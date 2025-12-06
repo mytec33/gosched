@@ -1,0 +1,44 @@
+[
+  {
+    "time": "10:00",
+    "prog": "rtov.exe",
+    "args": ["generate_daily", "DDI", "slot_configuration", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:00",
+    "prog": "rtov.exe",
+    "args": ["generate_daily", "DDI", "table_game_codes", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:00",
+    "prog": "rtov.exe",
+    "args": ["generate_daily", "DDI", "table_game_master", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:01",
+    "prog": "rtov.exe",
+    "args": ["generate_daily", "DDI", "slot_ratings", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:02",
+    "prog": "rtov.exe",
+    "args": ["generate_daily", "DDI", "table_ratings", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:15",
+    "prog": "rtov.exe",
+    "args": ["generate_modified", "DDI", "slot_ratings", "auto_send"],
+    "wdir": ""
+  },
+  {
+    "time": "10:15",
+    "prog": "rtov.exe",
+    "args": ["generate_modified", "DDI", "table_ratings", "auto_send"],
+    "wdir": ""
+  }
+]
