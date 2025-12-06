@@ -1,44 +1,34 @@
 [
   {
+    "name": "Slot Ratings",
     "time": "10:00",
-    "prog": "rtov.exe",
-    "args": ["generate_daily", "DDI", "slot_configuration", "auto_send"],
-    "wdir": ""
+    "steps": [
+      {
+        "name": "daily",
+        "program": "foo.exe",
+        "args": "generate_daily TRL slot_ratings"
+      },
+      {
+        "name": "modified",
+        "program": "foo.exe",
+        "args": "generate_modified TRL slot_ratings"
+      }
+    ]
   },
   {
+    "name": "Table Ratings",
     "time": "10:00",
-    "prog": "rtov.exe",
-    "args": ["generate_daily", "DDI", "table_game_codes", "auto_send"],
-    "wdir": ""
-  },
-  {
-    "time": "10:00",
-    "prog": "rtov.exe",
-    "args": ["generate_daily", "DDI", "table_game_master", "auto_send"],
-    "wdir": ""
-  },
-  {
-    "time": "10:01",
-    "prog": "rtov.exe",
-    "args": ["generate_daily", "DDI", "slot_ratings", "auto_send"],
-    "wdir": ""
-  },
-  {
-    "time": "10:02",
-    "prog": "rtov.exe",
-    "args": ["generate_daily", "DDI", "table_ratings", "auto_send"],
-    "wdir": ""
-  },
-  {
-    "time": "10:15",
-    "prog": "rtov.exe",
-    "args": ["generate_modified", "DDI", "slot_ratings", "auto_send"],
-    "wdir": ""
-  },
-  {
-    "time": "10:15",
-    "prog": "rtov.exe",
-    "args": ["generate_modified", "DDI", "table_ratings", "auto_send"],
-    "wdir": ""
+    "steps": [
+      {
+        "name": "daily",
+        "program": "foo.exe",
+        "args": "generate_daily TRL table_ratings"
+      },
+      {
+        "name": "modified",
+        "program": "foo.exe",
+        "args": "generate_modified TRL table_ratings"
+      }
+    ]
   }
 ]
