@@ -129,7 +129,7 @@ func executeJob(job Job) {
 	if running {
 		logging.StderrLogger.Error("execute", "job already running", jobLock)
 		return
-
+	}
 	RunningJobs.Set(jobLock, "running")
 	defer RunningJobs.Delete(jobLock)
 
