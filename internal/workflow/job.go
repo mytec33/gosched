@@ -1,5 +1,7 @@
 package workflow
 
+import "errors"
+
 type Workflow struct {
 	Name  string `json:"name"`
 	Time  string `json:"time"`
@@ -10,4 +12,13 @@ type Step struct {
 	Name    string `json:"name"`
 	Program string `json:"program"`
 	Args    string `json:"args"`
+}
+
+func (w Workflow) Validate() []error {
+
+	return []error{errors.New("foo")}
+}
+
+func ValidateAll(workflows []Workflow) []error {
+	return []error{errors.New("foo")}
 }

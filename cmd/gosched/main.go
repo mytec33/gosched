@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	ExitNoConfig int = 1
+	ExitNoConfig  int = 1
+	ExitBadConfig int = 2
 )
 
 var RunningWorkflows = workflow.NewSafeMapMutex()
@@ -21,13 +22,21 @@ var RunningWorkflows = workflow.NewSafeMapMutex()
 func main() {
 	logging.StdoutLogger.Info("startup", "Scheduler service started", "")
 
-	schedule, err := loadSchedule("schedule.json")
+	workflows, err := loadWorkflows("schedule.json")
 	if err != nil {
 		logging.StderrLogger.Error("startup", "reason", "failed to load schedule", "error", err)
 		os.Exit(ExitNoConfig)
 	}
 
-	logging.StderrLogger.Error("startup", "Workflows loaded", len(schedule))
+	errs := workflow.ValidateAll(workflows)
+	if len(errs) > 0 {
+		for _, e := range errs {
+			logging.StderrLogger.Error("startup", "configuration error", e)
+		}
+		os.Exit(ExitBadConfig)
+	}
+
+	logging.StderrLogger.Error("startup", "Workflows loaded", len(workflows))
 
 	lastMinute := ""
 
@@ -37,7 +46,7 @@ func main() {
 
 		if currentMinute != lastMinute {
 			workflowsThisMinute := 0
-			for _, wf := range schedule {
+			for _, wf := range workflows {
 				if wf.Time == currentMinute {
 					workflowsThisMinute++
 					go executeWorkflow(wf)
@@ -56,7 +65,7 @@ func main() {
 	}
 }
 
-func loadSchedule(filename string) ([]workflow.Workflow, error) {
+func loadWorkflows(filename string) ([]workflow.Workflow, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file: %w", err)
