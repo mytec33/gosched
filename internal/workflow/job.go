@@ -20,5 +20,9 @@ func (w Workflow) Validate() []error {
 }
 
 func ValidateAll(workflows []Workflow) []error {
+	if len(workflows) == 0 {
+		return []error{errors.New("no work flows found")}
+	}
+
 	return []error{errors.New("foo")}
 }
