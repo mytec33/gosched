@@ -13,68 +13,92 @@ import (
 )
 
 const (
-	ExitNoConfig  int = 1
-	ExitBadConfig int = 2
+	ExitNoConfig     int = 1
+	ExitDecodeConfig int = 2
+	ExitValidation   int = 3
 )
 
 var RunningWorkflows = workflow.NewSafeMapMutex()
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	logging.StdoutLogger.Info("startup", "Scheduler service started", "")
 
-	workflows, err := loadWorkflows("schedule.json")
+	filename := "schedule.json"
+
+	data, err := loadWorkflows(filename)
 	if err != nil {
 		logging.StderrLogger.Error("startup", "reason", "failed to load schedule", "error", err)
-		os.Exit(ExitNoConfig)
+		return ExitNoConfig
 	}
 
-	errs := workflow.ValidateAll(workflows)
-	if len(errs) > 0 {
+	workflows, err := decodeWorkflows(filename, data)
+	if err != nil {
+		logging.StderrLogger.Error("startup", "reason", "failed to decode schedule", "error", err)
+		return ExitDecodeConfig
+	}
+
+	if errs := workflow.ValidateAll(workflows); len(errs) > 0 {
 		for _, e := range errs {
 			logging.StderrLogger.Error("startup", "configuration error", e)
 		}
-		os.Exit(ExitBadConfig)
+		return ExitValidation
 	}
 
-	logging.StderrLogger.Error("startup", "Workflows loaded", len(workflows))
+	logging.StdoutLogger.Info("startup", "Workflows loaded", len(workflows))
 
-	lastMinute := ""
+	// Long-running scheduler loop (effects)
+	runScheduler(workflows)
 
-	for {
-		now := time.Now()
-		currentMinute := now.Format("15:04")
+	return 0
+}
 
-		if currentMinute != lastMinute {
-			workflowsThisMinute := 0
-			for _, wf := range workflows {
-				if wf.Time == currentMinute {
-					workflowsThisMinute++
-					go executeWorkflow(wf)
-				}
-			}
+func runScheduler(workflows []workflow.Workflow) {
+	// Align to the next minute boundary once, then tick.
+	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
 
-			if workflowsThisMinute > 0 {
-				logging.StderrLogger.Error("scheduler", "scheduled workflows", workflowsThisMinute, "minute", currentMinute)
-			}
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
 
-			lastMinute = currentMinute
+	for t := range ticker.C {
+		if n := runSchedulerTick(t, workflows); n > 0 {
+			logging.StdoutLogger.Info("scheduler", "scheduled workflows",
+				n, "minute", t.Format("15:04"),
+			)
 		}
-
-		nextMinute := now.Truncate(time.Minute).Add(time.Minute)
-		time.Sleep(time.Until(nextMinute))
 	}
 }
 
-func loadWorkflows(filename string) ([]workflow.Workflow, error) {
+func runSchedulerTick(now time.Time, workflows []workflow.Workflow) int {
+	currentMinute := now.Format("15:04")
+
+	count := 0
+	for _, wf := range workflows {
+		if wf.Time == currentMinute {
+			count++
+			go executeWorkflow(wf)
+		}
+	}
+	return count
+}
+
+func loadWorkflows(filename string) ([]byte, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
+		return nil, fmt.Errorf("error reading workflows file %q: %w", filename, err)
 	}
 
+	return data, nil
+}
+
+func decodeWorkflows(filename string, data []byte) ([]workflow.Workflow, error) {
 	var schedule []workflow.Workflow
-	err = json.Unmarshal(data, &schedule)
+	err := json.Unmarshal(data, &schedule)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %w", err)
+		return nil, fmt.Errorf("error parsing %q: %w", filename, err)
 	}
 
 	return schedule, nil
