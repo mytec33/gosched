@@ -1,33 +1,33 @@
 [
   {
     "name": "Slot Ratings",
-    "time": "10:00",
+    "time": "16:25",
     "steps": [
       {
         "name": "daily",
-        "program": "foo.exe",
-        "args": "generate_daily TRL slot_ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": "--sleep 10 --role daily-slot-ratings"
       },
       {
         "name": "modified",
-        "program": "foo.exe",
-        "args": "generate_modified TRL slot_ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": "--sleep 50 --role modified-slot-ratings"
       }
     ]
   },
   {
     "name": "Table Ratings",
-    "time": "10:00",
+    "time": "16:25",
     "steps": [
       {
         "name": "daily",
-        "program": "foo.exe",
-        "args": "generate_daily TRL table_ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": "--sleep 5 --role daily-table-ratings"
       },
       {
         "name": "modified",
-        "program": "foo.exe",
-        "args": "generate_modified TRL table_ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": "--sleep 25 --role modified-table-ratings"
       }
     ]
   }

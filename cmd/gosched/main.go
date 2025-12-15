@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,6 +17,7 @@ const (
 	ExitNoConfig     int = 1
 	ExitDecodeConfig int = 2
 	ExitValidation   int = 3
+	ExitInvalidArgs  int = 4
 )
 
 var RunningWorkflows = workflow.NewSafeMapMutex()
@@ -27,7 +29,15 @@ func main() {
 func run() int {
 	logging.StdoutLogger.Info("startup", "Scheduler service started", "")
 
-	filename := "schedule.json"
+	filename := ""
+	flag.StringVar(&filename, "schedule", "", "file containing a schedule to run")
+	flag.Parse()
+
+	if filename == "" {
+		logging.StderrLogger.Error("invalid args")
+		flag.Usage()
+		os.Exit(ExitInvalidArgs)
+	}
 
 	data, err := loadWorkflows(filename)
 	if err != nil {

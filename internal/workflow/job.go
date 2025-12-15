@@ -1,3 +1,4 @@
+// Package workflow provides schedule layout and locking
 package workflow
 
 import "errors"
@@ -24,5 +25,5 @@ func ValidateAll(workflows []Workflow) []error {
 		return []error{errors.New("no work flows found")}
 	}
 
-	return []error{errors.New("foo")}
+	return []error{}
 }
