@@ -74,7 +74,8 @@ func runScheduler(workflows []workflow.Workflow) {
 	defer ticker.Stop()
 
 	for t := range ticker.C {
-		if n := runSchedulerTick(t, workflows); n > 0 {
+		n := runSchedulerTick(t, workflows)
+		if n > 0 {
 			logging.StdoutLogger.Info("scheduler", "scheduled workflows",
 				n, "minute", t.Format("15:04"),
 			)
