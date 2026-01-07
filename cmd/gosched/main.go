@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	ExitSuccess      int = 0
 	ExitNoConfig     int = 1
 	ExitDecodeConfig int = 2
 	ExitValidation   int = 3
@@ -43,7 +44,9 @@ func run() int {
 	logging.StdoutLogger.Info("startup", "event", "Acquired single-instance lock", "port", defaultLockPort)
 
 	filename := ""
+	summarizeConfig := false
 	flag.StringVar(&filename, "schedule", "", "file containing a schedule to run")
+	flag.BoolVar(&summarizeConfig, "summarize-config", false, "show concise summary of configuration file schedule")
 	flag.Parse()
 
 	if filename == "" {
@@ -64,6 +67,10 @@ func run() int {
 		return ExitDecodeConfig
 	}
 
+	if summarizeConfig {
+		displayConfigSummarization()
+	}
+
 	if errs := workflow.ValidateAll(workflowMap); len(errs) > 0 {
 		for _, e := range errs {
 			logging.StderrLogger.Error("startup", "configuration error", e)
@@ -78,6 +85,12 @@ func run() int {
 	runScheduler()
 
 	return 0
+}
+
+func displayConfigSummarization() {
+	fmt.Println("display configuration summarization")
+
+	os.Exit(ExitSuccess)
 }
 
 func acquireSingleInstanceLock(port int) (release func() error, err error) {
