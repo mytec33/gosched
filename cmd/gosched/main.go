@@ -28,6 +28,8 @@ const defaultLockPort = 41037
 var RunningWorkflows = workflow.NewSafeMapMutex()
 var workflowMap = make(map[string][]workflow.Workflow)
 
+type TickFunc func(now time.Time) int
+
 func main() {
 	os.Exit(run())
 }
@@ -81,8 +83,7 @@ func run() int {
 	logging.StdoutLogger.Info("startup", "Workflows loaded", len(workflowMap))
 	fmt.Printf("Map with %%v: %v\n", workflowMap)
 
-	// Long-running scheduler loop (effects)
-	runScheduler()
+	runScheduler(runSchedulerTick)
 
 	return 0
 }
@@ -102,7 +103,7 @@ func acquireSingleInstanceLock(port int) (release func() error, err error) {
 	return ln.Close, nil
 }
 
-func runScheduler() {
+func runScheduler(tick TickFunc) {
 	// Align to the next minute boundary once, then tick.
 	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
 
@@ -111,7 +112,7 @@ func runScheduler() {
 
 	for range ticker.C {
 		now := time.Now().Truncate(time.Minute)
-		n := runSchedulerTick(now)
+		n := tick(now)
 		if n > 0 {
 			logging.StdoutLogger.Info("scheduler", "scheduled workflows",
 				n, "minute", now.Format("15:04"),
