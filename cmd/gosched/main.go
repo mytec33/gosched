@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,8 +21,6 @@ const (
 	ExitInvalidLock  int = 5
 )
 
-const defaultLockPort = 41037
-
 var RunningWorkflows = schedule.NewSafeMapMutex()
 
 type TickFunc func(now time.Time, data schedule.Schedule) int
@@ -34,14 +31,6 @@ func main() {
 
 func run() int {
 	logging.StdoutLogger.Info("startup", "event", "Scheduler service started")
-
-	release, err := acquireSingleInstanceLock(defaultLockPort)
-	if err != nil {
-		logging.StderrLogger.Error("startup", "reason", "single-instance lock failed", "error", err)
-		os.Exit(ExitInvalidLock)
-	}
-	defer release()
-	logging.StdoutLogger.Info("startup", "event", "Acquired single-instance lock", "port", defaultLockPort)
 
 	filename := ""
 	summarizeConfig := false
@@ -84,15 +73,6 @@ func displayConfigSummarization() {
 	fmt.Println("display configuration summarization")
 
 	os.Exit(ExitSuccess)
-}
-
-func acquireSingleInstanceLock(port int) (release func() error, err error) {
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return nil, fmt.Errorf("another instance is likely running (cannot bind lock %s): %w", addr, err)
-	}
-	return ln.Close, nil
 }
 
 func runScheduler(tick TickFunc, s schedule.Schedule) {
