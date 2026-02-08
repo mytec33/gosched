@@ -3,7 +3,21 @@ package schedule
 
 import "errors"
 
-type Schedule = map[MinuteKey][]Workflow
+type Schedule struct {
+	wf map[MinuteKey][]Workflow
+}
+
+func (s Schedule) WorkflowCount() int {
+	count := 0
+	for _, wfs := range s.wf {
+		count += len(wfs)
+	}
+	return count
+}
+
+func (s Schedule) WorkflowsAtMinute(k MinuteKey) []Workflow {
+	return s.wf[k]
+}
 
 type MinuteKey string
 
@@ -25,7 +39,7 @@ func (w Workflow) Validate() []error {
 }
 
 func ValidateSchedule(s Schedule) []error {
-	if len(s) == 0 {
+	if len(s.wf) == 0 {
 		return []error{errors.New("no schedule found")}
 	}
 

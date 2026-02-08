@@ -12,35 +12,36 @@ import (
 func ReadScheduleFile(filename string) (Schedule, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, fmt.Errorf("open workflows file %q: %w", filename, err)
+		return Schedule{}, fmt.Errorf("open workflows file %q: %w", filename, err)
 	}
 	defer f.Close()
 
 	s, err := DecodeSchedule(f)
 	if err != nil {
-		return nil, fmt.Errorf("decode workflows file %q: %w", filename, err)
+		return Schedule{}, fmt.Errorf("decode workflows file %q: %w", filename, err)
 	}
 	return s, nil
 }
 
 func DecodeSchedule(r io.Reader) (Schedule, error) {
+	s := Schedule{wf: make(map[MinuteKey][]Workflow)}
 	var wf []Workflow
 
 	dec := json.NewDecoder(r)
 	err := dec.Decode(&wf)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing scheduler configuration: %w", err)
+		return s, fmt.Errorf("error parsing scheduler configuration: %w", err)
 	}
 
-	schedule := make(Schedule)
+	schedule := s
 	for _, wf := range wf {
 		k, err := normalizeTime(wf.Time)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding workflow %q: %w", wf.Name, err)
+			return s, fmt.Errorf("error decoding workflow %q: %w", wf.Name, err)
 		}
 
 		wf.Time = string(k)
-		schedule[k] = append(schedule[k], wf)
+		schedule.wf[k] = append(schedule.wf[k], wf)
 	}
 
 	return schedule, nil

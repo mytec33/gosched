@@ -72,7 +72,7 @@ func run() int {
 		return ExitValidation
 	}
 
-	logging.StdoutLogger.Info("startup", "Workflows loaded", len(schedules))
+	logging.StdoutLogger.Info("startup", "Workflows loaded", schedules.WorkflowCount())
 	fmt.Printf("Map with %%v: %v\n", schedules)
 
 	runScheduler(runSchedulerTick, schedules)
@@ -113,11 +113,11 @@ func runScheduler(tick TickFunc, s schedule.Schedule) {
 	}
 }
 
-func runSchedulerTick(now time.Time, wfm schedule.Schedule) int {
+func runSchedulerTick(now time.Time, s schedule.Schedule) int {
 	currentMinute := schedule.MinuteKey(now.Format("15:04"))
 	logging.StdoutLogger.Info("run scheduler tick", "current_minute", currentMinute)
 
-	tasks := wfm[currentMinute]
+	tasks := s.WorkflowsAtMinute(currentMinute)
 	if len(tasks) == 0 {
 		return 0
 	}
