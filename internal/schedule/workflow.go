@@ -1,7 +1,11 @@
-// Package workflow provides schedule layout and locking
-package workflow
+// Package schedule provides schedule layout and locking
+package schedule
 
 import "errors"
+
+type Schedule = map[MinuteKey][]Workflow
+
+type MinuteKey string
 
 type Workflow struct {
 	Name  string `json:"name"`
@@ -20,9 +24,9 @@ func (w Workflow) Validate() []error {
 	return []error{errors.New("foo")}
 }
 
-func ValidateAll(workflowMap map[string][]Workflow) []error {
-	if len(workflowMap) == 0 {
-		return []error{errors.New("no work flows found")}
+func ValidateSchedule(s Schedule) []error {
+	if len(s) == 0 {
+		return []error{errors.New("no schedule found")}
 	}
 
 	return []error{}

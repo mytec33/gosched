@@ -1,4 +1,4 @@
-package workflow
+package schedule
 
 import (
 	"encoding/json"

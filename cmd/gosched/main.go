@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -11,7 +10,7 @@ import (
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"git.sr.ht/~mytec/gosched/internal/schedule"
 )
 
 const (
@@ -25,10 +24,9 @@ const (
 
 const defaultLockPort = 41037
 
-var RunningWorkflows = workflow.NewSafeMapMutex()
-var workflowMap = make(map[string][]workflow.Workflow)
+var RunningWorkflows = schedule.NewSafeMapMutex()
 
-type TickFunc func(now time.Time) int
+type TickFunc func(now time.Time, data schedule.Schedule) int
 
 func main() {
 	os.Exit(run())
@@ -57,33 +55,27 @@ func run() int {
 		os.Exit(ExitInvalidArgs)
 	}
 
-	data, err := loadWorkflows(filename)
+	schedules, err := schedule.ReadScheduleFile(filename)
 	if err != nil {
 		logging.StderrLogger.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
-	}
-
-	err = decodeWorkflows(filename, data)
-	if err != nil {
-		logging.StderrLogger.Error("startup", "reason", "failed to decode schedule", "error", err)
-		return ExitDecodeConfig
 	}
 
 	if summarizeConfig {
 		displayConfigSummarization()
 	}
 
-	if errs := workflow.ValidateAll(workflowMap); len(errs) > 0 {
+	if errs := schedule.ValidateSchedule(schedules); len(errs) > 0 {
 		for _, e := range errs {
 			logging.StderrLogger.Error("startup", "configuration error", e)
 		}
 		return ExitValidation
 	}
 
-	logging.StdoutLogger.Info("startup", "Workflows loaded", len(workflowMap))
-	fmt.Printf("Map with %%v: %v\n", workflowMap)
+	logging.StdoutLogger.Info("startup", "Workflows loaded", len(schedules))
+	fmt.Printf("Map with %%v: %v\n", schedules)
 
-	runScheduler(runSchedulerTick)
+	runScheduler(runSchedulerTick, schedules)
 
 	return 0
 }
@@ -103,7 +95,7 @@ func acquireSingleInstanceLock(port int) (release func() error, err error) {
 	return ln.Close, nil
 }
 
-func runScheduler(tick TickFunc) {
+func runScheduler(tick TickFunc, s schedule.Schedule) {
 	// Align to the next minute boundary once, then tick.
 	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
 
@@ -112,7 +104,7 @@ func runScheduler(tick TickFunc) {
 
 	for range ticker.C {
 		now := time.Now().Truncate(time.Minute)
-		n := tick(now)
+		n := tick(now, s)
 		if n > 0 {
 			logging.StdoutLogger.Info("scheduler", "scheduled workflows",
 				n, "minute", now.Format("15:04"),
@@ -121,11 +113,11 @@ func runScheduler(tick TickFunc) {
 	}
 }
 
-func runSchedulerTick(now time.Time) int {
-	currentMinute := now.Format("15:04")
+func runSchedulerTick(now time.Time, wfm schedule.Schedule) int {
+	currentMinute := schedule.MinuteKey(now.Format("15:04"))
 	logging.StdoutLogger.Info("run scheduler tick", "current_minute", currentMinute)
 
-	tasks := workflowMap[currentMinute]
+	tasks := wfm[currentMinute]
 	if len(tasks) == 0 {
 		return 0
 	}
@@ -136,52 +128,7 @@ func runSchedulerTick(now time.Time) int {
 	return len(tasks)
 }
 
-func loadWorkflows(filename string) ([]byte, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error reading workflows file %q: %w", filename, err)
-	}
-
-	return data, nil
-}
-
-func decodeWorkflows(filename string, data []byte) error {
-	var schedule []workflow.Workflow
-	err := json.Unmarshal(data, &schedule)
-	if err != nil {
-		return fmt.Errorf("error parsing %q: %w", filename, err)
-	}
-
-	// This depends on validation being performed before calling this function.
-	for _, wf := range schedule {
-		timeKey, err := normalizeTime(wf.Time)
-		if err != nil {
-			logging.StderrLogger.Error("decode", "invalid time", wf.Time, "workflow", wf.Name, "error", err)
-			return fmt.Errorf("error decoding workflow %q: %w", wf.Name, err)
-		}
-
-		logging.StdoutLogger.Info("decode", "time key", timeKey)
-		workflowMap[timeKey] = append(workflowMap[timeKey], wf)
-	}
-
-	return nil
-}
-
-func normalizeTime(timeKey string) (string, error) {
-	var h, m int
-	if _, err := fmt.Sscanf(strings.TrimSpace(timeKey), "%d:%d", &h, &m); err != nil {
-		return "", fmt.Errorf("invalid time %q", timeKey)
-	}
-
-	normalized := fmt.Sprintf("%02d:%02d", h, m)
-	_, err := time.Parse("15:04", normalized)
-	if err != nil {
-		return "", fmt.Errorf("invalid normalized time %q: %w", normalized, err)
-	}
-	return normalized, nil
-}
-
-func executeWorkflow(wf workflow.Workflow) {
+func executeWorkflow(wf schedule.Workflow) {
 	workflowStart := time.Now()
 
 	lockKey := wf.Name
