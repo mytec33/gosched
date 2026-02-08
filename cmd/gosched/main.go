@@ -50,16 +50,17 @@ func run() int {
 		return ExitNoConfig
 	}
 
-	if summarizeConfig {
-		displayConfigSummarization()
-	}
-
 	errs := schedule.Validate()
 	if len(errs) > 0 {
 		for _, e := range errs {
 			logging.StderrLogger.Error("startup", "reason", "configuration error", "error", e)
 		}
 		return ExitValidation
+	}
+
+	if summarizeConfig {
+		displayConfigSummarization()
+		return ExitSuccess
 	}
 
 	logging.StdoutLogger.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount())
@@ -71,8 +72,6 @@ func run() int {
 
 func displayConfigSummarization() {
 	fmt.Println("display configuration summarization")
-
-	os.Exit(ExitSuccess)
 }
 
 func runScheduler(tick TickFunc, s schedule.Schedule) {
