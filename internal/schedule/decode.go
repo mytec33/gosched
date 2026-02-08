@@ -2,12 +2,15 @@ package schedule
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 )
+
+var ErrDecodeSchedule = errors.New("decode schedule")
 
 func ReadScheduleFile(filename string) (Schedule, error) {
 	f, err := os.Open(filename)
@@ -28,16 +31,25 @@ func DecodeSchedule(r io.Reader) (Schedule, error) {
 	var wf []Workflow
 
 	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
 	err := dec.Decode(&wf)
 	if err != nil {
-		return s, fmt.Errorf("error parsing scheduler configuration: %w", err)
+		return s, fmt.Errorf("%w: %w", ErrDecodeSchedule, err)
+	}
+
+	// Enforce exactly one top-level JSON value; allow only trailing whitespace.
+	err = dec.Decode(&struct{}{})
+	if err == nil {
+		return s, fmt.Errorf("%w: trailing data", ErrDecodeSchedule)
+	} else if !errors.Is(err, io.EOF) {
+		return s, fmt.Errorf("%w: trailing data: %w", ErrDecodeSchedule, err)
 	}
 
 	schedule := s
 	for _, wf := range wf {
 		k, err := normalizeTime(wf.Time)
 		if err != nil {
-			return s, fmt.Errorf("error decoding workflow %q: %w", wf.Name, err)
+			return s, fmt.Errorf("error normalizing workflow %q: %w", wf.Name, err)
 		}
 
 		wf.Time = string(k)
