@@ -54,7 +54,8 @@ func run() int {
 		displayConfigSummarization()
 	}
 
-	if errs := schedule.Validate(); len(errs) > 0 {
+	errs := schedule.Validate()
+	if len(errs) > 0 {
 		for _, e := range errs {
 			logging.StderrLogger.Error("startup", "reason", "configuration error", "error", e)
 		}
