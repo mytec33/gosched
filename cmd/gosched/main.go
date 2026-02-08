@@ -124,17 +124,15 @@ func runSchedulerTick(now time.Time) int {
 	currentMinute := now.Format("15:04")
 	logging.StdoutLogger.Info("run scheduler tick", "current_minute", currentMinute)
 
-	workflowList, exists := workflowMap[currentMinute]
-	if !exists {
+	tasks := workflowMap[currentMinute]
+	if len(tasks) == 0 {
 		return 0
 	}
 
-	count := 0
-	for _, wf := range workflowList {
-		count++
-		go executeWorkflow(wf)
+	for _, task := range tasks {
+		go executeWorkflow(task)
 	}
-	return count
+	return len(tasks)
 }
 
 func loadWorkflows(filename string) ([]byte, error) {
