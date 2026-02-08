@@ -38,7 +38,7 @@ func (w Workflow) Validate() []error {
 	return []error{errors.New("foo")}
 }
 
-func ValidateSchedule(s Schedule) []error {
+func (s Schedule) Validate() []error {
 	if len(s.wf) == 0 {
 		return []error{errors.New("no schedule found")}
 	}

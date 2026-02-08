@@ -30,7 +30,7 @@ func main() {
 }
 
 func run() int {
-	logging.StdoutLogger.Info("startup", "event", "Scheduler service started")
+	logging.StdoutLogger.Info("startup", "reason", "scheduler service started")
 
 	filename := ""
 	summarizeConfig := false
@@ -39,12 +39,12 @@ func run() int {
 	flag.Parse()
 
 	if filename == "" {
-		logging.StderrLogger.Error("invalid args")
+		logging.StderrLogger.Error("startup", "reason", "invalid args")
 		flag.Usage()
-		os.Exit(ExitInvalidArgs)
+		return ExitInvalidArgs
 	}
 
-	schedules, err := schedule.ReadScheduleFile(filename)
+	schedule, err := schedule.ReadScheduleFile(filename)
 	if err != nil {
 		logging.StderrLogger.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
@@ -54,17 +54,16 @@ func run() int {
 		displayConfigSummarization()
 	}
 
-	if errs := schedule.ValidateSchedule(schedules); len(errs) > 0 {
+	if errs := schedule.Validate(); len(errs) > 0 {
 		for _, e := range errs {
-			logging.StderrLogger.Error("startup", "configuration error", e)
+			logging.StderrLogger.Error("startup", "reason", "configuration error", "error", e)
 		}
 		return ExitValidation
 	}
 
-	logging.StdoutLogger.Info("startup", "Workflows loaded", schedules.WorkflowCount())
-	fmt.Printf("Map with %%v: %v\n", schedules)
+	logging.StdoutLogger.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount())
 
-	runScheduler(runSchedulerTick, schedules)
+	runScheduler(runSchedulerTick, schedule)
 
 	return 0
 }
