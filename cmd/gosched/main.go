@@ -21,8 +21,6 @@ const (
 	ExitInvalidLock  int = 5
 )
 
-var RunningWorkflows = schedule.NewSafeMapMutex()
-
 type TickFunc func(now time.Time, data schedule.Schedule) int
 
 func main() {
@@ -111,13 +109,13 @@ func executeWorkflow(wf schedule.Workflow) {
 	workflowStart := time.Now()
 
 	lockKey := wf.Name
-	_, running := RunningWorkflows.Get(lockKey)
+	_, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
 		logging.StderrLogger.Error("execute", "workflow already running", lockKey)
 		return
 	}
-	RunningWorkflows.Set(lockKey, "running")
-	defer RunningWorkflows.Delete(lockKey)
+	schedule.RunningWorkflows.Set(lockKey, "running")
+	defer schedule.RunningWorkflows.Delete(lockKey)
 
 	for i, step := range wf.Steps {
 		stepStart := time.Now()

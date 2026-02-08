@@ -2,6 +2,8 @@ package schedule
 
 import "sync"
 
+var RunningWorkflows = NewSafeMapMutex()
+
 type SafeMapRWMutex struct {
 	mu   sync.RWMutex
 	data map[string]string
