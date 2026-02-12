@@ -117,24 +117,24 @@ func executeWorkflow(wf schedule.Workflow) {
 	schedule.RunningWorkflows.Set(lockKey, "running")
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
-	for i, step := range wf.Steps {
+	for _, step := range wf.Steps {
 		stepStart := time.Now()
 
 		args := strings.Fields(step.Args)
-		logging.StdoutLogger.Info("execute", wf.Name, "starting", "stepIndex", i, "stepName", step.Name, "args", step.Args)
+		logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "started", "stepName", step.Name, "args", step.Args)
 
 		cmd := exec.Command(step.Program, args...)
 		output, err := cmd.CombinedOutput()
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
-			logging.StderrLogger.Error("execute", wf.Name, "failed", "stepIndex", i, "stepName", step.Name, "args", step.Args, "duration", stepDuration, "reason", err, "output", string(output))
+			logging.StderrLogger.Error("execute", "workflow", wf.Name, "status", "failed", "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		} else {
-			logging.StdoutLogger.Info("execute", wf.Name, "completed", "stepIndex", i, "stepName", step.Name, "args", step.Args, "duration", stepDuration)
+			logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "completed", "stepName", step.Name, "duration", stepDuration)
 		}
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	logging.StdoutLogger.Info("execute", wf.Name, "completed", "duration", workflowDuration)
+	logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
 }
