@@ -28,7 +28,7 @@ func main() {
 }
 
 func run() int {
-	logging.StdoutLogger.Info("startup", "reason", "scheduler service started")
+	logging.StdOut.Info("startup", "reason", "scheduler service started")
 
 	filename := ""
 	summarizeConfig := false
@@ -37,21 +37,21 @@ func run() int {
 	flag.Parse()
 
 	if filename == "" {
-		logging.StderrLogger.Error("startup", "reason", "invalid args")
+		logging.StdErr.Error("startup", "reason", "invalid args")
 		flag.Usage()
 		return ExitInvalidArgs
 	}
 
 	schedule, err := schedule.ReadScheduleFile(filename)
 	if err != nil {
-		logging.StderrLogger.Error("startup", "reason", "failed to load schedule", "error", err)
+		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
 	}
 
 	errs := schedule.Validate()
 	if len(errs) > 0 {
 		for _, e := range errs {
-			logging.StderrLogger.Error("startup", "reason", "configuration error", "error", e)
+			logging.StdErr.Error("startup", "reason", "configuration error", "error", e)
 		}
 		return ExitValidation
 	}
@@ -61,7 +61,7 @@ func run() int {
 		return ExitSuccess
 	}
 
-	logging.StdoutLogger.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount())
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount())
 
 	runScheduler(runSchedulerTick, schedule)
 
@@ -83,7 +83,7 @@ func runScheduler(tick TickFunc, s schedule.Schedule) {
 		now := time.Now().Truncate(time.Minute)
 		n := tick(now, s)
 		if n > 0 {
-			logging.StdoutLogger.Info("scheduler", "scheduled workflows",
+			logging.StdOut.Info("scheduler", "scheduled workflows",
 				n, "minute", now.Format("15:04"),
 			)
 		}
@@ -92,7 +92,7 @@ func runScheduler(tick TickFunc, s schedule.Schedule) {
 
 func runSchedulerTick(now time.Time, s schedule.Schedule) int {
 	currentMinute := schedule.MinuteKey(now.Format("15:04"))
-	logging.StdoutLogger.Info("run scheduler tick", "current_minute", currentMinute)
+	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
 	if len(tasks) == 0 {
@@ -111,7 +111,7 @@ func executeWorkflow(wf schedule.Workflow) {
 	lockKey := wf.Name
 	_, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		logging.StderrLogger.Error("execute", "workflow already running", lockKey)
+		logging.StdErr.Error("execute", "workflow already running", lockKey)
 		return
 	}
 	schedule.RunningWorkflows.Set(lockKey, "running")
@@ -121,20 +121,20 @@ func executeWorkflow(wf schedule.Workflow) {
 		stepStart := time.Now()
 
 		args := strings.Fields(step.Args)
-		logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "started", "stepName", step.Name, "args", step.Args)
+		logging.StdOut.Info("execute", "workflow", wf.Name, "status", "started", "stepName", step.Name, "args", step.Args)
 
 		cmd := exec.Command(step.Program, args...)
 		output, err := cmd.CombinedOutput()
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
-			logging.StderrLogger.Error("execute", "workflow", wf.Name, "status", "failed", "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
+			logging.StdErr.Error("execute", "workflow", wf.Name, "status", "failed", "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		} else {
-			logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "completed", "stepName", step.Name, "duration", stepDuration)
+			logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "stepName", step.Name, "duration", stepDuration)
 		}
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	logging.StdoutLogger.Info("execute", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
+	logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
 }
