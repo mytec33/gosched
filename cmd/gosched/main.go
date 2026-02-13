@@ -111,7 +111,7 @@ func executeWorkflow(wf schedule.Workflow) {
 	lockKey := wf.Name
 	_, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		logging.StdErr.Error("execute", "workflow already running", lockKey)
+		logging.StdErr.Error("execute", "status", "skipped", "reason", "workflow already running", "key", lockKey)
 		return
 	}
 	schedule.RunningWorkflows.Set(lockKey, "running")
