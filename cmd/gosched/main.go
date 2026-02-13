@@ -117,21 +117,21 @@ func executeWorkflow(wf schedule.Workflow) {
 	schedule.RunningWorkflows.Set(lockKey, "running")
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
-	for _, step := range wf.Steps {
+	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
 		args := strings.Fields(step.Args)
-		logging.StdOut.Info("execute", "workflow", wf.Name, "status", "started", "stepName", step.Name, "args", step.Args)
+		logging.StdOut.Info("execute", "workflow", wf.Name, "status", "started", "index", i, "stepName", step.Name, "args", step.Args)
 
 		cmd := exec.Command(step.Program, args...)
 		output, err := cmd.CombinedOutput()
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
-			logging.StdErr.Error("execute", "workflow", wf.Name, "status", "failed", "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
+			logging.StdErr.Error("execute", "workflow", wf.Name, "status", "failed", "index", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		} else {
-			logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "stepName", step.Name, "duration", stepDuration)
+			logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "index", i, "stepName", step.Name, "duration", stepDuration)
 		}
 	}
 
