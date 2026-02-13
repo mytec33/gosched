@@ -108,33 +108,37 @@ func runSchedulerTick(now time.Time, s schedule.Schedule) int {
 func executeWorkflow(wf schedule.Workflow) {
 	workflowStart := time.Now()
 
+	wfLog := logging.NewWorkFlowLogger(wf.Name)
+	stdOut := wfLog.Out
+	stdErr := wfLog.Err
+
 	lockKey := wf.Name
-	_, running := schedule.RunningWorkflows.Get(lockKey)
+	existingID, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		logging.StdErr.Error("execute", "status", "skipped", "reason", "workflow already running", "key", lockKey)
+		stdErr.Error("execute", "status", "skipped", "reason", "workflow already running", "existingWfRunID", existingID)
 		return
 	}
-	schedule.RunningWorkflows.Set(lockKey, "running")
+	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
 	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
 		args := strings.Fields(step.Args)
-		logging.StdOut.Info("execute", "workflow", wf.Name, "status", "started", "index", i, "stepName", step.Name, "args", step.Args)
+		stdOut.Info("execute", "status", "started", "index", i, "stepName", step.Name, "args", step.Args)
 
 		cmd := exec.Command(step.Program, args...)
 		output, err := cmd.CombinedOutput()
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
-			logging.StdErr.Error("execute", "workflow", wf.Name, "status", "failed", "index", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
+			stdErr.Error("execute", "status", "failed", "index", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		} else {
-			logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "index", i, "stepName", step.Name, "duration", stepDuration)
+			stdOut.Info("execute", "status", "completed", "index", i, "stepName", step.Name, "duration", stepDuration)
 		}
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	logging.StdOut.Info("execute", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
+	stdOut.Info("execute", "status", "completed", "duration", workflowDuration)
 }
