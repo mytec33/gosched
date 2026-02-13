@@ -18,18 +18,18 @@ var StdErr = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 	Level: slog.LevelWarn,
 }))
 
-type WorkFlowLogger struct {
+type WorkflowLogger struct {
 	WfRunID string
 	Out     *slog.Logger
 	Err     *slog.Logger
 }
 
-func NewWorkFlowLogger(workflowName string) WorkFlowLogger {
+func NewWorkflowLogger(workflowName string) WorkflowLogger {
 	now := time.Now()
 
 	wfID := ulid.MustNew(ulid.Timestamp(now), rand.Reader).String()
 
-	return WorkFlowLogger{
+	return WorkflowLogger{
 		WfRunID: wfID,
 		Out: StdOut.With(
 			slog.String("wfRunID", wfID),

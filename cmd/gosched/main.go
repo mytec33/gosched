@@ -61,7 +61,7 @@ func run() int {
 		return ExitSuccess
 	}
 
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount())
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount(), "filename", filename)
 
 	runScheduler(runSchedulerTick, schedule)
 
@@ -108,37 +108,39 @@ func runSchedulerTick(now time.Time, s schedule.Schedule) int {
 func executeWorkflow(wf schedule.Workflow) {
 	workflowStart := time.Now()
 
-	wfLog := logging.NewWorkFlowLogger(wf.Name)
+	wfLog := logging.NewWorkflowLogger(wf.Name)
 	stdOut := wfLog.Out
 	stdErr := wfLog.Err
 
 	lockKey := wf.Name
 	existingID, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		stdErr.Error("execute", "status", "skipped", "reason", "workflow already running", "existingWfRunID", existingID)
+		stdErr.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingWfRunID", existingID)
 		return
 	}
 	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
+	stdOut.Info("workflow", "status", "started")
+
 	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
 		args := strings.Fields(step.Args)
-		stdOut.Info("execute", "status", "started", "index", i, "stepName", step.Name, "args", step.Args)
+		stdOut.Info("workflow step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
 
 		cmd := exec.Command(step.Program, args...)
 		output, err := cmd.CombinedOutput()
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
-			stdErr.Error("execute", "status", "failed", "index", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
+			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		} else {
-			stdOut.Info("execute", "status", "completed", "index", i, "stepName", step.Name, "duration", stepDuration)
+			stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
 		}
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	stdOut.Info("execute", "status", "completed", "duration", workflowDuration)
+	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 }
