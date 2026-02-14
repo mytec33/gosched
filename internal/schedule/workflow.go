@@ -4,6 +4,7 @@ package schedule
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/platform"
@@ -32,16 +33,21 @@ func (e ValidationError) Error() string {
 	return fmt.Sprintf("%s: %v", e.Field, e.Err)
 }
 
+func (e ValidationError) Unwrap() error {
+	return e.Err
+}
+
 const (
-	maxWorkflowLength int = 256 // 260 for windows, 255 for Linux, 1024 for macOS
+	maxWorkflowNameLength int = 256
 )
 
 var (
 	ErrEmpty                       = errors.New("cannot be empty")
 	ErrInvalidDuration             = errors.New("invalid number, must be zero or greater")
 	ErrInvalidTime                 = errors.New("invalid time value")
-	ErrLeadingOrTrailingWhitespace = errors.New("leading or trailing whitespace")
 	ErrTooLong                     = errors.New("too long")
+	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
+	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")
 )
 
 func (w Workflow) Validate() []error {
@@ -102,7 +108,16 @@ func validateIdentifier(s string) error {
 	if s == "" {
 		return ErrEmpty
 	}
-	if len(s) > maxWorkflowLength {
+
+	if strings.TrimSpace(s) == "" {
+		return ErrWhitespaceAll
+	}
+
+	if strings.TrimSpace(s) != s {
+		return ErrWhitespaceLeadingOrTrailing
+	}
+
+	if len(s) > maxWorkflowNameLength {
 		return ErrTooLong
 	}
 	return nil
@@ -112,6 +127,7 @@ func validateRequired(field, value string, check func(string) error) error {
 	if value == "" {
 		return invalid(field, ErrEmpty)
 	}
+
 	if err := check(value); err != nil {
 		return invalid(field, err)
 	}
