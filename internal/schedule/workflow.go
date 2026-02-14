@@ -78,11 +78,7 @@ func parseTime(timeVal string) bool {
 	layout := "15:04"
 
 	_, err := time.Parse(layout, timeVal)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (e ValidationError) Error() string {
