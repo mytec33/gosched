@@ -1,6 +1,6 @@
 //go:build linux
 
-package schedule
+package platform
 
 func maxPathLength() int {
 	return 255

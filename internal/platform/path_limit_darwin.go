@@ -1,6 +1,6 @@
 //go:build darwin
 
-package schedule
+package platform
 
 func maxPathLength() int {
 	return 1024
