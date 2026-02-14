@@ -12,6 +12,9 @@ import (
 
 var ErrDecodeSchedule = errors.New("decode schedule")
 
+// ReadScheduleFile opens the schedule file and delegates decoding and validation.
+// Validation errors are returned in the slice. The returned error is reserved for
+// I/O or decoding failures.
 func ReadScheduleFile(filename string) (Schedule, []error, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -19,17 +22,20 @@ func ReadScheduleFile(filename string) (Schedule, []error, error) {
 	}
 	defer f.Close()
 
-	s, errors, err := DecodeSchedule(f)
+	s, validationErrors, err := DecodeSchedule(f)
 	if err != nil {
-		return Schedule{}, errors, fmt.Errorf("decode workflows file %q: %w", filename, err)
+		return Schedule{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", filename, err)
 	}
 
-	if len(errors) > 0 {
-		return Schedule{}, errors, nil
+	if len(validationErrors) > 0 {
+		return Schedule{}, validationErrors, nil
 	}
 	return s, nil, nil
 }
 
+// DecodeSchedule reads JSON and performs validation.
+// The returned slice contains validation errors found in the input.
+// The returned error is reserved for I/O or decoding failures.
 func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	s := Schedule{wf: make(map[MinuteKey][]Workflow)}
 	var workflows []Workflow
