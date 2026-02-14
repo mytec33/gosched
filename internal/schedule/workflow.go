@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"git.sr.ht/~mytec/gosched/internal/platform"
 )
 
 type Workflow struct {
@@ -25,24 +27,28 @@ type ValidationError struct {
 	Err   error
 }
 
+func (e ValidationError) Error() string {
+	return fmt.Sprintf("%s: %v", e.Field, e.Err)
+}
+
 const (
-	maxWorkflowLength int = 256
+	maxWorkflowLength int = 256 // 260 for windows, 255 for Linux, 1024 for macOS
 )
 
 var (
-	ErrEmpty           = errors.New("cannot be empty")
-	ErrInvalidDuration = errors.New("invalid number, must be zero or greater")
-	ErrInvalidTime     = errors.New("invalid time value")
-	ErrTooLong         = errors.New("too long")
+	ErrEmpty                       = errors.New("cannot be empty")
+	ErrInvalidDuration             = errors.New("invalid number, must be zero or greater")
+	ErrInvalidTime                 = errors.New("invalid time value")
+	ErrLeadingOrTrailingWhitespace = errors.New("leading or trailing whitespace")
+	ErrTooLong                     = errors.New("too long")
 )
 
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	if w.Name == "" {
-		errorList = append(errorList, invalid("workflow.name", ErrEmpty))
-	} else if len(w.Name) > maxWorkflowLength {
-		errorList = append(errorList, invalid("workflow.name", ErrTooLong))
+	err := validateRequired("workflow.name", w.Name, validateIdentifier)
+	if err != nil {
+		errorList = append(errorList, err)
 	}
 
 	if w.Time == "" {
@@ -56,14 +62,20 @@ func (w Workflow) Validate() []error {
 	}
 
 	for i, steps := range w.Steps {
-		if steps.Name == "" {
-			errorList = append(errorList, invalid(fmt.Sprintf("workflow.steps[%d].name", i), ErrEmpty))
-		} else if len(steps.Name) > maxWorkflowLength {
-			errorList = append(errorList, invalid(fmt.Sprintf("workflow.steps[%d].name", i), ErrTooLong))
+		stepPrefix := fmt.Sprintf("workflow.steps[%d]", i)
+
+		err = validateRequired(stepPrefix+".name", steps.Name, validateIdentifier)
+		if err != nil {
+			errorList = append(errorList, err)
+		}
+
+		err = validateRequired(stepPrefix+".program", steps.Program, platform.ValidateProgramPath)
+		if err != nil {
+			errorList = append(errorList, err)
 		}
 
 		if steps.Timeout < 0 {
-			errorList = append(errorList, invalid(fmt.Sprintf("workflow.steps[%d].timeout", i), ErrInvalidDuration))
+			errorList = append(errorList, invalid(stepPrefix+".timeout", ErrInvalidDuration))
 		}
 	}
 
@@ -81,6 +93,22 @@ func parseTime(timeVal string) bool {
 	return err == nil
 }
 
-func (e ValidationError) Error() string {
-	return fmt.Sprintf("%s: %v", e.Field, e.Err)
+func validateIdentifier(s string) error {
+	if s == "" {
+		return ErrEmpty
+	}
+	if len(s) > maxWorkflowLength {
+		return ErrTooLong
+	}
+	return nil
+}
+
+func validateRequired(field, value string, check func(string) error) error {
+	if value == "" {
+		return invalid(field, ErrEmpty)
+	}
+	if err := check(value); err != nil {
+		return invalid(field, err)
+	}
+	return nil
 }
