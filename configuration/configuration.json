@@ -1,17 +1,17 @@
 [
   {
-    "name": "",
-    "time": "10:35",
+    "name": "Slot Ratings",
+    "time": "23:44",
     "steps": [
       {
         "name": "daily",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 10 --role daily-slot-ratings",
-        "timeOut": 1000
+        "timeout": 2
       },
       {
         "name": "modified",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 50 --role modified-slot-ratings"
       }
     ]
@@ -22,12 +22,12 @@
     "steps": [
       {
         "name": "daily",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 5 --role daily-table-ratings"
       },
       {
         "name": "modified",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 25 --role modified-table-ratings"
       }
     ]

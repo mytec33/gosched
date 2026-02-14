@@ -17,7 +17,7 @@ type Step struct {
 	Name    string `json:"name"`
 	Program string `json:"program"`
 	Args    string `json:"args"`
-	Timeout int    `json:"timeOut"`
+	Timeout int    `json:"timeout"`
 }
 
 type ValidationError struct {

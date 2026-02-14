@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -133,8 +134,22 @@ func executeWorkflow(wf schedule.Workflow) {
 		args := strings.Fields(step.Args)
 		stdOut.Info("workflow step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
 
-		cmd := exec.Command(step.Program, args...)
+		var cmd *exec.Cmd
+		var cancel context.CancelFunc
+
+		if step.Timeout > 0 {
+			ctx, c := context.WithTimeout(context.Background(), time.Duration(step.Timeout)*time.Second)
+			cancel = c
+			cmd = exec.CommandContext(ctx, step.Program, args...)
+		} else {
+			cmd = exec.Command(step.Program, args...)
+		}
 		output, err := cmd.CombinedOutput()
+
+		if cancel != nil {
+			cancel()
+		}
+
 		stepDuration := time.Since(stepStart)
 
 		if err != nil {
