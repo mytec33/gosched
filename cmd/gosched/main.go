@@ -42,17 +42,14 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	schedule, err := schedule.ReadScheduleFile(filename)
+	schedule, valErrors, err := schedule.ReadScheduleFile(filename)
 	if err != nil {
 		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
 	}
 
-	errs := schedule.Validate()
-	if len(errs) > 0 {
-		for _, e := range errs {
-			logging.StdErr.Error("startup", "reason", "configuration error", "error", e)
-		}
+	if len(valErrors) > 0 {
+		displayErrors(valErrors)
 		return ExitValidation
 	}
 
@@ -70,6 +67,13 @@ func run() int {
 
 func displayConfigSummarization() {
 	fmt.Println("display configuration summarization")
+}
+
+func displayErrors(errors []error) {
+	fmt.Println("configuration invalid, errors found:")
+	for _, err := range errors {
+		fmt.Println(err)
+	}
 }
 
 func runScheduler(tick TickFunc, s schedule.Schedule) {

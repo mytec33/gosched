@@ -96,7 +96,7 @@ func TestDecode_InvalidInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, err := DecodeSchedule(r)
+			_, _, err := DecodeSchedule(r)
 			if err == nil {
 				t.Fatal("expected error, got no error")
 			} else if !errors.Is(err, ErrDecodeSchedule) {
@@ -120,7 +120,7 @@ func TestDecode_ValidInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, err := DecodeSchedule(r)
+			_, _, err := DecodeSchedule(r)
 			if err != nil {
 				t.Fatalf("%v: expected no error, got %v", tt.name, err)
 			}
@@ -131,14 +131,14 @@ func TestDecode_ValidInput(t *testing.T) {
 func TestReadScheduleFile_OK(t *testing.T) {
 	filename := writeTempFile(t, validOneWorkflowOneStep)
 
-	_, err := ReadScheduleFile(filename)
+	_, _, err := ReadScheduleFile(filename)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 }
 
 func TestReadScheduleFile_OpenError(t *testing.T) {
-	_, err := ReadScheduleFile("/path/that/does/not/exist.json")
+	_, _, err := ReadScheduleFile("/path/that/does/not/exist.json")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -151,7 +151,7 @@ func TestReadScheduleFile_OpenError(t *testing.T) {
 func TestReadScheduleFile_DecodeErrorIncludesFilename(t *testing.T) {
 	filename := writeTempFile(t, "{") // intentionally invalid JSON
 
-	_, err := ReadScheduleFile(filename)
+	_, _, err := ReadScheduleFile(filename)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
