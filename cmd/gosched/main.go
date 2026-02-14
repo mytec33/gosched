@@ -14,12 +14,10 @@ import (
 )
 
 const (
-	ExitSuccess      int = 0
-	ExitNoConfig     int = 1
-	ExitDecodeConfig int = 2
-	ExitValidation   int = 3
-	ExitInvalidArgs  int = 4
-	ExitInvalidLock  int = 5
+	ExitSuccess     int = 0
+	ExitNoConfig    int = 1
+	ExitValidation  int = 3
+	ExitInvalidArgs int = 4
 )
 
 type TickFunc func(now time.Time, data schedule.Schedule) int
@@ -43,7 +41,7 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	schedule, valErrors, err := schedule.ReadScheduleFile(filename)
+	sched, valErrors, err := schedule.ReadScheduleFile(filename)
 	if err != nil {
 		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
@@ -59,9 +57,9 @@ func run() int {
 		return ExitSuccess
 	}
 
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", schedule.WorkflowCount(), "filename", filename)
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", filename)
 
-	runScheduler(runSchedulerTick, schedule)
+	runScheduler(runSchedulerTick, sched)
 
 	return 0
 }
@@ -120,7 +118,7 @@ func executeWorkflow(wf schedule.Workflow) {
 	lockKey := wf.Name
 	existingID, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		stdErr.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingWfRunID", existingID)
+		stdErr.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
 		return
 	}
 	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
@@ -155,9 +153,9 @@ func executeWorkflow(wf schedule.Workflow) {
 		if err != nil {
 			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
-		} else {
-			stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
 		}
+
+		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
 	}
 
 	workflowDuration := time.Since(workflowStart)
