@@ -7,15 +7,6 @@ import (
 
 type ErrorCode string
 
-const (
-	ErrCodeMissingField    ErrorCode = "missing_field"
-	ErrCodeDuplicateName   ErrorCode = "duplicate_name"
-	ErrCodeUnknownJob      ErrorCode = "unknown_job"
-	ErrCodeDependencyCycle ErrorCode = "dependency_cycle"
-	ErrCodeInvalidSchedule ErrorCode = "invalid_schedule"
-	// etc
-)
-
 func TestValidation_Invalid(t *testing.T) {
 	tests := []struct {
 		name     string
