@@ -126,6 +126,7 @@ func executeWorkflow(wf schedule.Workflow) {
 
 	stdOut.Info("workflow", "status", "started")
 
+	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
@@ -156,6 +157,17 @@ func executeWorkflow(wf schedule.Workflow) {
 		}
 
 		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
+
+		if step.Pause > 0 {
+			pause := time.Duration(step.Pause) * time.Second
+
+			if i < numSteps-1 {
+				stdOut.Info("workflow step", "status", "pause started", "duration", pause, "stepIndex", i, "stepName", step.Name)
+				time.Sleep(pause)
+			} else {
+				stdOut.Info("workflow step", "status", "pause skipped", "reason", "last step", "stepIndex", i, "stepName", step.Name)
+			}
+		}
 	}
 
 	workflowDuration := time.Since(workflowStart)

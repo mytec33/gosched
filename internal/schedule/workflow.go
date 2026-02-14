@@ -20,6 +20,7 @@ type Step struct {
 	Program string `json:"program"`
 	Args    string `json:"args"`
 	Timeout int    `json:"timeout"`
+	Pause   int    `json:"pause"`
 }
 
 type ValidationError struct {
@@ -76,6 +77,10 @@ func (w Workflow) Validate() []error {
 
 		if steps.Timeout < 0 {
 			errorList = append(errorList, invalid(stepPrefix+".timeout", ErrInvalidDuration))
+		}
+
+		if steps.Pause < 0 {
+			errorList = append(errorList, invalid(stepPrefix+".pause", ErrInvalidDuration))
 		}
 	}
 

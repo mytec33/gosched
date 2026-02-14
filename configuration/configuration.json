@@ -1,18 +1,20 @@
 [
   {
     "name": "Slot Ratings",
-    "time": "00:04",
+    "time": "14:11",
     "steps": [
       {
         "name": "daily",
         "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 10 --role daily-slot-ratings",
-        "timeout": 2
+        "timeout": 11,
+        "pause": 3
       },
       {
         "name": "modified",
         "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 50 --role modified-slot-ratings"
+        "args": "--sleep 50 --role modified-slot-ratings",
+        "pause": 5
       }
     ]
   },
