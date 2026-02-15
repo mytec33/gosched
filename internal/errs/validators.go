@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/platform"
 )
 
@@ -120,19 +119,19 @@ func RequireValidTime(timeVal string) error {
 
 func ValidateProgramPath(s string) error {
 	if s == "" {
-		return errs.ErrEmpty
+		return ErrEmpty
 	}
 
 	if strings.TrimSpace(s) == "" {
-		return errs.ErrWhitespaceAll
+		return ErrWhitespaceAll
 	}
 
 	if strings.TrimSpace(s) != s {
-		return errs.ErrWhitespaceLeadingOrTrailing
+		return ErrWhitespaceLeadingOrTrailing
 	}
 
-	if len(s) > errs.MaxPathLength() {
-		return errs.ErrTooLong
+	if len(s) > platform.MaxPathLength() {
+		return ErrTooLong
 	}
 
 	return nil
@@ -143,7 +142,7 @@ var ValidateWorkflowName = createRuleset(
 	RequireNonEmpty,
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
-	LimitLength(errs.MaxWorkflowNameLength),
+	LimitLength(MaxWorkflowNameLength),
 )
 
 var ValidateWorkflowTime = createRuleset(
@@ -152,14 +151,14 @@ var ValidateWorkflowTime = createRuleset(
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
 	RequireValidTime,
-	LimitLength(errs.MaxWorkflowTimeLength),
+	LimitLength(MaxWorkflowTimeLength),
 )
 
 var ValidateWorkflowStepArgs = createRuleset(
 	"workflow.step.arg",
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
-	LimitLength(errs.MaxWorkflowNameLength),
+	LimitLength(MaxWorkflowNameLength),
 )
 
 var ValidateWorkflowStepName = createRuleset(
@@ -167,7 +166,7 @@ var ValidateWorkflowStepName = createRuleset(
 	RequireNonEmpty,
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
-	LimitLength(errs.MaxWorkflowNameLength),
+	LimitLength(MaxWorkflowNameLength),
 )
 
 var ValidateWorkflowStepPause = createRuleset(
