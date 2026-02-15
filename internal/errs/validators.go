@@ -145,26 +145,6 @@ func RequireValidTime(timeVal string) error {
 	return nil
 }
 
-func ValidateProgramPath(s string) error {
-	if s == "" {
-		return ErrEmpty
-	}
-
-	if strings.TrimSpace(s) == "" {
-		return ErrWhitespaceAll
-	}
-
-	if strings.TrimSpace(s) != s {
-		return ErrWhitespaceLeadingOrTrailing
-	}
-
-	if len(s) > platform.MaxPathLength() {
-		return ErrTooLong
-	}
-
-	return nil
-}
-
 var ValidateWorkflowName = createRuleset(
 	"workflow.name",
 	RequireNonEmpty,
