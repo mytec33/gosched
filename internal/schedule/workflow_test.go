@@ -342,10 +342,10 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
-		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrStepTimeoutInvalid},
-		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: errs.ErrStepTimeoutTooLong},
-		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrStepPauseInvalid},
-		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: errs.ErrStepPauseTooLong},
+		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrNonNegativeNumber},
+		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: errs.ErrExceedsMaxLimit},
+		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrNonNegativeNumber},
+		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: errs.ErrExceedsMaxLimit},
 	}
 
 	for _, tt := range tests {
@@ -365,11 +365,13 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 			for _, ve := range validationErrors {
 				if errors.Is(ve, tt.wantError) {
 					found = true
-					break
+				} else {
+					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
+						tt.name, ve, tt.wantError, validationErrors)
 				}
 			}
 			if !found {
-				t.Fatalf("%s: got %q, want an error matching %v", tt.name, validationErrors, tt.wantError)
+				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
 			}
 		})
 	}

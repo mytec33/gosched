@@ -48,8 +48,32 @@ func LimitLength(max int) rule {
 	}
 }
 
+func LimitValue(max int) rule {
+	return func(s string) error {
+		num, err := strconv.Atoi(s)
+		if err != nil {
+			return ErrNotANumber
+		}
+
+		if num > max {
+			return ErrExceedsMaxLimit
+		}
+
+		return nil
+	}
+}
+
 func RequireNoLeadingTrailingWhitespace(s string) error {
-	if strings.TrimSpace(s) != s {
+	if s == "" {
+		return nil
+	}
+
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" {
+		return nil // let ErrWhitespaceAll handle all-whitespace
+	}
+
+	if trimmed != s {
 		return ErrWhitespaceLeadingOrTrailing
 	}
 
@@ -99,6 +123,10 @@ func NonNegative(x int) rule {
 }
 
 func RequireNoWhitespace(s string) error {
+	if s == "" {
+		return nil
+	}
+
 	if strings.TrimSpace(s) == "" {
 		return ErrWhitespaceAll
 	}
@@ -171,6 +199,7 @@ var ValidateWorkflowStepName = createRuleset(
 
 var ValidateWorkflowStepPause = createRuleset(
 	"workflow.step.pause",
+	LimitValue(MaxWorkflowStepPause),
 	NonNegative(1),
 )
 
@@ -184,5 +213,6 @@ var ValidateWorkflowStepProgram = createRuleset(
 
 var ValidateWorkflowStepTimeout = createRuleset(
 	"workflow.step.timeout",
+	LimitValue(MaxWorkflowStepTimeout),
 	NonNegative(1),
 )

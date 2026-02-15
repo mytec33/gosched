@@ -3,25 +3,20 @@ package errs
 
 import (
 	"errors"
-	"fmt"
-	"time"
 )
 
 const (
 	MaxWorkflowNameLength  int = 256
 	MaxWorkflowTimeLength  int = 5     // hh:mm
-	maxWorkflowStepPause   int = 3600  // 1 hour
-	maxWorkflowStepTimeout int = 43200 // 12 hours
+	MaxWorkflowStepPause   int = 3600  // 1 hour
+	MaxWorkflowStepTimeout int = 43200 // 12 hours
 )
 
 var (
 	ErrEmpty                       = errors.New("cannot be empty")
-	ErrNonNegativeNumber           = errors.New("number cannot be negative")
+	ErrExceedsMaxLimit             = errors.New("number exceeds maximum value")
+	ErrNonNegativeNumber           = errors.New("number cannot be negative, must be zero (indefinite) or greater")
 	ErrNotANumber                  = errors.New("value must be a number")
-	ErrStepPauseInvalid            = errors.New("invalid pause duration, must be zero (no pause) or greater")
-	ErrStepPauseTooLong            = fmt.Errorf("invalid pause duration, must be less than equal %d or %s", maxWorkflowStepPause, time.Duration(maxWorkflowStepPause)*time.Second)
-	ErrStepTimeoutInvalid          = errors.New("invalid timeout duration, must be zero (no timeout) or greater")
-	ErrStepTimeoutTooLong          = fmt.Errorf("invalid timeout duration, must be less than equal %d or %s", maxWorkflowStepTimeout, time.Duration(maxWorkflowStepTimeout)*time.Second)
 	ErrInvalidTime                 = errors.New("invalid time value")
 	ErrTooLong                     = errors.New("too long")
 	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
