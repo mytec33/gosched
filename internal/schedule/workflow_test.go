@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/platform"
+	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 const WorkflowNameEmpty = `
@@ -104,15 +104,15 @@ func TestWorkflow_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "name empty", json: WorkflowNameEmpty, wantError: ErrEmpty},
-		{name: "name whitespace", json: WorkflowNameWhitespace, wantError: ErrWhitespaceAll},
-		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "name too long", json: WorkflowNameTooLong, wantError: ErrTooLong},
-		{name: "time empty", json: WorkflowTimeEmpty, wantError: ErrEmpty},
-		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: ErrInvalidTime},
-		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: ErrInvalidTime},
-		{name: "missing steps", json: WorkflowNoSteps, wantError: ErrEmpty},
+		{name: "name empty", json: WorkflowNameEmpty, wantError: errs.ErrEmpty},
+		{name: "name whitespace", json: WorkflowNameWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "name too long", json: WorkflowNameTooLong, wantError: errs.ErrTooLong},
+		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrEmpty},
+		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrInvalidTime},
+		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrInvalidTime},
+		{name: "missing steps", json: WorkflowNoSteps, wantError: errs.ErrEmpty},
 	}
 
 	for _, tt := range tests {
@@ -328,24 +328,24 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "name empty", json: WorkflowStepNameEmpty, wantError: ErrEmpty},
-		{name: "name whitespace", json: WorkflowStepNameWhitespace, wantError: ErrWhitespaceAll},
-		{name: "name whitespace leading", json: WorkflowStepNameWhitespaceLeading, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "name whitespace trailing", json: WorkflowStepNameWhitespaceTrailing, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "name too long", json: WorkflowStepNameTooLong, wantError: ErrTooLong},
-		{name: "program empty", json: WorkflowStepProgramEmpty, wantError: ErrEmpty},
-		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: platform.ErrPlatformWhitespaceAll},
-		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: platform.ErrPlatformWhitespaceLeadingOrTrailing},
-		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: platform.ErrPlatformWhitespaceLeadingOrTrailing},
-		{name: "program too long", json: WorkflowStepProgramTooLong, wantError: platform.ErrPlatformTooLong},
-		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: ErrWhitespaceAll},
-		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: ErrWhitespaceLeadingOrTrailing},
-		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: ErrTooLong},
-		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: ErrStepTimeoutInvalid},
-		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: ErrStepTimeoutTooLong},
-		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: ErrStepPauseInvalid},
-		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: ErrStepPauseTooLong},
+		{name: "name empty", json: WorkflowStepNameEmpty, wantError: errs.ErrEmpty},
+		{name: "name whitespace", json: WorkflowStepNameWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "name whitespace leading", json: WorkflowStepNameWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "name whitespace trailing", json: WorkflowStepNameWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "name too long", json: WorkflowStepNameTooLong, wantError: errs.ErrTooLong},
+		{name: "program empty", json: WorkflowStepProgramEmpty, wantError: errs.ErrEmpty},
+		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "program too long", json: WorkflowStepProgramTooLong, wantError: errs.ErrTooLong},
+		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
+		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrStepTimeoutInvalid},
+		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: errs.ErrStepTimeoutTooLong},
+		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrStepPauseInvalid},
+		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: errs.ErrStepPauseTooLong},
 	}
 
 	for _, tt := range tests {
@@ -369,7 +369,7 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 				}
 			}
 			if !found {
-				t.Fatalf("%s: got %v, want an error matching %v", tt.name, validationErrors, tt.wantError)
+				t.Fatalf("%s: got %q, want an error matching %v", tt.name, validationErrors, tt.wantError)
 			}
 		})
 	}

@@ -2,12 +2,9 @@
 package schedule
 
 import (
-	"errors"
-	"fmt"
-	"strings"
-	"time"
+	"strconv"
 
-	"git.sr.ht/~mytec/gosched/internal/platform"
+	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 type Workflow struct {
@@ -24,126 +21,49 @@ type Step struct {
 	Pause   int    `json:"pause"`
 }
 
-type ValidationError struct {
-	Field string
-	Err   error
-}
-
-func (e ValidationError) Error() string {
-	return fmt.Sprintf("%s: %v", e.Field, e.Err)
-}
-
-func (e ValidationError) Unwrap() error {
-	return e.Err
-}
-
-const (
-	maxWorkflowNameLength  int = 256
-	maxWorkflowStepPause   int = 3600  // 1 hour
-	maxWorkflowStepTimeout int = 43200 // 12 hours
-)
-
-var (
-	ErrEmpty                       = errors.New("cannot be empty")
-	ErrStepPauseInvalid            = errors.New("invalid pause duration, must be zero (no pause) or greater")
-	ErrStepPauseTooLong            = fmt.Errorf("invalid pause duration, must be less than equal %d or %s", maxWorkflowStepPause, time.Duration(maxWorkflowStepPause)*time.Second)
-	ErrStepTimeoutInvalid          = errors.New("invalid timeout duration, must be zero (no timeout) or greater")
-	ErrStepTimeoutTooLong          = fmt.Errorf("invalid timeout duration, must be less than equal %d or %s", maxWorkflowStepTimeout, time.Duration(maxWorkflowStepTimeout)*time.Second)
-	ErrInvalidTime                 = errors.New("invalid time value")
-	ErrTooLong                     = errors.New("too long")
-	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
-	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")
-)
-
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	err := validateRequired("workflow.name", w.Name, validateIdentifier)
-	if err != nil {
-		errorList = append(errorList, err)
+	validationErrs := errs.ValidateWorkflowName(w.Name)
+	if len(validationErrs) != 0 {
+		errorList = append(errorList, validationErrs...)
 	}
 
-	if w.Time == "" {
-		errorList = append(errorList, invalid("workflow.time", ErrEmpty))
-	} else if !parseTime(w.Time) {
-		errorList = append(errorList, invalid("workflow.time", ErrInvalidTime))
+	validationErrs = errs.ValidateWorkflowTime(w.Time)
+	if len(validationErrs) != 0 {
+		errorList = append(errorList, validationErrs...)
 	}
 
 	if len(w.Steps) == 0 {
-		errorList = append(errorList, invalid("workflow.steps", ErrEmpty))
+		errorList = append(errorList, errs.ValidationError{Field: "workflow.steps", Err: errs.ErrEmpty})
 	}
 
-	for i, steps := range w.Steps {
-		stepPrefix := fmt.Sprintf("workflow.steps[%d]", i)
-
-		err = validateRequired(stepPrefix+".name", steps.Name, validateIdentifier)
-		if err != nil {
-			errorList = append(errorList, err)
+	for _, steps := range w.Steps {
+		validationErrs := errs.ValidateWorkflowStepName(steps.Name)
+		if len(validationErrs) != 0 {
+			errorList = append(errorList, validationErrs...)
 		}
 
-		err = validateRequired(stepPrefix+".program", steps.Program, platform.ValidateProgramPath)
-		if err != nil {
-			errorList = append(errorList, err)
+		validationErrs = errs.ValidateWorkflowStepProgram(steps.Program)
+		if len(validationErrs) != 0 {
+			errorList = append(errorList, validationErrs...)
 		}
 
-		err = validateRequired(stepPrefix+".args", steps.Args, validateIdentifier)
-		if err != nil {
-			errorList = append(errorList, err)
+		validationErrs = errs.ValidateWorkflowStepArgs(steps.Args)
+		if len(validationErrs) != 0 {
+			errorList = append(errorList, validationErrs...)
 		}
 
-		if steps.Timeout < 0 {
-			errorList = append(errorList, invalid(stepPrefix+".timeout", ErrStepTimeoutInvalid))
-		} else if steps.Timeout > maxWorkflowStepTimeout {
-			errorList = append(errorList, invalid(stepPrefix+".timeout", ErrStepTimeoutTooLong))
+		validationErrs = errs.ValidateWorkflowStepTimeout(strconv.Itoa(steps.Timeout))
+		if len(validationErrs) != 0 {
+			errorList = append(errorList, validationErrs...)
 		}
 
-		if steps.Pause < 0 {
-			errorList = append(errorList, invalid(stepPrefix+".pause", ErrStepPauseInvalid))
-		} else if steps.Pause > maxWorkflowStepPause {
-			errorList = append(errorList, invalid(stepPrefix+".pause", ErrStepPauseTooLong))
+		validationErrs = errs.ValidateWorkflowStepPause(strconv.Itoa(steps.Pause))
+		if len(validationErrs) != 0 {
+			errorList = append(errorList, validationErrs...)
 		}
 	}
 
 	return errorList
-}
-
-func invalid(field string, reason error) error {
-	return ValidationError{Field: field, Err: reason}
-}
-
-func parseTime(timeVal string) bool {
-	layout := "15:04"
-
-	_, err := time.Parse(layout, timeVal)
-	return err == nil
-}
-
-func validateIdentifier(s string) error {
-	if s == "" {
-		return ErrEmpty
-	}
-
-	if strings.TrimSpace(s) == "" {
-		return ErrWhitespaceAll
-	}
-
-	if strings.TrimSpace(s) != s {
-		return ErrWhitespaceLeadingOrTrailing
-	}
-
-	if len(s) > maxWorkflowNameLength {
-		return ErrTooLong
-	}
-	return nil
-}
-
-func validateRequired(field, value string, check func(string) error) error {
-	if value == "" {
-		return invalid(field, ErrEmpty)
-	}
-
-	if err := check(value); err != nil {
-		return invalid(field, err)
-	}
-	return nil
 }

@@ -2,6 +2,6 @@
 
 package platform
 
-func maxPathLength() int {
+func MaxPathLength() int {
 	return 260
 }

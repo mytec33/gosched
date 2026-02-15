@@ -1,7 +1,8 @@
 //go:build darwin
 
+// Package platform provides details about the underlying platform.
 package platform
 
-func maxPathLength() int {
+func MaxPathLength() int {
 	return 1024
 }
