@@ -22,14 +22,14 @@ type Step struct {
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	validationErrs := errs.ValidateWorkflowName(w.Name)
-	if len(validationErrs) != 0 {
-		errorList = append(errorList, validationErrs...)
+	vErrs := errs.ValidateWorkflowName(w.Name)
+	if len(vErrs) != 0 {
+		errorList = append(errorList, vErrs...)
 	}
 
-	validationErrs = errs.ValidateWorkflowTime(w.Time)
-	if len(validationErrs) != 0 {
-		errorList = append(errorList, validationErrs...)
+	vErrs = errs.ValidateWorkflowTime(w.Time)
+	if len(vErrs) != 0 {
+		errorList = append(errorList, vErrs...)
 	}
 
 	if len(w.Steps) == 0 {
@@ -37,29 +37,29 @@ func (w Workflow) Validate() []error {
 	}
 
 	for _, steps := range w.Steps {
-		validationErrs := errs.ValidateWorkflowStepName(steps.Name)
-		if len(validationErrs) != 0 {
-			errorList = append(errorList, validationErrs...)
+		vErrs := errs.ValidateWorkflowStepName(steps.Name)
+		if len(vErrs) != 0 {
+			errorList = append(errorList, vErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepProgram(steps.Program)
-		if len(validationErrs) != 0 {
-			errorList = append(errorList, validationErrs...)
+		vErrs = errs.ValidateWorkflowStepProgram(steps.Program)
+		if len(vErrs) != 0 {
+			errorList = append(errorList, vErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepArgs(steps.Args)
-		if len(validationErrs) != 0 {
-			errorList = append(errorList, validationErrs...)
+		vErrs = errs.ValidateWorkflowStepArgs(steps.Args)
+		if len(vErrs) != 0 {
+			errorList = append(errorList, vErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepTimeout(steps.Timeout)
-		if len(validationErrs) != 0 {
-			errorList = append(errorList, validationErrs...)
+		vErrs = errs.ValidateWorkflowStepTimeout(steps.Timeout)
+		if len(vErrs) != 0 {
+			errorList = append(errorList, vErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepPause(steps.Pause)
-		if len(validationErrs) != 0 {
-			errorList = append(errorList, validationErrs...)
+		vErrs = errs.ValidateWorkflowStepPause(steps.Pause)
+		if len(vErrs) != 0 {
+			errorList = append(errorList, vErrs...)
 		}
 	}
 
