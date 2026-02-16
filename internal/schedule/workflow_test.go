@@ -342,9 +342,9 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
-		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrNonNegativeNumber},
+		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrNegativeNumber},
 		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: errs.ErrExceedsMaxLimit},
-		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrNonNegativeNumber},
+		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrNegativeNumber},
 		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: errs.ErrExceedsMaxLimit},
 	}
 

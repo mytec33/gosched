@@ -2,7 +2,6 @@ package errs
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +24,9 @@ func (e ValidationError) Unwrap() error {
 type rule func(string) error
 type ruleSet func(string) []error
 
+type ruleInt func(int) error
+type ruleSetInt func(int) []error
+
 func createRuleset(field string, r ...rule) ruleSet {
 	return func(value string) []error {
 		var out []error
@@ -38,25 +40,26 @@ func createRuleset(field string, r ...rule) ruleSet {
 	}
 }
 
-func LimitLength(max int) rule {
-	return func(s string) error {
-		if len(s) > max {
-			return ErrTooLong
+func createRulesetInt(field string, r ...ruleInt) ruleSetInt {
+	return func(value int) []error {
+		var out []error
+		for _, rule := range r {
+			err := rule(value)
+			if err != nil {
+				out = append(out, ValidationError{Field: field, Err: err})
+			}
 		}
-
-		return nil
+		return out
 	}
 }
 
-func LimitValue(max int) rule {
+func LimitLength(max int) rule {
+	if max < 0 {
+		panic("LimitLength: max must be >= 0")
+	}
 	return func(s string) error {
-		num, err := strconv.Atoi(s)
-		if err != nil {
-			return ErrNotANumber
-		}
-
-		if num > max {
-			return ErrExceedsMaxLimit
+		if len(s) > max {
+			return ErrTooLong
 		}
 
 		return nil
@@ -88,40 +91,6 @@ func RequireNonEmpty(s string) error {
 	return nil
 }
 
-func RequireNonNegative(x int) rule {
-	return func(s string) error {
-		num, err := strconv.Atoi(s)
-		if err != nil {
-			return ErrNotANumber
-		}
-
-		if num < 0 {
-			return ErrNonNegativeNumber
-		}
-
-		return nil
-	}
-}
-
-func NonNegative(x int) rule {
-	return func(s string) error {
-		if s == "" {
-			return nil
-		}
-
-		num, err := strconv.Atoi(s)
-		if err != nil {
-			return ErrNotANumber
-		}
-
-		if num < 0 {
-			return ErrNonNegativeNumber
-		}
-
-		return nil
-	}
-}
-
 func RequireNoWhitespace(s string) error {
 	if s == "" {
 		return nil
@@ -140,6 +109,24 @@ func RequireValidTime(timeVal string) error {
 	_, err := time.Parse(layout, timeVal)
 	if err != nil {
 		return ErrInvalidTime
+	}
+
+	return nil
+}
+
+func LimitValue(max int) ruleInt {
+	return func(i int) error {
+		if i > max {
+			return ErrExceedsMaxLimit
+		}
+
+		return nil
+	}
+}
+
+func RequireNoNegative(i int) error {
+	if i < 0 {
+		return ErrNegativeNumber
 	}
 
 	return nil
@@ -177,12 +164,6 @@ var ValidateWorkflowStepName = createRuleset(
 	LimitLength(MaxWorkflowNameLength),
 )
 
-var ValidateWorkflowStepPause = createRuleset(
-	"workflow.step.pause",
-	LimitValue(MaxWorkflowStepPause),
-	NonNegative(1),
-)
-
 var ValidateWorkflowStepProgram = createRuleset(
 	"workflow.step.program",
 	RequireNonEmpty,
@@ -191,8 +172,14 @@ var ValidateWorkflowStepProgram = createRuleset(
 	LimitLength(platform.MaxPathLength()),
 )
 
-var ValidateWorkflowStepTimeout = createRuleset(
+var ValidateWorkflowStepPause = createRulesetInt(
+	"workflow.step.pause",
+	LimitValue(MaxWorkflowStepPause),
+	RequireNoNegative,
+)
+
+var ValidateWorkflowStepTimeout = createRulesetInt(
 	"workflow.step.timeout",
 	LimitValue(MaxWorkflowStepTimeout),
-	NonNegative(1),
+	RequireNoNegative,
 )

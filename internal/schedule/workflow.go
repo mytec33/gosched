@@ -2,8 +2,6 @@
 package schedule
 
 import (
-	"strconv"
-
 	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
@@ -54,12 +52,12 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, validationErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepTimeout(strconv.Itoa(steps.Timeout))
+		validationErrs = errs.ValidateWorkflowStepTimeout(steps.Timeout)
 		if len(validationErrs) != 0 {
 			errorList = append(errorList, validationErrs...)
 		}
 
-		validationErrs = errs.ValidateWorkflowStepPause(strconv.Itoa(steps.Pause))
+		validationErrs = errs.ValidateWorkflowStepPause(steps.Pause)
 		if len(validationErrs) != 0 {
 			errorList = append(errorList, validationErrs...)
 		}

@@ -15,7 +15,7 @@ const (
 var (
 	ErrEmpty                       = errors.New("cannot be empty")
 	ErrExceedsMaxLimit             = errors.New("number exceeds maximum value")
-	ErrNonNegativeNumber           = errors.New("number cannot be negative, must be zero (indefinite) or greater")
+	ErrNegativeNumber              = errors.New("number cannot be negative, must be zero (indefinite) or greater")
 	ErrNotANumber                  = errors.New("value must be a number")
 	ErrInvalidTime                 = errors.New("invalid time value")
 	ErrTooLong                     = errors.New("too long")
