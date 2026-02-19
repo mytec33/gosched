@@ -2,6 +2,7 @@
   {
     "name": "Slot Ratings",
     "time": "14:11",
+    "onFailure": "continue",
     "steps": [
       {
         "name": "daily",
@@ -21,6 +22,7 @@
   {
     "name": "Table Ratings",
     "time": "10:35",
+    "onFailure": "abort",
     "steps": [
       {
         "name": "daily",
@@ -31,6 +33,18 @@
         "name": "modified",
         "program": "/home/bill/MySource/go/gosched/testprog",
         "args": "--sleep 25 --role modified-table-ratings"
+      }
+    ]
+  },
+  {
+    "name": "Jackpots",
+    "time": "10:35",
+    "onFailure": "retry",
+    "steps": [
+      {
+        "name": "daily",
+        "program": "/home/bill/MySource/go/gosched/testprog",
+        "args": "--sleep 5 --role daily-jackpots"
       }
     ]
   }

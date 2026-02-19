@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
+	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 )
 
@@ -151,7 +152,7 @@ func executeWorkflow(wf schedule.Workflow) {
 
 		stepDuration := time.Since(stepStart)
 
-		if err != nil {
+		if err != nil && wf.OnFailure == policy.Abort {
 			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
 			return
 		}

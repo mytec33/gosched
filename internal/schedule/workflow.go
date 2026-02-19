@@ -3,12 +3,14 @@ package schedule
 
 import (
 	"git.sr.ht/~mytec/gosched/internal/errs"
+	"git.sr.ht/~mytec/gosched/internal/policy"
 )
 
 type Workflow struct {
-	Name  string `json:"name"`
-	Time  string `json:"time"`
-	Steps []Step `json:"steps"`
+	Name      string             `json:"name"`
+	Time      string             `json:"time"`
+	OnFailure policy.FailureMode `json:"onFailiure"`
+	Steps     []Step             `json:"steps"`
 }
 
 type Step struct {
