@@ -1,0 +1,16 @@
+image: openbsd/7.8
+packages:
+  - golang-go
+sources:
+  - https://git.sr.ht/~mytec/gosched
+tasks:
+  - compile: |
+      cd gosched
+      go build ./...
+  - test: |
+      cd gosched
+      go test ./...
+triggers:
+  - action: email
+    condition: always
+    to: mytec@bogoflop.com
