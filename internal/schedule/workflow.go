@@ -7,10 +7,16 @@ import (
 )
 
 type Workflow struct {
-	Name      string             `json:"name"`
-	Time      string             `json:"time"`
-	OnFailure policy.FailureMode `json:"onFailiure"`
-	Steps     []Step             `json:"steps"`
+	Name      string              `json:"name"`
+	Time      string              `json:"time"`
+	OnFailure *policy.FailureMode `json:"onFailure"`
+	Retry     RetryConfig
+	Steps     []Step `json:"steps"`
+}
+
+type RetryConfig struct {
+	Attempts     int `json:"attempts"`
+	PauseSeconds int `json:"pauseSeconds"`
 }
 
 type Step struct {
@@ -30,6 +36,22 @@ func (w Workflow) Validate() []error {
 	}
 
 	vErrs = errs.ValidateWorkflowTime(w.Time)
+	if len(vErrs) != 0 {
+		errorList = append(errorList, vErrs...)
+	}
+
+	// The JSON field onFailure isn't tested here because it's converted
+	// from string -> enum and that boundary controls if it's valid or not
+	if w.OnFailure == nil {
+		errorList = append(errorList, errs.ErrOnFailureRequired)
+	}
+
+	vErrs = errs.ValidateWorkflowRetryAttempts(w.Retry.Attempts)
+	if len(vErrs) != 0 {
+		errorList = append(errorList, vErrs...)
+	}
+
+	vErrs = errs.ValidateWorkflowRetryPause(w.Retry.PauseSeconds)
 	if len(vErrs) != 0 {
 		errorList = append(errorList, vErrs...)
 	}

@@ -19,6 +19,7 @@ const ScheduleOneWorkflowOneStep = `
   {
     "name": "Workflow 1",
     "time": "%s",
+	"onFailure": "continue",
     "steps": [
       {
         "name": "daily",
@@ -35,6 +36,7 @@ const ScheduleTwoWorkflowOneStep = `
   {
     "name": "Workflow 1",
     "time": "%s",
+	"onFailure": "continue",	
     "steps": [
       {
         "name": "daily",
@@ -46,6 +48,7 @@ const ScheduleTwoWorkflowOneStep = `
   {
     "name": "Workflow 2",
     "time": "%s",
+    "onFailure": "continue",	
     "steps": [
       {
         "name": "daily",

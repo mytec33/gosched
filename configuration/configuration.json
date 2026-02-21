@@ -40,6 +40,10 @@
     "name": "Jackpots",
     "time": "10:35",
     "onFailure": "retry",
+    "retry": {
+      "attempts": 1,
+      "pauseSeconds": 5
+    },
     "steps": [
       {
         "name": "daily",

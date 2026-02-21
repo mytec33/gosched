@@ -4,6 +4,8 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
+
+	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 type FailureMode struct {
@@ -38,7 +40,7 @@ func (f *FailureMode) UnmarshalJSON(data []byte) error {
 	case "retry":
 		*f = Retry
 	default:
-		return fmt.Errorf("invalid workflow failure mode: %q", s)
+		return fmt.Errorf("%w: %q", errs.ErrOnFailureInvalidMode, s)
 	}
 
 	return nil

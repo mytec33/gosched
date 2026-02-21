@@ -114,12 +114,33 @@ func RequireValidTime(timeVal string) error {
 	return nil
 }
 
+func RequireValues(values ...string) rule {
+	return func(s string) error {
+		for _, v := range values {
+			if strings.EqualFold(s, v) {
+				return nil
+			}
+		}
+
+		return ErrInvalidRetryValues
+	}
+}
+
 func LimitValue(max int) ruleInt {
 	return func(i int) error {
 		if i > max {
 			return ErrExceedsMaxLimit
 		}
 
+		return nil
+	}
+}
+
+func RequireAtLeast(min int) ruleInt {
+	return func(v int) error {
+		if v < min {
+			return fmt.Errorf("must be at least %d", min)
+		}
 		return nil
 	}
 }
@@ -147,6 +168,18 @@ var ValidateWorkflowTime = createRuleset(
 	RequireNoLeadingTrailingWhitespace,
 	RequireValidTime,
 	LimitLength(MaxWorkflowTimeLength),
+)
+
+var ValidateWorkflowRetryAttempts = createRulesetInt(
+	"workflow.retry.attempts",
+	LimitValue(MaxWorkflowRetryAttempts),
+	RequireNoNegative,
+)
+
+var ValidateWorkflowRetryPause = createRulesetInt(
+	"workflow.retry.pause",
+	LimitValue(MaxWorkflowRetryPause),
+	RequireNoNegative,
 )
 
 var ValidateWorkflowStepArgs = createRuleset(

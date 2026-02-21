@@ -15,6 +15,7 @@ const WorkflowNameEmpty = `
   {
     "name": "",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -25,6 +26,7 @@ const WorkflowNameWhitespace = `
   {
     "name": "        ",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -35,6 +37,7 @@ const WorkflowNameWhitespaceLeading = `
   {
     "name": " name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -45,6 +48,7 @@ const WorkflowNameWhitespaceTrailing = `
   {
     "name": "name ",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -55,6 +59,7 @@ const WorkflowNameTooLong = `
   {
     "name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -65,6 +70,7 @@ const WorkflowTimeEmpty = `
   {
     "name": "foo",
     "time": "",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -75,6 +81,7 @@ const WorkflowTimeBadHour = `
   {
     "name": "foo",
     "time": "99:35",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -85,6 +92,7 @@ const WorkflowTimeWhitespace = `
   {
     "name": "name",
     "time": " ",
+    "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": "args"}]
   }
 ]
@@ -95,6 +103,7 @@ const WorkflowNoSteps = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": []
   }
 ]
@@ -149,6 +158,7 @@ const WorkflowStepNameEmpty = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "", "program": "program", "args": "args"}]
   }
 ]
@@ -159,6 +169,7 @@ const WorkflowStepNameWhitespace = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "   ", "program": "program", "args": "args"}]
   }
 ]
@@ -169,6 +180,7 @@ const WorkflowStepNameWhitespaceLeading = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": " leading", "program": "program", "args": "args"}]
   }
 ]
@@ -179,6 +191,7 @@ const WorkflowStepNameWhitespaceTrailing = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "trailing ", "program": "program", "args": "args"}]
   }
 ]
@@ -189,6 +202,7 @@ const WorkflowStepNameTooLong = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..", "program": "program", "args": "args"}]
   }
 ]
@@ -199,6 +213,7 @@ const WorkflowStepProgramEmpty = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "", "args": "args"}]
   }
 ]
@@ -209,6 +224,7 @@ const WorkflowStepProgramWhitespace = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "     ", "args": "args"}]
   }
 ]
@@ -219,6 +235,7 @@ const WorkflowStepProgramWhitespaceLeading = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": " foo", "args": "args"}]
   }
 ]
@@ -229,6 +246,7 @@ const WorkflowStepProgramWhitespaceTrailing = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "foo ", "args": "args"}]
   }
 ]
@@ -239,6 +257,7 @@ const WorkflowStepProgramTooLong = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..", "args": "args"}]
   }
 ]
@@ -249,6 +268,7 @@ const WorkflowStepArgsWhitespace = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "         "}]
   }
 ]
@@ -259,6 +279,7 @@ const WorkflowStepArgsWhitespaceLeading = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": " leading"}]
   }
 ]
@@ -269,6 +290,7 @@ const WorkflowStepArgsWhitespaceTrailing = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "trailing "}]
   }
 ]
@@ -279,6 +301,7 @@ const WorkflowStepArgsTooLong = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.."}]
   }
 ]
@@ -289,6 +312,7 @@ const WorkflowStepTimeoutInvalid = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": -1}]
   }
 ]
@@ -299,6 +323,7 @@ const WorkflowStepTimeoutTooLong = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 43201}]
   }
 ]
@@ -309,6 +334,7 @@ const WorkflowStepPauseInvalid = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 0, "pause": -1}]
   }
 ]
@@ -319,6 +345,7 @@ const WorkflowStepPauseTooLong = `
   {
     "name": "name",
     "time": "10:35",
+    "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 43200, "pause": 3601}]
   }
 ]
@@ -389,6 +416,7 @@ func workflowStepProgramTooLongJSON() string {
         {
           "name": "name",
           "time": "10:35",
+          "onFailure": "continue",          
           "steps": [{"name": "step name", "program": "%s", "args": "args"}]
         }
       ]`, tooLong)
@@ -399,10 +427,12 @@ const WorkflowValid = `
   {
     "name": "workflow 1",
     "time": "10:35",
+    "onFailure": "continue",
     "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 43200, "pause": 3600}]
   },
   {
     "name": "workflow 2",
+    "onFailure": "continue",    
     "time": "11:35",
     "steps": [{"name": "step name 2", "program": "program 1", "args": "args 1", "timeout": 0, "pause": 0}]
   }

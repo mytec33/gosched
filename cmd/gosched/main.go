@@ -185,7 +185,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 		stepDuration := time.Since(stepStart)
 
-		if err != nil && wf.OnFailure == policy.Abort {
+		if err != nil && wf.OnFailure == &policy.Abort {
 			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name,
 				"duration", stepDuration, "reason", err, "output", string(output))
 			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, err)
