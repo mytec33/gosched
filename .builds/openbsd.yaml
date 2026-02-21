@@ -1,6 +1,6 @@
 image: openbsd/7.8
 packages:
-  - golang-go
+  - go
 sources:
   - https://git.sr.ht/~mytec/gosched
 tasks:
