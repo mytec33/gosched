@@ -19,9 +19,10 @@ const (
 	ExitNoConfig    int = 1
 	ExitValidation  int = 3
 	ExitInvalidArgs int = 4
+	ExitRunOnce     int = 5
 )
 
-type TickFunc func(now time.Time, data schedule.Schedule) int
+type TickFunc func(now time.Time, data schedule.Schedule, runOnce bool) int
 
 func main() {
 	os.Exit(run())
@@ -31,8 +32,10 @@ func run() int {
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
 
 	filename := ""
+	runOnce := false
 	summarizeConfig := false
 	flag.StringVar(&filename, "schedule", "", "file containing a schedule to run")
+	flag.BoolVar(&runOnce, "run-once", false, "bypass any schedule and run now")
 	flag.BoolVar(&summarizeConfig, "summarize-config", false, "show concise summary of configuration file schedule")
 	flag.Parse()
 
@@ -60,7 +63,13 @@ func run() int {
 
 	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", filename)
 
-	runScheduler(runSchedulerTick, sched)
+	if runOnce {
+		runSchedulerTick(time.Now(), sched, runOnce)
+		logging.StdOut.Info("scheduler", "exiting", "run once finished")
+		return 0
+	}
+
+	runScheduler(runSchedulerTick, sched, runOnce)
 
 	return 0
 }
@@ -76,7 +85,11 @@ func displayErrors(errors []error) {
 	}
 }
 
-func runScheduler(tick TickFunc, s schedule.Schedule) {
+func runScheduler(tick TickFunc, s schedule.Schedule, runOnce bool) {
+	if runOnce {
+		tick(time.Now().Truncate(time.Minute), s, runOnce)
+	}
+
 	// Align to the next minute boundary once, then tick.
 	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
 
@@ -85,7 +98,7 @@ func runScheduler(tick TickFunc, s schedule.Schedule) {
 
 	for range ticker.C {
 		now := time.Now().Truncate(time.Minute)
-		n := tick(now, s)
+		n := tick(now, s, runOnce)
 		if n > 0 {
 			logging.StdOut.Info("scheduler", "scheduled workflows",
 				n, "minute", now.Format("15:04"),
@@ -94,12 +107,19 @@ func runScheduler(tick TickFunc, s schedule.Schedule) {
 	}
 }
 
-func runSchedulerTick(now time.Time, s schedule.Schedule) int {
+func runSchedulerTick(now time.Time, s schedule.Schedule, runOnce bool) int {
 	currentMinute := schedule.MinuteKey(now.Format("15:04"))
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
 	if len(tasks) == 0 {
+		return 0
+	}
+
+	if runOnce {
+		for _, task := range tasks {
+			executeWorkflow(task)
+		}
 		return 0
 	}
 
