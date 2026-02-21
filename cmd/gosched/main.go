@@ -64,9 +64,12 @@ func run() int {
 	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", filename)
 
 	if runOnce {
-		runSchedulerTick(time.Now(), sched, runOnce)
-		logging.StdOut.Info("scheduler", "exiting", "run once finished")
-		return 0
+		failures := runSchedulerTick(time.Now(), sched, true)
+		logging.StdOut.Info("scheduler", "event", "run-once-finished", "failures", failures)
+		if failures > 0 {
+			return ExitRunOnce
+		}
+		return ExitSuccess
 	}
 
 	runScheduler(runSchedulerTick, sched, runOnce)
@@ -117,19 +120,29 @@ func runSchedulerTick(now time.Time, s schedule.Schedule, runOnce bool) int {
 	}
 
 	if runOnce {
+		failures := 0
 		for _, task := range tasks {
-			executeWorkflow(task)
+			err := executeWorkflow(task)
+			if err != nil {
+				failures++
+				logging.StdErr.Error("workflow", "status", "failed", "workflow", task.Name, "error", err)
+			}
 		}
-		return 0
+		return failures
 	}
 
 	for _, task := range tasks {
-		go executeWorkflow(task)
+		go func(w schedule.Workflow) {
+			err := executeWorkflow(w)
+			if err != nil {
+				logging.StdErr.Error("workflow", "status", "failed", "error", err)
+			}
+		}(task)
 	}
 	return len(tasks)
 }
 
-func executeWorkflow(wf schedule.Workflow) {
+func executeWorkflow(wf schedule.Workflow) error {
 	workflowStart := time.Now()
 
 	wfLog := logging.NewWorkflowLogger(wf.Name)
@@ -140,7 +153,7 @@ func executeWorkflow(wf schedule.Workflow) {
 	existingID, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
 		stdErr.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
-		return
+		return nil
 	}
 	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
 	defer schedule.RunningWorkflows.Delete(lockKey)
@@ -173,8 +186,9 @@ func executeWorkflow(wf schedule.Workflow) {
 		stepDuration := time.Since(stepStart)
 
 		if err != nil && wf.OnFailure == policy.Abort {
-			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration, "reason", err, "output", string(output))
-			return
+			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name,
+				"duration", stepDuration, "reason", err, "output", string(output))
+			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, err)
 		}
 
 		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
@@ -193,4 +207,5 @@ func executeWorkflow(wf schedule.Workflow) {
 
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
+	return nil
 }

@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -22,6 +23,33 @@ const ScheduleOneWorkflowOneStep = `
         "name": "daily",
         "program": %q,
         "args": "--sleep 1 --role daily-slot-ratings"
+      }
+    ]
+  }
+]
+`
+
+const ScheduleTwoWorkflowOneStep = `
+[
+  {
+    "name": "Workflow 1",
+    "time": "%s",
+    "steps": [
+      {
+        "name": "daily",
+        "program": %q,
+        "args": "--sleep 1 --role workflow-1-step-1"
+      }
+    ]
+  },
+  {
+    "name": "Workflow 2",
+    "time": "%s",
+    "steps": [
+      {
+        "name": "daily",
+        "program": %q,
+        "args": "--sleep 2 --role workflow-2-step-1"
       }
     ]
   }
@@ -80,6 +108,37 @@ func TestOneWorkFlowOneStep(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, scheduler, "-schedule", file, "-run-once")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("scheduler failed: %v\n%s", err, out)
+	}
+
+	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
+		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
+		t.Fatalf("unexpected run-once receipt\n%s", out)
+	}
+}
+
+func TestTwoWorkFlowOneStep(t *testing.T) {
+	t.Parallel()
+
+	scheduler := buildBinary(t, "gosched", "cmd/gosched")
+	testprog := buildBinary(t, "testprog", "cmd/testprog")
+
+	now := time.Now().Format("15:04")
+	schedule := fmt.Sprintf(ScheduleTwoWorkflowOneStep, now, testprog, now, testprog)
+
+	dir := t.TempDir()
+	file := filepath.Join(dir, "schedule.json")
+	if err := os.WriteFile(file, []byte(schedule), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -90,5 +149,9 @@ func TestOneWorkFlowOneStep(t *testing.T) {
 		t.Fatalf("scheduler failed: %v\n%s", err, out)
 	}
 
-	fmt.Printf("output: %s\n", out)
+	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
+		!bytes.Contains(out, []byte(`workflow="Workflow 2" status=completed`)) ||
+		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
+		t.Fatalf("unexpected run-once receipt\n%s", out)
+	}
 }
