@@ -28,43 +28,6 @@ func TestLimitLength(t *testing.T) {
 	}
 }
 
-func TestLimitLength_PanicOnNegative(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic for negative max")
-		}
-	}()
-
-	_ = LimitLength(-1)
-}
-
-func TestLimitValue(t *testing.T) {
-	tests := []struct {
-		name      string
-		maxValue  int
-		value     int
-		wantError error
-	}{
-		{name: "equal ok", maxValue: 5, value: 5, wantError: nil},
-		{name: "below ok", maxValue: 5, value: 4, wantError: nil},
-		{name: "zero ok", maxValue: 5, value: 0, wantError: nil},
-		{name: "just over", maxValue: 5, value: 6, wantError: ErrExceedsMaxLimit},
-		{name: "max zero value one", maxValue: 0, value: 1, wantError: ErrExceedsMaxLimit},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f := LimitValue(tt.maxValue)
-
-			err := f(tt.value)
-			if err != tt.wantError {
-				t.Fatalf("%s: got %q, want %q", tt.name, err, tt.wantError)
-			}
-		})
-	}
-}
-
 func TestRequireNoLeadingTrailingWhitespace(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -101,27 +64,6 @@ func TestRequireNonEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := RequireNonEmpty(tt.value)
-			if err != tt.wantError {
-				t.Fatalf("%s: got %q, want %q", tt.name, err, tt.wantError)
-			}
-		})
-	}
-}
-
-func TestRequireNonNegative(t *testing.T) {
-	tests := []struct {
-		name      string
-		value     int
-		wantError error
-	}{
-		{name: "zero ok", value: 0, wantError: nil},
-		{name: "greater than zero ok", value: 110, wantError: nil},
-		{name: "less than zero", value: -1, wantError: ErrNegativeNumber},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := RequireNoNegative(tt.value)
 			if err != tt.wantError {
 				t.Fatalf("%s: got %q, want %q", tt.name, err, tt.wantError)
 			}

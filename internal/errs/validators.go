@@ -24,24 +24,8 @@ func (e ValidationError) Unwrap() error {
 type rule func(string) error
 type ruleSet func(string) []error
 
-type ruleInt func(int) error
-type ruleSetInt func(int) []error
-
 func createRuleset(field string, r ...rule) ruleSet {
 	return func(value string) []error {
-		var out []error
-		for _, rule := range r {
-			err := rule(value)
-			if err != nil {
-				out = append(out, ValidationError{Field: field, Err: err})
-			}
-		}
-		return out
-	}
-}
-
-func createRulesetInt(field string, r ...ruleInt) ruleSetInt {
-	return func(value int) []error {
 		var out []error
 		for _, rule := range r {
 			err := rule(value)
@@ -126,33 +110,6 @@ func RequireValues(values ...string) rule {
 	}
 }
 
-func LimitValue(max int) ruleInt {
-	return func(i int) error {
-		if i > max {
-			return ErrExceedsMaxLimit
-		}
-
-		return nil
-	}
-}
-
-func RequireAtLeast(min int) ruleInt {
-	return func(v int) error {
-		if v < min {
-			return fmt.Errorf("must be at least %d", min)
-		}
-		return nil
-	}
-}
-
-func RequireNoNegative(i int) error {
-	if i < 0 {
-		return ErrNegativeNumber
-	}
-
-	return nil
-}
-
 var ValidateWorkflowName = createRuleset(
 	"workflow.name",
 	RequireNonEmpty,
@@ -168,18 +125,6 @@ var ValidateWorkflowTime = createRuleset(
 	RequireNoLeadingTrailingWhitespace,
 	RequireValidTime,
 	LimitLength(MaxWorkflowTimeLength),
-)
-
-var ValidateWorkflowRetryAttempts = createRulesetInt(
-	"workflow.retry.attempts",
-	LimitValue(MaxWorkflowRetryAttempts),
-	RequireNoNegative,
-)
-
-var ValidateWorkflowRetryPause = createRulesetInt(
-	"workflow.retry.pause",
-	LimitValue(MaxWorkflowRetryPause),
-	RequireNoNegative,
 )
 
 var ValidateWorkflowStepArgs = createRuleset(
@@ -203,16 +148,4 @@ var ValidateWorkflowStepProgram = createRuleset(
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
 	LimitLength(platform.MaxPathLength()),
-)
-
-var ValidateWorkflowStepPause = createRulesetInt(
-	"workflow.step.pause",
-	LimitValue(MaxWorkflowStepPause),
-	RequireNoNegative,
-)
-
-var ValidateWorkflowStepTimeout = createRulesetInt(
-	"workflow.step.timeout",
-	LimitValue(MaxWorkflowStepTimeout),
-	RequireNoNegative,
 )

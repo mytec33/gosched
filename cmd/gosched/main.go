@@ -170,8 +170,8 @@ func executeWorkflow(wf schedule.Workflow) error {
 		var cmd *exec.Cmd
 		var cancel context.CancelFunc
 
-		if step.Timeout > 0 {
-			ctx, c := context.WithTimeout(context.Background(), time.Duration(step.Timeout)*time.Second)
+		if step.Timeout.Configured() {
+			ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
 			cancel = c
 			cmd = exec.CommandContext(ctx, step.Program, args...)
 		} else {
@@ -193,8 +193,8 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
 
-		if step.Pause > 0 {
-			pause := time.Duration(step.Pause) * time.Second
+		if step.Pause.Configured() {
+			pause := step.Pause.Duration()
 
 			if i < numSteps-1 {
 				stdOut.Info("workflow step", "status", "pause started", "duration", pause, "stepIndex", i, "stepName", step.Name)

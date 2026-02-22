@@ -4,6 +4,7 @@ package schedule
 import (
 	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/policy"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 type Workflow struct {
@@ -15,16 +16,16 @@ type Workflow struct {
 }
 
 type RetryConfig struct {
-	Attempts     int `json:"attempts"`
-	PauseSeconds int `json:"pauseSeconds"`
+	Attempts     types.ConfiguredInt `json:"attempts"`
+	PauseSeconds types.ConfiguredInt `json:"pauseSeconds"`
 }
 
 type Step struct {
-	Name    string `json:"name"`
-	Program string `json:"program"`
-	Args    string `json:"args"`
-	Timeout int    `json:"timeout"`
-	Pause   int    `json:"pause"`
+	Name    string              `json:"name"`
+	Program string              `json:"program"`
+	Args    string              `json:"args"`
+	Timeout types.ConfiguredInt `json:"timeout"`
+	Pause   types.ConfiguredInt `json:"pause"`
 }
 
 func (w Workflow) Validate() []error {
@@ -46,16 +47,6 @@ func (w Workflow) Validate() []error {
 		errorList = append(errorList, errs.ErrOnFailureRequired)
 	}
 
-	vErrs = errs.ValidateWorkflowRetryAttempts(w.Retry.Attempts)
-	if len(vErrs) != 0 {
-		errorList = append(errorList, vErrs...)
-	}
-
-	vErrs = errs.ValidateWorkflowRetryPause(w.Retry.PauseSeconds)
-	if len(vErrs) != 0 {
-		errorList = append(errorList, vErrs...)
-	}
-
 	if len(w.Steps) == 0 {
 		errorList = append(errorList, errs.ValidationError{Field: "workflow.steps", Err: errs.ErrEmpty})
 	}
@@ -72,16 +63,6 @@ func (w Workflow) Validate() []error {
 		}
 
 		vErrs = errs.ValidateWorkflowStepArgs(steps.Args)
-		if len(vErrs) != 0 {
-			errorList = append(errorList, vErrs...)
-		}
-
-		vErrs = errs.ValidateWorkflowStepTimeout(steps.Timeout)
-		if len(vErrs) != 0 {
-			errorList = append(errorList, vErrs...)
-		}
-
-		vErrs = errs.ValidateWorkflowStepPause(steps.Pause)
 		if len(vErrs) != 0 {
 			errorList = append(errorList, vErrs...)
 		}

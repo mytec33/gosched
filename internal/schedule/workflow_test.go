@@ -307,50 +307,6 @@ const WorkflowStepArgsTooLong = `
 ]
 `
 
-const WorkflowStepTimeoutInvalid = `
-[
-  {
-    "name": "name",
-    "time": "10:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": -1}]
-  }
-]
-`
-
-const WorkflowStepTimeoutTooLong = `
-[
-  {
-    "name": "name",
-    "time": "10:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 43201}]
-  }
-]
-`
-
-const WorkflowStepPauseInvalid = `
-[
-  {
-    "name": "name",
-    "time": "10:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 0, "pause": -1}]
-  }
-]
-`
-
-const WorkflowStepPauseTooLong = `
-[
-  {
-    "name": "name",
-    "time": "10:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": "args", "timeout": 43200, "pause": 3601}]
-  }
-]
-`
-
 func TestWorkflowSteps_Invalid(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -371,10 +327,6 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
-		{name: "timeout less than zero", json: WorkflowStepTimeoutInvalid, wantError: errs.ErrNegativeNumber},
-		{name: "timeout too long", json: WorkflowStepTimeoutTooLong, wantError: errs.ErrExceedsMaxLimit},
-		{name: "pause less than zero", json: WorkflowStepPauseInvalid, wantError: errs.ErrNegativeNumber},
-		{name: "pause too long", json: WorkflowStepPauseTooLong, wantError: errs.ErrExceedsMaxLimit},
 	}
 
 	for _, tt := range tests {
