@@ -3,6 +3,7 @@ package schedule
 import (
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -158,7 +159,7 @@ func TestReadScheduleFile_DecodeErrorIncludesFilename(t *testing.T) {
 	if !strings.Contains(err.Error(), "decode workflows file") {
 		t.Fatalf("expected decode context, got %v", err)
 	}
-	if !strings.Contains(err.Error(), filename) {
+	if !strings.Contains(err.Error(), strconv.Quote(filename)) {
 		t.Fatalf("expected filename in error, got %v", err)
 	}
 }
