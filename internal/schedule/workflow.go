@@ -16,8 +16,8 @@ type Workflow struct {
 }
 
 type RetryConfig struct {
-	Attempts     types.ConfiguredInt `json:"attempts"`
-	PauseSeconds types.ConfiguredInt `json:"pauseSeconds"`
+	NumberRetries types.ConfiguredInt `json:"numberRetries"`
+	PauseSeconds  types.ConfiguredInt `json:"pauseSeconds"`
 }
 
 type Step struct {
