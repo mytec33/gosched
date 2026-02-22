@@ -98,18 +98,6 @@ func RequireValidTime(timeVal string) error {
 	return nil
 }
 
-func RequireValues(values ...string) rule {
-	return func(s string) error {
-		for _, v := range values {
-			if strings.EqualFold(s, v) {
-				return nil
-			}
-		}
-
-		return ErrInvalidRetryValues
-	}
-}
-
 var ValidateWorkflowName = createRuleset(
 	"workflow.name",
 	RequireNonEmpty,

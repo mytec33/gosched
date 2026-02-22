@@ -252,17 +252,6 @@ const WorkflowStepProgramWhitespaceTrailing = `
 ]
 `
 
-const WorkflowStepProgramTooLong = `
-[
-  {
-    "name": "name",
-    "time": "10:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..", "args": "args"}]
-  }
-]
-`
-
 const WorkflowStepArgsWhitespace = `
 [
   {
@@ -359,9 +348,9 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 }
 
 func workflowStepProgramTooLongJSON() string {
-	max := platform.MaxPathLength()
+	maxLength := platform.MaxPathLength()
 
-	tooLong := strings.Repeat("a", max+1)
+	tooLong := strings.Repeat("a", maxLength+1)
 
 	return fmt.Sprintf(`
       [
