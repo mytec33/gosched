@@ -52,7 +52,7 @@ func run() int {
 	}
 
 	if len(valErrors) > 0 {
-		displayErrors(valErrors)
+		displayCfgErrors(valErrors)
 		return ExitValidation
 	}
 
@@ -81,10 +81,11 @@ func displayConfigSummarization() {
 	fmt.Println("display configuration summarization")
 }
 
-func displayErrors(errors []error) {
-	fmt.Println("configuration invalid, errors found:")
+func displayCfgErrors(errors []error) {
+	logging.StdErr.Error("startup", "reason", "configuration invalid")
+
 	for _, err := range errors {
-		fmt.Println(err)
+		logging.StdErr.Error("startup", "reason", err)
 	}
 }
 
