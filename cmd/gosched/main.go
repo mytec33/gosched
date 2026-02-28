@@ -179,6 +179,8 @@ func executeWorkflow(wf schedule.Workflow) error {
 			cmd = exec.Command(step.Program, args...)
 		}
 		output, err := cmd.CombinedOutput()
+		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
+			"output", output)
 
 		if cancel != nil {
 			cancel()
@@ -188,7 +190,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 		if err != nil && wf.OnFailure == &policy.Abort {
 			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name,
-				"duration", stepDuration, "reason", err, "output", string(output))
+				"duration", stepDuration, "reason", err)
 			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, err)
 		}
 
