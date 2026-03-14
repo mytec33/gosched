@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
@@ -165,7 +164,6 @@ func executeWorkflow(wf schedule.Workflow) error {
 	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
-		args := strings.Fields(step.Args)
 		stdOut.Info("workflow step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
 
 		var cmd *exec.Cmd
@@ -174,9 +172,9 @@ func executeWorkflow(wf schedule.Workflow) error {
 		if step.Timeout.Configured() {
 			ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
 			cancel = c
-			cmd = exec.CommandContext(ctx, step.Program, args...)
+			cmd = exec.CommandContext(ctx, step.Program, step.Args...)
 		} else {
-			cmd = exec.Command(step.Program, args...)
+			cmd = exec.Command(step.Program, step.Args...)
 		}
 		output, err := cmd.CombinedOutput()
 		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,

@@ -1,20 +1,30 @@
 [
   {
     "name": "Slot Ratings",
-    "time": "14:11",
+    "time": "22:13",
     "onFailure": "continue",
     "steps": [
       {
         "name": "daily",
-        "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 10 --role daily-slot-ratings",
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": [
+            "--sleep",
+            "10",
+            "--role",
+            "daily-slot-ratings"
+          ],
         "timeout": 11,
         "pause": 3
       },
       {
         "name": "modified",
-        "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 50 --role modified-slot-ratings",
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": [
+            "--sleep",
+            "50",
+            "--role",
+            "modified-slot-ratings"
+          ],
         "pause": 5
       }
     ]
@@ -26,13 +36,23 @@
     "steps": [
       {
         "name": "daily",
-        "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 5 --role daily-table-ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": [
+          "--sleep",
+          "5",
+          "--role",
+          "daily-table-ratings"
+        ]
       },
       {
         "name": "modified",
-        "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 25 --role modified-table-ratings"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": [
+          "--sleep",
+          "25",
+          "--role",
+          "modified-table-ratings"
+        ]
       }
     ]
   },
@@ -47,8 +67,13 @@
     "steps": [
       {
         "name": "daily",
-        "program": "/home/bill/MySource/go/gosched/testprog",
-        "args": "--sleep 5 --role daily-jackpots"
+        "program": "/Users/bill/MySource/go/gosched/testprog",
+        "args": [
+          "--sleep",
+          "5",
+          "--role",
+          "daily-jackpots"
+        ]
       }
     ]
   }
