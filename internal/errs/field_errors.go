@@ -5,11 +5,6 @@ import (
 	"errors"
 )
 
-const (
-	MaxWorkflowNameLength int = 256
-	MaxWorkflowTimeLength int = 5 // hh:mm
-)
-
 var (
 	ErrEmpty                       = errors.New("cannot be empty")
 	ErrNegativeNumber              = errors.New("number cannot be negative, must be zero (indefinite) or greater")

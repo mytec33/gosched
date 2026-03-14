@@ -115,13 +115,6 @@ var ValidateWorkflowTime = createRuleset(
 	LimitLength(MaxWorkflowTimeLength),
 )
 
-var ValidateWorkflowStepArgs = createRuleset(
-	"workflow.step.arg",
-	RequireNoWhitespace,
-	RequireNoLeadingTrailingWhitespace,
-	LimitLength(MaxWorkflowNameLength),
-)
-
 var ValidateWorkflowStepName = createRuleset(
 	"workflow.step.name",
 	RequireNonEmpty,

@@ -24,7 +24,7 @@ const ScheduleOneWorkflowOneStep = `
       {
         "name": "daily",
         "program": %q,
-        "args": "--sleep 1 --role daily-slot-ratings"
+        "args": ["--sleep", "1", "--role", "daily-slot-ratings"]
       }
     ]
   }
@@ -41,7 +41,7 @@ const ScheduleTwoWorkflowOneStep = `
       {
         "name": "daily",
         "program": %q,
-        "args": "--sleep 1 --role workflow-1-step-1"
+        "args": ["--sleep", "1", "--role", "workflow-1-step-1"]
       }
     ]
   },
@@ -53,7 +53,7 @@ const ScheduleTwoWorkflowOneStep = `
       {
         "name": "daily",
         "program": %q,
-        "args": "--sleep 2 --role workflow-2-step-1"
+        "args": ["--sleep", "2", "--role", "workflow-2-step-1"]
       }
     ]
   }

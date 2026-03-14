@@ -21,11 +21,11 @@ type RetryConfig struct {
 }
 
 type Step struct {
-	Name    string              `json:"name"`
-	Program string              `json:"program"`
-	Args    []string            `json:"args"`
-	Timeout types.ConfiguredInt `json:"timeout"`
-	Pause   types.ConfiguredInt `json:"pause"`
+	Name    string                `json:"name"`
+	Program string                `json:"program"`
+	Args    []types.ConfiguredArg `json:"args"`
+	Timeout types.ConfiguredInt   `json:"timeout"`
+	Pause   types.ConfiguredInt   `json:"pause"`
 }
 
 func (w Workflow) Validate() []error {
@@ -61,12 +61,6 @@ func (w Workflow) Validate() []error {
 		if len(vErrs) != 0 {
 			errorList = append(errorList, vErrs...)
 		}
-
-		/*
-			if len(vErrs) == 0 {
-				errorList = append(errorList, fmt.Errorf(""))
-			}
-		*/
 	}
 
 	return errorList

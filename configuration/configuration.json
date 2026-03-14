@@ -10,7 +10,7 @@
         "args": [
             "--sleep",
             "10",
-            "--role",
+            "--role ",
             "daily slot ratings"
           ],
         "timeout": 11,

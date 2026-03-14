@@ -184,12 +184,17 @@ func executeWorkflow(wf schedule.Workflow) error {
 		var cmd *exec.Cmd
 		var cancel context.CancelFunc
 
+		args := make([]string, 0, len(step.Args))
+		for _, a := range step.Args {
+			args = append(args, a.String())
+		}
+
 		if step.Timeout.Configured() {
 			ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
 			cancel = c
-			cmd = exec.CommandContext(ctx, step.Program, step.Args...)
+			cmd = exec.CommandContext(ctx, step.Program, args...)
 		} else {
-			cmd = exec.Command(step.Program, step.Args...)
+			cmd = exec.Command(step.Program, args...)
 		}
 		output, err := cmd.CombinedOutput()
 		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,

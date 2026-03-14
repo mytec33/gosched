@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 const validOneWorkflowOneStep = `
@@ -17,7 +19,7 @@ const validOneWorkflowOneStep = `
       {
         "name": "daily",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 10 --role daily-slot-ratings"
+        "args": ["--sleep", "10", "--role", "daily-slot-ratings"]
       }
     ]
   }
@@ -33,12 +35,12 @@ const validOneWorkflowTwoSteps = `
       {
         "name": "daily",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 10 --role daily-slot-ratings"
+        "args": ["--sleep", "10", "--role", "daily-slot-ratings"]
       },
       {
         "name": "modified",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 50 --role modified-slot-ratings"
+        "args": ["--sleep", "50", "--role", "modified-slot-ratings"]
       }
     ]
   }
@@ -54,12 +56,12 @@ const validTwoWorkflows = `
       {
         "name": "daily",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 10 --role daily-slot-ratings"
+        "args": ["--sleep", "10", "--role", "daily-slot-ratings"]
       },
       {
         "name": "modified",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 50 --role modified-slot-ratings"
+        "args": ["--sleep", "50", "--role", "modified-slot-ratings"]
       }
     ]
   },
@@ -70,12 +72,12 @@ const validTwoWorkflows = `
       {
         "name": "daily",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 5 --role daily-table-ratings"
+        "args": ["--sleep", "5", "--role", "daily-table-ratings"]
       },
       {
         "name": "modified",
         "program": "/Users/user/some_path/go/gosched/testprog",
-        "args": "--sleep 25 --role modified-table-ratings"
+        "args": ["--sleep", "25", "--role", "modified-table-ratings"]
       }
     ]
   }
@@ -161,6 +163,80 @@ func TestReadScheduleFile_DecodeErrorIncludesFilename(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), strconv.Quote(filename)) {
 		t.Fatalf("expected filename in error, got %v", err)
+	}
+}
+
+const WorkflowStepArgsWhitespace = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["         "]}]
+  }
+]
+`
+
+const WorkflowStepArgsWhitespaceLeading = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": [" leading"]}]
+  }
+]
+`
+
+const WorkflowStepArgsWhitespaceTrailing = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["trailing "]}]
+  }
+]
+`
+
+const WorkflowStepArgsTooLong = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.."]}]
+  }
+]
+`
+
+func TestDecodeArgs_Invalid(t *testing.T) {
+	tests := []struct {
+		name      string
+		json      string
+		wantError error
+	}{
+		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.json)
+
+			_, _, err := DecodeSchedule(r)
+
+			if err == nil {
+				t.Fatalf("%s: expected %s, got %v", tt.name, tt.wantError, err)
+			}
+
+			if !errors.Is(err, tt.wantError) {
+				t.Fatalf("%s: want %v, got %v", tt.name, tt.wantError, err)
+			}
+
+		})
 	}
 }
 
