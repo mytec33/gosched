@@ -1,16 +1,16 @@
 [
   {
     "name": "Slot Ratings",
-    "time": "22:49",
+    "time": "14:31",
     "onFailure": "continue",
     "steps": [
       {
         "name": "daily",
-        "program": "/Users/bill/MySource/go/gosched/testprogs",
+        "program": "/Users/bill/MySource/go/gosched/testprog",
         "args": [
             "--sleep",
             "10",
-            "--role ",
+            "--role",
             "daily slot ratings"
           ],
         "timeout": 11,

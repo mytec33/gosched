@@ -200,6 +200,19 @@ func executeWorkflow(wf schedule.Workflow) error {
 		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
 			"output", output)
 
+		exitCode := -1
+		if cmd.ProcessState != nil {
+			exitCode = cmd.ProcessState.ExitCode()
+		}
+
+		if exitCode > 0 {
+			stdErr.Error("workflow step", "stepIndex", i, "stepName", step.Name,
+				"exitCode", exitCode)
+		} else {
+			stdOut.Info("workflow step", "stepIndex", i, "stepName", step.Name,
+				"exitCode", exitCode)
+		}
+
 		if cancel != nil {
 			cancel()
 		}
