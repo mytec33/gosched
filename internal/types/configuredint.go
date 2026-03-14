@@ -1,3 +1,4 @@
+// Package types provides configuration types
 package types
 
 import (

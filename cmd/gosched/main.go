@@ -88,6 +88,15 @@ func displayCfgErrors(errors []error) {
 	}
 }
 
+func programExists(prog string) error {
+	_, err := os.Stat(prog)
+	if err != nil {
+		return fmt.Errorf("program not found: %s", prog)
+	}
+
+	return nil
+}
+
 func runScheduler(tick TickFunc, s schedule.Schedule, runOnce bool) {
 	if runOnce {
 		tick(time.Now().Truncate(time.Minute), s, runOnce)
@@ -165,6 +174,12 @@ func executeWorkflow(wf schedule.Workflow) error {
 		stepStart := time.Now()
 
 		stdOut.Info("workflow step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
+
+		err := programExists(step.Program)
+		if err != nil {
+			stdErr.Error("workflow step", "status", "cannot find program", "stepIndex", i, "stepName", step.Name, "program", step.Program)
+			continue
+		}
 
 		var cmd *exec.Cmd
 		var cancel context.CancelFunc
