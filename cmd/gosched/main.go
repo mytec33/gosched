@@ -21,6 +21,12 @@ const (
 	ExitRunOnce     int = 5
 )
 
+type StepExecutionResult struct {
+	Output   []byte
+	Err      error
+	ExitCode int
+}
+
 type TickFunc func(now time.Time, data schedule.Schedule, runOnce bool) int
 
 func main() {
@@ -181,48 +187,24 @@ func executeWorkflow(wf schedule.Workflow) error {
 			continue
 		}
 
-		var cmd *exec.Cmd
-		var cancel context.CancelFunc
-
-		args := make([]string, 0, len(step.Args))
-		for _, a := range step.Args {
-			args = append(args, a.String())
-		}
-
-		if step.Timeout.Configured() {
-			ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
-			cancel = c
-			cmd = exec.CommandContext(ctx, step.Program, args...)
-		} else {
-			cmd = exec.Command(step.Program, args...)
-		}
-		output, err := cmd.CombinedOutput()
-		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
-			"output", output)
-
-		exitCode := -1
-		if cmd.ProcessState != nil {
-			exitCode = cmd.ProcessState.ExitCode()
-		}
-
-		if exitCode > 0 {
-			stdErr.Error("workflow step", "stepIndex", i, "stepName", step.Name,
-				"exitCode", exitCode)
-		} else {
-			stdOut.Info("workflow step", "stepIndex", i, "stepName", step.Name,
-				"exitCode", exitCode)
-		}
-
-		if cancel != nil {
-			cancel()
-		}
-
+		result := runStepCommand(step)
 		stepDuration := time.Since(stepStart)
 
-		if err != nil && wf.OnFailure == &policy.Abort {
+		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
+			"output", result.Output)
+
+		if result.ExitCode > 0 {
+			stdErr.Error("workflow step", "stepIndex", i, "stepName", step.Name,
+				"exitCode", result.ExitCode)
+		} else {
+			stdOut.Info("workflow step", "stepIndex", i, "stepName", step.Name,
+				"exitCode", result.ExitCode)
+		}
+
+		if result.Err != nil && wf.OnFailure == &policy.Abort {
 			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name,
-				"duration", stepDuration, "reason", err)
-			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, err)
+				"duration", stepDuration, "reason", result.Err)
+			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, result.Err)
 		}
 
 		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
@@ -242,4 +224,43 @@ func executeWorkflow(wf schedule.Workflow) error {
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 	return nil
+}
+
+func runStepCommand(step schedule.Step) StepExecutionResult {
+	var stepResult StepExecutionResult
+
+	var cmd *exec.Cmd
+	var cancel context.CancelFunc
+
+	args := make([]string, 0, len(step.Args))
+	for _, a := range step.Args {
+		args = append(args, a.String())
+	}
+
+	if step.Timeout.Configured() {
+		ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
+		cancel = c
+		cmd = exec.CommandContext(ctx, step.Program, args...)
+	} else {
+		cmd = exec.Command(step.Program, args...)
+	}
+	output, err := cmd.CombinedOutput()
+	stepResult.Err = err
+	stepResult.Output = output
+
+	exitCode := -1
+	if cmd.ProcessState != nil {
+		exitCode = cmd.ProcessState.ExitCode()
+	}
+	stepResult.ExitCode = exitCode
+
+	if cancel != nil {
+		cancel()
+	}
+
+	return stepResult
+}
+
+func (s StepExecutionResult) Failed() bool {
+	return s.Err != nil || s.ExitCode != 0
 }
