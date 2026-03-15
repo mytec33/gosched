@@ -24,6 +24,10 @@ func (c ConfiguredInt) Duration() time.Duration {
 	return time.Duration(c.Int()) * time.Second
 }
 
+func NewConfiguredInt(i int) ConfiguredInt {
+	return ConfiguredInt{v: i}
+}
+
 func (c *ConfiguredInt) UnmarshalJSON(b []byte) error {
 	var tmp int
 
