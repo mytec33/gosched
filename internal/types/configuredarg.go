@@ -21,6 +21,10 @@ func (c ConfiguredArg) Configured() bool {
 	return len(c.v) > 0
 }
 
+func NewArg(s string) ConfiguredArg {
+	return ConfiguredArg{v: s}
+}
+
 func (c *ConfiguredArg) UnmarshalJSON(b []byte) error {
 	var tmp string
 

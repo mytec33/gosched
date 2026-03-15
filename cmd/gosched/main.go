@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
@@ -20,12 +18,6 @@ const (
 	ExitInvalidArgs int = 4
 	ExitRunOnce     int = 5
 )
-
-type StepExecutionResult struct {
-	Output   []byte
-	Err      error
-	ExitCode int
-}
 
 type TickFunc func(now time.Time, data schedule.Schedule, runOnce bool) int
 
@@ -187,7 +179,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 			continue
 		}
 
-		result := runStepCommand(step)
+		result := schedule.RunStepCommand(step)
 		stepDuration := time.Since(stepStart)
 
 		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
@@ -224,43 +216,4 @@ func executeWorkflow(wf schedule.Workflow) error {
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 	return nil
-}
-
-func runStepCommand(step schedule.Step) StepExecutionResult {
-	var stepResult StepExecutionResult
-
-	var cmd *exec.Cmd
-	var cancel context.CancelFunc
-
-	args := make([]string, 0, len(step.Args))
-	for _, a := range step.Args {
-		args = append(args, a.String())
-	}
-
-	if step.Timeout.Configured() {
-		ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
-		cancel = c
-		cmd = exec.CommandContext(ctx, step.Program, args...)
-	} else {
-		cmd = exec.Command(step.Program, args...)
-	}
-	output, err := cmd.CombinedOutput()
-	stepResult.Err = err
-	stepResult.Output = output
-
-	exitCode := -1
-	if cmd.ProcessState != nil {
-		exitCode = cmd.ProcessState.ExitCode()
-	}
-	stepResult.ExitCode = exitCode
-
-	if cancel != nil {
-		cancel()
-	}
-
-	return stepResult
-}
-
-func (s StepExecutionResult) Failed() bool {
-	return s.Err != nil || s.ExitCode != 0
 }
