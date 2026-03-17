@@ -171,44 +171,50 @@ func executeWorkflow(wf schedule.Workflow) error {
 	for i, step := range wf.Steps {
 		stepStart := time.Now()
 
-		stdOut.Info("workflow step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
+		stdOut.Info("step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
 
 		err := programExists(step.Program)
 		if err != nil {
-			stdErr.Error("workflow step", "status", "cannot find program", "stepIndex", i, "stepName", step.Name, "program", step.Program)
+			stdErr.Error("step", "status", "failed", "reason", "cannot find program", "program", step.Program)
 			continue
 		}
 
 		result := schedule.RunStepCommand(step)
 		stepDuration := time.Since(stepStart)
 
-		stdOut.Info("workflow step", "status", "output", "stepIndex", i, "stepName", step.Name,
-			"output", result.Output)
+		if len(result.Output) != 0 {
+			stdOut.Info("step output", "data", result.Output)
+		}
 
-		if result.ExitCode > 0 {
-			stdErr.Error("workflow step", "stepIndex", i, "stepName", step.Name,
-				"exitCode", result.ExitCode)
+		if result.Err != nil {
+			stdErr.Error(
+				"step",
+				"status", "failed",
+				"exitCode", result.ExitCode,
+				"duration", stepDuration,
+				"reason", result.Err,
+			)
+
+			if wf.OnFailure == &policy.Abort {
+				return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, result.Err)
+			}
 		} else {
-			stdOut.Info("workflow step", "stepIndex", i, "stepName", step.Name,
-				"exitCode", result.ExitCode)
+			stdOut.Info(
+				"step",
+				"status", "completed",
+				"exitCode", result.ExitCode,
+				"duration", stepDuration,
+			)
 		}
-
-		if result.Err != nil && wf.OnFailure == &policy.Abort {
-			stdErr.Error("workflow step", "status", "failed", "stepIndex", i, "stepName", step.Name,
-				"duration", stepDuration, "reason", result.Err)
-			return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, result.Err)
-		}
-
-		stdOut.Info("workflow step", "status", "completed", "stepIndex", i, "stepName", step.Name, "duration", stepDuration)
 
 		if step.Pause.Configured() {
 			pause := step.Pause.Duration()
 
 			if i < numSteps-1 {
-				stdOut.Info("workflow step", "status", "pause started", "duration", pause, "stepIndex", i, "stepName", step.Name)
+				stdOut.Info("step pause", "status", "started", "duration", pause)
 				time.Sleep(pause)
 			} else {
-				stdOut.Info("workflow step", "status", "pause skipped", "reason", "last step", "stepIndex", i, "stepName", step.Name)
+				stdOut.Info("step pause", "status", "skipped", "reason", "last step")
 			}
 		}
 	}
