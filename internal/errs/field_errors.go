@@ -17,5 +17,6 @@ var (
 )
 
 var (
+	ErrDuplicateStepName     = errors.New("step name is a duplicate")
 	ErrDuplicateWorkflowName = errors.New("work flow name is a duplicate")
 )

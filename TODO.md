@@ -18,4 +18,4 @@
 
 ### Validation
 1. ~~Workflow names must be unqiue.~~
-2. Step names within a workflow must be unique.
+2. ~~Step names within a workflow must be unique.~~

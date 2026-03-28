@@ -2,6 +2,8 @@
 package schedule
 
 import (
+	"fmt"
+
 	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
@@ -63,5 +65,23 @@ func (w Workflow) Validate() []error {
 		}
 	}
 
+	errorList = append(errorList, validateUniqueStepNames(w.Steps)...)
+
 	return errorList
+}
+
+func validateUniqueStepNames(steps []Step) []error {
+	stepNames := make(map[string]struct{})
+	var errors []error
+
+	for _, step := range steps {
+		_, exists := stepNames[step.Name]
+		if exists {
+			errors = append(errors, fmt.Errorf("%w: %s", errs.ErrDuplicateStepName, step.Name))
+		} else {
+			stepNames[step.Name] = struct{}{}
+		}
+	}
+
+	return errors
 }
