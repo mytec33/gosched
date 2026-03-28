@@ -14,7 +14,7 @@
  - useful for diff to compare configurations
 
 
-- add flag -create-new to create a sample configuration file to work off of
+- ~~add flag -create-new to create a sample configuration file to work off of~~
 
 ### Validation
 1. ~~Workflow names must be unqiue.~~

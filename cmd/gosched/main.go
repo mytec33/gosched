@@ -26,15 +26,24 @@ func main() {
 }
 
 func run() int {
-	logging.StdOut.Info("startup", "reason", "scheduler service started")
-
 	filename := ""
+	newConfig := false
 	runOnce := false
 	summarizeConfig := false
 	flag.StringVar(&filename, "schedule", "", "file containing a schedule to run")
+	flag.BoolVar(&newConfig, "new-config", false, "create an new configuration to begin with")
 	flag.BoolVar(&runOnce, "run-once", false, "bypass any schedule and run now")
 	flag.BoolVar(&summarizeConfig, "summarize-config", false, "show concise summary of configuration file schedule")
 	flag.Parse()
+
+	if newConfig {
+		generateNewConfig()
+		return ExitSuccess
+	}
+
+	// This goes after newConfig or any other option that prints to STDOUT so only the output we
+	// wish to print is shown and not logging messages. Those don't play well with JSON. :-)
+	logging.StdOut.Info("startup", "reason", "scheduler service started")
 
 	if filename == "" {
 		logging.StdErr.Error("startup", "reason", "invalid args")
@@ -222,4 +231,52 @@ func executeWorkflow(wf schedule.Workflow) error {
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 	return nil
+}
+
+func generateNewConfig() {
+	newConfig := `
+[
+  {
+    "name": "Workflow 1",
+    "time": "10:00",
+    "onFailure": "continue",
+    "steps": [
+      {
+        "name": "step 1",
+        "program": "/usr/bin/some_program",
+        "args": [
+            "--verbose",
+            "--file",
+            "some_file_name"
+          ],
+        "timeout": 11,
+        "pause": 3
+      },
+      {
+        "name": "step 2",
+        "program": "/usr/bin/some_program",
+        "args": [],
+        "pause": 0
+      }
+    ]
+  },
+  {
+    "name": "Workflow 2",
+    "time": "10:35",
+    "onFailure": "abort",
+    "steps": [
+      {
+        "name": "daily",
+        "program": "/opt/sbin/some_script",
+        "args": [
+          "--sleep",
+          "5"
+        ]
+      }
+    ]
+  }
+]	
+`
+
+	fmt.Println(newConfig)
 }

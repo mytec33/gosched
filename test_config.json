@@ -1,0 +1,43 @@
+
+[
+  {
+    "name": "Workflow 1",
+    "time": "10:00",
+    "onFailure": "continue",
+    "steps": [
+      {
+        "name": "step 1",
+        "program": "/usr/bin/some_program",
+        "args": [
+            "--verbose",
+            "--file",
+            "some_file_name"
+          ],
+        "timeout": 11,
+        "pause": 3
+      },
+      {
+        "name": "step 2",
+        "program": "/usr/bin/some_program",
+        "args": [],
+        "pause": 0
+      }
+    ]
+  },
+  {
+    "name": "Workflow 2",
+    "time": "10:35",
+    "onFailure": "abort",
+    "steps": [
+      {
+        "name": "daily",
+        "program": "/opt/sbin/some_script",
+        "args": [
+          "--sleep",
+          "5"
+        ]
+      }
+    ]
+  }
+]	
+
