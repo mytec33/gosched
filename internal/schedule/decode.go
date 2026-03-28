@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 var ErrDecodeSchedule = errors.New("decode schedule")
@@ -64,6 +66,8 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 		}
 	}
 
+	valErrs = append(valErrs, validateUniqueWorkflowNames(workflows)...)
+
 	if len(valErrs) > 0 {
 		return Schedule{}, valErrs, nil
 	}
@@ -81,6 +85,22 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	}
 
 	return schedule, nil, nil
+}
+
+func validateUniqueWorkflowNames(wfs []Workflow) []error {
+	wfNames := make(map[string]struct{})
+	var errors []error
+
+	for _, wf := range wfs {
+		_, exists := wfNames[wf.Name]
+		if exists {
+			errors = append(errors, fmt.Errorf("%w: %s", errs.ErrDuplicateWorkflowName, wf.Name))
+		} else {
+			wfNames[wf.Name] = struct{}{}
+		}
+	}
+
+	return errors
 }
 
 func normalizeTime(timeKey string) (MinuteKey, error) {

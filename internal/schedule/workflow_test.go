@@ -315,6 +315,53 @@ func workflowStepProgramTooLongJSON() string {
       ]`, tooLong)
 }
 
+const WorkflowNamesNotUnique = `
+[
+  {
+    "name": "workflow 1",
+    "time": "10:35",
+    "onFailure": "continue",
+    "steps": [{"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}]
+  },
+  {
+    "name": "workflow 1",
+    "onFailure": "continue",    
+    "time": "11:35",
+    "steps": [{"name": "step name 2", "program": "program 1", "args": ["args 1"], "timeout": 0, "pause": 0}]
+  }
+]
+`
+
+func TestWorkflowNamesNotUnique(t *testing.T) {
+	tests := []struct {
+		name      string
+		json      string
+		wantError error
+	}{
+		{name: "duplicate workflow names", json: WorkflowNamesNotUnique, wantError: errs.ErrDuplicateWorkflowName},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.json)
+			_, validationErrors, _ := DecodeSchedule(r)
+
+			found := false
+			for _, ve := range validationErrors {
+				if errors.Is(ve, tt.wantError) {
+					found = true
+				} else {
+					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
+						tt.name, ve, tt.wantError, validationErrors)
+				}
+			}
+			if !found {
+				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
+			}
+		})
+	}
+}
+
 const WorkflowValid = `
 [
   {

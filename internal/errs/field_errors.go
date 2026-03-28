@@ -15,3 +15,7 @@ var (
 	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
 	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")
 )
+
+var (
+	ErrDuplicateWorkflowName = errors.New("work flow name is a duplicate")
+)
