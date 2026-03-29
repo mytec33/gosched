@@ -9,6 +9,7 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/logging"
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 const (
@@ -127,7 +128,11 @@ func runScheduler(tick TickFunc, s schedule.Schedule, runOnce bool) {
 }
 
 func runSchedulerTick(now time.Time, s schedule.Schedule, runOnce bool) int {
-	currentMinute := schedule.MinuteKey(now.Format("15:04"))
+	currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
+	if err != nil {
+		logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
+		return 1
+	}
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
@@ -220,10 +225,10 @@ func executeWorkflow(wf schedule.Workflow) error {
 			pause := step.Pause.Duration()
 
 			if i < numSteps-1 {
-				stdOut.Info("step pause", "status", "started", "duration", pause)
+				stdOut.Info("step", "status", "paused", "duration", pause)
 				time.Sleep(pause)
 			} else {
-				stdOut.Info("step pause", "status", "skipped", "reason", "last step")
+				stdOut.Info("step", "status", "skipped pause", "reason", "last step")
 			}
 		}
 	}

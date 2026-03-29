@@ -1,43 +1,52 @@
-
 [
   {
     "name": "Workflow 1",
-    "time": "10:00",
-    "onFailure": "continue",
+    "time": "11:45",
+    "onFailure": "abort",
     "steps": [
       {
         "name": "step 1",
-        "program": "/usr/bin/some_program",
-        "args": [
-            "--verbose",
-            "--file",
-            "some_file_name"
-          ],
-        "timeout": 11,
-        "pause": 3
+        "program": "./testprog",
+        "args": ["--sleep", "1", "--role", "wf1-step1"],
+        "timeout": 30,
+        "pause": 5
       },
       {
         "name": "step 2",
-        "program": "/usr/bin/some_program",
-        "args": [],
-        "pause": 0
+	"program": "./testprog",
+	"args": ["--sleep", "2", "--role", "wf1-step2"],
+	"timeout": 30,
+	"pause": 0
       }
     ]
   },
   {
     "name": "Workflow 2",
-    "time": "10:35",
+    "time": "11:45",
+    "onFailure": "continue",
+    "steps": [
+      {
+        "name": "step 1",
+        "program": "./testprog",
+        "args": ["--sleep", "1", "--role", "wf2-step1"],
+        "timeout": 30,
+        "pause": 0
+      }
+    ]
+  },
+  {
+    "name": "Workflow 3",
+    "time": "11:46",
     "onFailure": "abort",
     "steps": [
       {
-        "name": "daily",
-        "program": "/opt/sbin/some_script",
-        "args": [
-          "--sleep",
-          "5"
-        ]
+        "name": "step 1",
+        "program": "./testprog",
+        "args": ["--sleep", "1", "--role", "wf3-step1"],
+        "timeout": 30,
+        "pause": 0
       }
     ]
   }
-]	
+]
 

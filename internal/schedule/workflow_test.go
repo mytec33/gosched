@@ -65,39 +65,6 @@ const WorkflowNameTooLong = `
 ]
 `
 
-const WorkflowTimeEmpty = `
-[
-  {
-    "name": "foo",
-    "time": "",
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowTimeBadHour = `
-[
-  {
-    "name": "foo",
-    "time": "99:35",
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowTimeWhitespace = `
-[
-  {
-    "name": "name",
-    "time": " ",
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
 const WorkflowNoSteps = `
 [
   {
@@ -120,9 +87,9 @@ func TestWorkflow_Invalid(t *testing.T) {
 		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "name too long", json: WorkflowNameTooLong, wantError: errs.ErrTooLong},
-		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrEmpty},
-		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrInvalidTime},
-		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrInvalidTime},
+		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrInvalidTimeFormat},
 		{name: "missing steps", json: WorkflowNoSteps, wantError: errs.ErrEmpty},
 	}
 

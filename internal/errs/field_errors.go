@@ -10,7 +10,7 @@ var (
 	ErrNegativeNumber              = errors.New("number cannot be negative, must be zero (indefinite) or greater")
 	ErrOnFailureInvalidMode        = errors.New("invalid workflow on failure mode")
 	ErrOnFailureRequired           = errors.New("onFailure field required")
-	ErrInvalidTime                 = errors.New("invalid time value")
+	ErrInvalidTimeFormat           = errors.New("invalid time format")
 	ErrTooLong                     = errors.New("too long")
 	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
 	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")

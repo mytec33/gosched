@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 var ErrDecodeSchedule = errors.New("decode schedule")
@@ -39,7 +38,7 @@ func ReadScheduleFile(filename string) (Schedule, []error, error) {
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
 func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
-	s := Schedule{wf: make(map[MinuteKey][]Workflow)}
+	s := Schedule{wf: make(map[types.MinuteOfDay][]Workflow)}
 	var workflows []Workflow
 
 	dec := json.NewDecoder(r)
@@ -75,13 +74,7 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	// Loop once again to do normalization
 	schedule := s
 	for _, wf := range workflows {
-		k, err := normalizeTime(wf.Time)
-		if err != nil {
-			return s, nil, fmt.Errorf("error normalizing workflow %q: %w", wf.Name, err)
-		}
-
-		wf.Time = string(k)
-		schedule.wf[k] = append(schedule.wf[k], wf)
+		schedule.wf[wf.Time] = append(schedule.wf[wf.Time], wf)
 	}
 
 	return schedule, nil, nil
@@ -101,18 +94,4 @@ func validateUniqueWorkflowNames(wfs []Workflow) []error {
 	}
 
 	return errors
-}
-
-func normalizeTime(timeKey string) (MinuteKey, error) {
-	var h, m int
-	if _, err := fmt.Sscanf(strings.TrimSpace(timeKey), "%d:%d", &h, &m); err != nil {
-		return "", fmt.Errorf("invalid time %q", timeKey)
-	}
-
-	nt := fmt.Sprintf("%02d:%02d", h, m)
-	_, err := time.Parse("15:04", nt)
-	if err != nil {
-		return "", fmt.Errorf("invalid normalized time %q: %w", nt, err)
-	}
-	return MinuteKey(nt), nil
 }

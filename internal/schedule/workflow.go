@@ -11,7 +11,7 @@ import (
 
 type Workflow struct {
 	Name      string              `json:"name"`
-	Time      string              `json:"time"`
+	Time      types.MinuteOfDay   `json:"time"`
 	OnFailure *policy.FailureMode `json:"onFailure"`
 	Retry     RetryConfig
 	Steps     []Step `json:"steps"`
@@ -34,11 +34,6 @@ func (w Workflow) Validate() []error {
 	var errorList []error
 
 	vErrs := errs.ValidateWorkflowName(w.Name)
-	if len(vErrs) != 0 {
-		errorList = append(errorList, vErrs...)
-	}
-
-	vErrs = errs.ValidateWorkflowTime(w.Time)
 	if len(vErrs) != 0 {
 		errorList = append(errorList, vErrs...)
 	}

@@ -3,7 +3,6 @@ package errs
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/platform"
 )
@@ -87,32 +86,12 @@ func RequireNoWhitespace(s string) error {
 	return nil
 }
 
-func RequireValidTime(timeVal string) error {
-	layout := "15:04"
-
-	_, err := time.Parse(layout, timeVal)
-	if err != nil {
-		return ErrInvalidTime
-	}
-
-	return nil
-}
-
 var ValidateWorkflowName = createRuleset(
 	"workflow.name",
 	RequireNonEmpty,
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
 	LimitLength(MaxWorkflowNameLength),
-)
-
-var ValidateWorkflowTime = createRuleset(
-	"workflow.time",
-	RequireNonEmpty,
-	RequireNoWhitespace,
-	RequireNoLeadingTrailingWhitespace,
-	RequireValidTime,
-	LimitLength(MaxWorkflowTimeLength),
 )
 
 var ValidateWorkflowStepName = createRuleset(

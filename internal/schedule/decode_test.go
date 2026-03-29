@@ -240,6 +240,91 @@ func TestDecodeArgs_Invalid(t *testing.T) {
 	}
 }
 
+const WorkflowTimeEmpty = `
+[
+  {
+    "name": "foo",
+    "time": "",
+    "onFailure": "continue",    
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const WorkflowTimeBadHour = `
+[
+  {
+    "name": "foo",
+    "time": "99:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const WorkflowTimeBadMinute = `
+[
+  {
+    "name": "foo",
+    "time": "10:123",
+    "onFailure": "continue",    
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const WorkflowTimeMissingColon = `
+[
+  {
+    "name": "name",
+    "time": "1001",
+    "onFailure": "continue",    
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+  `
+
+const WorkflowTimeWhitespace = `
+[
+  {
+    "name": "name",
+    "time": " ",
+    "onFailure": "continue",    
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+func TestWorkflowTimes_Invalid(t *testing.T) {
+	tests := []struct {
+		name      string
+		json      string
+		wantError error
+	}{
+		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time bad minute", json: WorkflowTimeBadMinute, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time missing colon", json: WorkflowTimeMissingColon, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrInvalidTimeFormat},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.json)
+			_, _, err := DecodeSchedule(r)
+
+			if err == nil {
+				t.Fatalf("%s: unexpected decode/system error: got %v, want %v", tt.name, err, tt.wantError)
+			}
+
+			if !errors.Is(err, tt.wantError) {
+				t.Fatalf("%s: got %v, want %v", tt.name, err, tt.wantError)
+			}
+
+		})
+	}
+}
+
 func writeTempFile(t *testing.T, content string) string {
 	t.Helper()
 

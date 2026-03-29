@@ -1,9 +1,9 @@
 package schedule
 
-type MinuteKey string
+import "git.sr.ht/~mytec/gosched/internal/types"
 
 type Schedule struct {
-	wf map[MinuteKey][]Workflow
+	wf map[types.MinuteOfDay][]Workflow
 }
 
 func (s Schedule) WorkflowCount() int {
@@ -14,6 +14,6 @@ func (s Schedule) WorkflowCount() int {
 	return count
 }
 
-func (s Schedule) WorkflowsAtMinute(k MinuteKey) []Workflow {
+func (s Schedule) WorkflowsAtMinute(k types.MinuteOfDay) []Workflow {
 	return s.wf[k]
 }
