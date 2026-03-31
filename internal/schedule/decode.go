@@ -38,7 +38,7 @@ func ReadScheduleFile(filename string) (Schedule, []error, error) {
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
 func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
-	s := Schedule{wf: make(map[types.MinuteOfDay][]Workflow)}
+	s := Schedule{byMinute: make(map[types.MinuteOfDay][]Workflow)}
 	var workflows []Workflow
 
 	dec := json.NewDecoder(r)
@@ -74,8 +74,9 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	// Loop once again to do normalization
 	schedule := s
 	for _, wf := range workflows {
-		schedule.wf[wf.Time] = append(schedule.wf[wf.Time], wf)
+		schedule.byMinute[wf.Time] = append(schedule.byMinute[wf.Time], wf)
 	}
+	schedule.workflows = workflows
 
 	return schedule, nil, nil
 }

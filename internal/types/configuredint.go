@@ -3,6 +3,7 @@ package types
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
@@ -14,6 +15,10 @@ type ConfiguredInt struct {
 
 func (c ConfiguredInt) Int() int {
 	return c.v
+}
+
+func (c ConfiguredInt) String() string {
+	return strconv.Itoa(c.v)
 }
 
 func (c ConfiguredInt) Configured() bool {
