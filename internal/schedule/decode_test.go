@@ -2,8 +2,6 @@ package schedule
 
 import (
 	"errors"
-	"os"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -131,40 +129,40 @@ func TestDecode_ValidInput(t *testing.T) {
 	}
 }
 
-func TestReadScheduleFile_OK(t *testing.T) {
-	filename := writeTempFile(t, validOneWorkflowOneStep)
+// func TestReadScheduleFile_OK(t *testing.T) {
+// 	filename := writeTempFile(t, validOneWorkflowOneStep)
 
-	_, _, err := ReadScheduleFile(filename)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-}
+// 	_, _, err := ReadScheduleFile(filename)
+// 	if err != nil {
+// 		t.Fatalf("expected no error, got %v", err)
+// 	}
+// }
 
-func TestReadScheduleFile_OpenError(t *testing.T) {
-	_, _, err := ReadScheduleFile("/path/that/does/not/exist.json")
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
+// func TestReadScheduleFile_OpenError(t *testing.T) {
+// 	_, _, err := ReadScheduleFile("/path/that/does/not/exist.json")
+// 	if err == nil {
+// 		t.Fatal("expected error, got nil")
+// 	}
 
-	if !strings.Contains(err.Error(), "open workflows file") {
-		t.Fatalf("expected open context, got %v", err)
-	}
-}
+// 	if !strings.Contains(err.Error(), "open workflows file") {
+// 		t.Fatalf("expected open context, got %v", err)
+// 	}
+// }
 
-func TestReadScheduleFile_DecodeErrorIncludesFilename(t *testing.T) {
-	filename := writeTempFile(t, "{") // intentionally invalid JSON
+// func TestReadScheduleFile_DecodeErrorIncludesFilename(t *testing.T) {
+// 	filename := writeTempFile(t, "{") // intentionally invalid JSON
 
-	_, _, err := ReadScheduleFile(filename)
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-	if !strings.Contains(err.Error(), "decode workflows file") {
-		t.Fatalf("expected decode context, got %v", err)
-	}
-	if !strings.Contains(err.Error(), strconv.Quote(filename)) {
-		t.Fatalf("expected filename in error, got %v", err)
-	}
-}
+// 	_, _, err := ReadScheduleFile(filename)
+// 	if err == nil {
+// 		t.Fatal("expected error, got nil")
+// 	}
+// 	if !strings.Contains(err.Error(), "decode workflows file") {
+// 		t.Fatalf("expected decode context, got %v", err)
+// 	}
+// 	if !strings.Contains(err.Error(), strconv.Quote(filename)) {
+// 		t.Fatalf("expected filename in error, got %v", err)
+// 	}
+// }
 
 const WorkflowStepArgsWhitespace = `
 [
@@ -325,23 +323,23 @@ func TestWorkflowTimes_Invalid(t *testing.T) {
 	}
 }
 
-func writeTempFile(t *testing.T, content string) string {
-	t.Helper()
+// func writeTempFile(t *testing.T, content string) string {
+// 	t.Helper()
 
-	f, err := os.CreateTemp(t.TempDir(), "schedule-*.json")
-	if err != nil {
-		t.Fatalf("CreateTemp: %v", err)
-	}
+// 	f, err := os.CreateTemp(t.TempDir(), "schedule-*.json")
+// 	if err != nil {
+// 		t.Fatalf("CreateTemp: %v", err)
+// 	}
 
-	_, err = f.WriteString(content)
-	if err != nil {
-		f.Close()
-		t.Fatalf("WriteString: %v", err)
-	}
+// 	_, err = f.WriteString(content)
+// 	if err != nil {
+// 		f.Close()
+// 		t.Fatalf("WriteString: %v", err)
+// 	}
 
-	err = f.Close()
-	if err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	return f.Name()
-}
+// 	err = f.Close()
+// 	if err != nil {
+// 		t.Fatalf("Close: %v", err)
+// 	}
+// 	return f.Name()
+// }

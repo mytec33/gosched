@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
@@ -29,14 +27,14 @@ func main() {
 }
 
 func run() int {
-	filename := ""
+	var schedules schedule.ScheduleSliceFlag
 	newConfig := false
 	runOnce := false
 	printSchedule := ""
-	flag.StringVar(&filename, "schedule", "", "file containing a schedule to run")
+	flag.Var(&schedules, "schedule", "file containing a schedule to run")
 	flag.BoolVar(&newConfig, "new-config", false, "create an new configuration to begin with")
 	flag.BoolVar(&runOnce, "run-once", false, "bypass any schedule and run now")
-	flag.StringVar(&printSchedule, "print-schedule", "", "configuration summary: config, time, time-name")
+	flag.StringVar(&printSchedule, "print-schedule", "", "configuration summary: config, operational")
 	flag.Parse()
 
 	if newConfig {
@@ -44,13 +42,13 @@ func run() int {
 		return ExitSuccess
 	}
 
-	if filename == "" {
+	if len(schedules) == 0 {
 		logging.StdErr.Error("startup", "reason", "invalid args")
 		flag.Usage()
 		return ExitInvalidArgs
 	}
 
-	sched, valErrors, err := schedule.ReadScheduleFile(filename)
+	sched, valErrors, err := schedule.ReadScheduleFiles(schedules)
 	if err != nil {
 		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
@@ -69,7 +67,7 @@ func run() int {
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
 	// wish to print is shown and not logging messages. Those don't play well with JSON. :-)
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", filename)
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", schedules)
 
 	if runOnce {
 		failures := runSchedulerTick(time.Now(), sched, true)
@@ -88,35 +86,11 @@ func run() int {
 func printConfiguration(method string, s schedule.Schedule) {
 	switch method {
 	case "config":
-		printConfig(s)
+		s.PrintScheduleConfig(os.Stdout)
+	case "operational":
+		s.PrintScheduleOperational(os.Stdout)
 	default:
 		fmt.Printf("Unknown print config method: %s\n", method)
-	}
-}
-
-func printConfig(s schedule.Schedule) {
-	workflows := s.Workflows()
-	wfWidth := len(strconv.Itoa(len(workflows)))
-
-	for i, v := range workflows {
-		fmt.Printf("%*d: %s  %s (%s)\n", wfWidth, i+1, v.Time, v.Name, v.OnFailure)
-		for j, step := range v.Steps {
-			sWidth := len(strconv.Itoa(len(v.Steps)))
-
-			var details []string
-
-			details = append(details, fmt.Sprintf("timeout %s", step.Timeout.Duration()))
-
-			if step.Pause.Int() > 0 {
-				details = append(details, fmt.Sprintf("pause %s", step.Pause.Duration()))
-			}
-
-			if len(details) > 0 {
-				fmt.Printf("\t\t%*d: %s (%s)\n", sWidth, j+1, step.Name, strings.Join(details, ", "))
-			} else {
-				fmt.Printf("\t\t%*d: %s\n", sWidth, j+1, step.Name)
-			}
-		}
 	}
 }
 

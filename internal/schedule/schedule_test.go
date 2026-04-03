@@ -10,6 +10,9 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"git.sr.ht/~mytec/gosched/internal/policy"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 // All tests in this file are testing valid workflows to ensure we can run what we say we can run
@@ -160,5 +163,161 @@ func TestTwoWorkFlowOneStep(t *testing.T) {
 		!bytes.Contains(out, []byte(`workflow="Workflow 2" status=completed`)) ||
 		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
 		t.Fatalf("unexpected run-once receipt\n%s", out)
+	}
+}
+
+func TestPrintScheduleConfig(t *testing.T) {
+	m1145, err := types.ParseMinuteOfDay("11:45")
+	if err != nil {
+		t.Fatalf("parse 11:45: %v", err)
+	}
+
+	m1146, err := types.ParseMinuteOfDay("11:46")
+	if err != nil {
+		t.Fatalf("parse 11:46: %v", err)
+	}
+
+	m1247, err := types.ParseMinuteOfDay("12:47")
+	if err != nil {
+		t.Fatalf("parse 12:47: %v", err)
+	}
+
+	s := Schedule{
+		workflows: []Workflow{
+			{
+				Name:      "Workflow 1",
+				Time:      m1146,
+				OnFailure: &policy.Abort,
+				Steps: []Step{
+					{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+				},
+			},
+			{
+				Name:      "Workflow 1",
+				Time:      m1145,
+				OnFailure: &policy.Abort,
+				Steps: []Step{
+					{Name: "step 1", Timeout: types.NewConfiguredInt(30), Pause: types.NewConfiguredInt(5)},
+					{Name: "step 2", Timeout: types.NewConfiguredInt(30)},
+				},
+			},
+			{
+				Name:      "Workflow 2",
+				Time:      m1145,
+				OnFailure: &policy.Continue,
+				Steps: []Step{
+					{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+				},
+			},
+			{
+				Name:      "Workflow 1",
+				Time:      m1247,
+				OnFailure: &policy.Retry,
+				Steps: []Step{
+					{Name: "step 1", Timeout: types.NewConfiguredInt(1800)},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	s.PrintScheduleConfig(&buf)
+
+	got := buf.String()
+	want := `1: 11:46  Workflow 1 (abort)
+		1: step 1 (timeout 30s)
+2: 11:45  Workflow 1 (abort)
+		1: step 1 (timeout 30s, pause 5s)
+		2: step 2 (timeout 30s)
+3: 11:45  Workflow 2 (continue)
+		1: step 1 (timeout 30s)
+4: 12:47  Workflow 1 (retry)
+		1: step 1 (timeout 30m0s)
+`
+
+	if got != want {
+		t.Fatalf("unexpected output\ngot:\n%s\nwant:\n%s", got, want)
+	}
+}
+
+func TestPrintScheduleOperational(t *testing.T) {
+	m1145, err := types.ParseMinuteOfDay("11:45")
+	if err != nil {
+		t.Fatalf("parse 11:45: %v", err)
+	}
+
+	m1146, err := types.ParseMinuteOfDay("11:46")
+	if err != nil {
+		t.Fatalf("parse 11:46: %v", err)
+	}
+
+	m1247, err := types.ParseMinuteOfDay("12:47")
+	if err != nil {
+		t.Fatalf("parse 12:47: %v", err)
+	}
+
+	s := Schedule{
+		byMinute: map[types.MinuteOfDay][]Workflow{
+			m1146: {
+				{
+					Name:      "Workflow 3",
+					Time:      m1146,
+					OnFailure: &policy.Abort,
+					Steps: []Step{
+						{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+					},
+				},
+			},
+			m1145: {
+				{
+					Name:      "Workflow 1",
+					Time:      m1145,
+					OnFailure: &policy.Abort,
+					Steps: []Step{
+						{Name: "step 1", Timeout: types.NewConfiguredInt(30), Pause: types.NewConfiguredInt(5)},
+						{Name: "step 2", Timeout: types.NewConfiguredInt(30)},
+					},
+				},
+				{
+					Name:      "Workflow 2",
+					Time:      m1145,
+					OnFailure: &policy.Continue,
+					Steps: []Step{
+						{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+					},
+				},
+			},
+			m1247: {
+				{
+					Name:      "Workflow 1",
+					Time:      m1247,
+					OnFailure: &policy.Retry,
+					Steps: []Step{
+						{Name: "step 1", Timeout: types.NewConfiguredInt(1800)},
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	s.PrintScheduleOperational(&buf)
+
+	got := buf.String()
+	want := `1: 11:45  Workflow 1 (abort)
+		1: step 1 (timeout 30s, pause 5s)
+		2: step 2 (timeout 30s)
+2: 11:45  Workflow 2 (continue)
+		1: step 1 (timeout 30s)
+
+1: 11:46  Workflow 3 (abort)
+		1: step 1 (timeout 30s)
+
+1: 12:47  Workflow 1 (retry)
+		1: step 1 (timeout 30m0s)
+`
+
+	if got != want {
+		t.Fatalf("unexpected output\ngot:\n%s\nwant:\n%s", got, want)
 	}
 }
