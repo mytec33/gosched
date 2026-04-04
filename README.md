@@ -1,7 +1,6 @@
 # goSched
 
-A scheduler designed as simple replacement for Windows Task Scheduler with multiple
-config files and operational visibility.
+gosched is a task scheduler designed as simple replacement for Windows Task Scheduler. It allows multiple config files, workflows with multiple steps executed sequentially along with operational visibility. It is written in Go.
 
 ## Why
 
@@ -40,13 +39,12 @@ gosched -schedule base.json -schedule site.json
 
 Muliple `-schedule` flags are supported. Files are merged in the order provided.
 
-## Output modes
+### Display the two configurations as they were imported.
 
-### Config View
+```bash
+gosched -schedule config1.json -schedule config2.json -print-schedule config
+```
 
-Displays workflows as defined in configuration files. Useful for verifying correctness of configuration.
-
-Example:
 ```
 1: 11:45  Workflow 1 (abort)
 		1: step 1 (timeout 30s, pause 5s)
@@ -67,11 +65,12 @@ Example:
 		2: step 2 (timeout 30s)
 ```
 
-### Operational View
+### Display the configuration ordered by time.
 
-Displays workflows grouped by execution time.
+```bash
+gosched -schedule config1.json -schedule config2.json -print-schedule operational
+```
 
-Example:
 ```
 1: 11:45  Workflow 1 (abort)
 		1: step 1 (timeout 30s, pause 5s)
@@ -94,12 +93,6 @@ Example:
 		2: step 2 (timeout 30s)
 
 ```
-
-Useful for:
-
-- understanding workload at a given time
-- identifying scheduling collisions
-- planning concurrency limits
 
 ## Roadmap
 
