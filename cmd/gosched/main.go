@@ -222,6 +222,8 @@ func executeWorkflow(wf schedule.Workflow) error {
 			stdOut.Info(
 				"step",
 				"status", "completed",
+				"stepIndex", i,
+				"stepName", step.Name,
 				"exitCode", result.ExitCode,
 				"duration", stepDuration,
 			)
