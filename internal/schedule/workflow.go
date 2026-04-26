@@ -19,16 +19,16 @@ type Workflow struct {
 }
 
 type RetryConfig struct {
-	NumberRetries types.ConfiguredInt `json:"numberRetries"`
-	PauseSeconds  types.ConfiguredInt `json:"pauseSeconds"`
+	NumberRetries int `json:"numberRetries"`
+	PauseSeconds  int `json:"pauseSeconds"`
 }
 
 type Step struct {
-	Name    string              `json:"name"`
-	Program string              `json:"program"`
-	Args    []string            `json:"args"`
-	Timeout types.ConfiguredInt `json:"timeout"`
-	Pause   types.ConfiguredInt `json:"pause"`
+	Name    string   `json:"name"`
+	Program string   `json:"program"`
+	Args    []string `json:"args"`
+	Timeout int      `json:"timeout"`
+	Pause   int      `json:"pause"`
 }
 
 func (w Workflow) Validate() []error {
@@ -49,10 +49,26 @@ func (w Workflow) Validate() []error {
 		errorList = append(errorList, errs.ValidationError{Field: "workflow.steps", Err: errs.ErrEmpty})
 	}
 
+	if w.Retry.NumberRetries < 0 {
+		errorList = append(errorList, errs.ErrNegativeNumber)
+	}
+
+	if w.Retry.PauseSeconds < 0 {
+		errorList = append(errorList, errs.ErrNegativeNumber)
+	}
+
 	for _, steps := range w.Steps {
 		vErrs := errs.ValidateWorkflowStepName(steps.Name)
 		if len(vErrs) != 0 {
 			errorList = append(errorList, vErrs...)
+		}
+
+		if steps.Timeout < 0 {
+			errorList = append(errorList, errs.ErrNegativeNumber)
+		}
+
+		if steps.Pause < 0 {
+			errorList = append(errorList, errs.ErrNegativeNumber)
 		}
 
 		trimmedProgram := strings.TrimSpace(steps.Program)
@@ -75,7 +91,7 @@ func (w Workflow) Validate() []error {
 				errorList = append(errorList, errs.ErrWhitespaceAll)
 			case trimmed != arg:
 				errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
-			case len(arg) > 256:
+			case len(arg) > errs.MaxProgramArgsLengths:
 				errorList = append(errorList, errs.ErrArgsTooLong)
 			}
 		}

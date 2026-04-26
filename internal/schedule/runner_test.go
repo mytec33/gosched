@@ -3,8 +3,6 @@ package schedule
 import (
 	"testing"
 	"time"
-
-	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func TestExitCode(t *testing.T) {
@@ -55,7 +53,7 @@ func TestExitCode(t *testing.T) {
 				Args: []string{
 					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
 				},
-				Timeout: types.NewConfiguredInt(1),
+				Timeout: 1,
 			},
 			wantExitCode: -1,
 			wantFailed:   true,
@@ -92,7 +90,7 @@ func TestTimeout(t *testing.T) {
 				Args: []string{
 					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
 				},
-				Timeout: types.NewConfiguredInt(1),
+				Timeout: 1,
 			},
 			wantFailed: true,
 		},

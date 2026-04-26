@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"os/exec"
+	"time"
 )
 
 type StepExecutionResult struct {
@@ -17,8 +18,8 @@ func RunStepCommand(step Step) StepExecutionResult {
 	var cmd *exec.Cmd
 	var cancel context.CancelFunc
 
-	if step.Timeout.Configured() {
-		ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
+	if step.Timeout > 0 {
+		ctx, c := context.WithTimeout(context.Background(), secondsDuration(step.Timeout))
 		cancel = c
 		cmd = exec.CommandContext(ctx, step.Program, step.Args...)
 	} else {
@@ -43,4 +44,8 @@ func RunStepCommand(step Step) StepExecutionResult {
 
 func (s StepExecutionResult) Failed() bool {
 	return s.Err != nil || s.ExitCode != 0
+}
+
+func secondsDuration(seconds int) time.Duration {
+	return time.Duration(seconds) * time.Second
 }

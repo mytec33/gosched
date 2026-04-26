@@ -189,7 +189,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				Time:      m1146,
 				OnFailure: &policy.Abort,
 				Steps: []Step{
-					{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
@@ -197,8 +197,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 				Time:      m1145,
 				OnFailure: &policy.Abort,
 				Steps: []Step{
-					{Name: "step 1", Timeout: types.NewConfiguredInt(30), Pause: types.NewConfiguredInt(5)},
-					{Name: "step 2", Timeout: types.NewConfiguredInt(30)},
+					{Name: "step 1", Timeout: 30, Pause: 5},
+					{Name: "step 2", Timeout: 30},
 				},
 			},
 			{
@@ -206,7 +206,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				Time:      m1145,
 				OnFailure: &policy.Continue,
 				Steps: []Step{
-					{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
@@ -214,7 +214,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				Time:      m1247,
 				OnFailure: &policy.Retry,
 				Steps: []Step{
-					{Name: "step 1", Timeout: types.NewConfiguredInt(1800)},
+					{Name: "step 1", Timeout: 1800},
 				},
 			},
 		},
@@ -264,7 +264,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					Time:      m1146,
 					OnFailure: &policy.Abort,
 					Steps: []Step{
-						{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+						{Name: "step 1", Timeout: 30},
 					},
 				},
 			},
@@ -274,8 +274,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 					Time:      m1145,
 					OnFailure: &policy.Abort,
 					Steps: []Step{
-						{Name: "step 1", Timeout: types.NewConfiguredInt(30), Pause: types.NewConfiguredInt(5)},
-						{Name: "step 2", Timeout: types.NewConfiguredInt(30)},
+						{Name: "step 1", Timeout: 30, Pause: 5},
+						{Name: "step 2", Timeout: 30},
 					},
 				},
 				{
@@ -283,7 +283,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					Time:      m1145,
 					OnFailure: &policy.Continue,
 					Steps: []Step{
-						{Name: "step 1", Timeout: types.NewConfiguredInt(30)},
+						{Name: "step 1", Timeout: 30},
 					},
 				},
 			},
@@ -293,7 +293,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					Time:      m1247,
 					OnFailure: &policy.Retry,
 					Steps: []Step{
-						{Name: "step 1", Timeout: types.NewConfiguredInt(1800)},
+						{Name: "step 1", Timeout: 1800},
 					},
 				},
 			},

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
+	"git.sr.ht/~mytec/gosched/internal/policy"
 )
 
 const WorkflowNameEmpty = `
@@ -393,6 +394,66 @@ func TestWorkflowSteps_Valid(t *testing.T) {
 
 			if len(validationErrors) != 0 {
 				t.Fatalf("%s: unexpected validation error(s): %v, expected no error", tt.name, validationErrors)
+			}
+		})
+	}
+}
+
+func TestWorkflowConfiguredNumbers_Invalid(t *testing.T) {
+	tests := []struct {
+		name string
+		wf   Workflow
+	}{
+		{
+			name: "retry number negative",
+			wf: Workflow{
+				Name:      "workflow",
+				OnFailure: &policy.Continue,
+				Retry:     RetryConfig{NumberRetries: -1},
+				Steps:     []Step{{Name: "step", Program: "program"}},
+			},
+		},
+		{
+			name: "retry pause negative",
+			wf: Workflow{
+				Name:      "workflow",
+				OnFailure: &policy.Continue,
+				Retry:     RetryConfig{PauseSeconds: -1},
+				Steps:     []Step{{Name: "step", Program: "program"}},
+			},
+		},
+		{
+			name: "step timeout negative",
+			wf: Workflow{
+				Name:      "workflow",
+				OnFailure: &policy.Continue,
+				Steps:     []Step{{Name: "step", Program: "program", Timeout: -1}},
+			},
+		},
+		{
+			name: "step pause negative",
+			wf: Workflow{
+				Name:      "workflow",
+				OnFailure: &policy.Continue,
+				Steps:     []Step{{Name: "step", Program: "program", Pause: -1}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			validationErrors := tt.wf.Validate()
+
+			found := false
+			for _, ve := range validationErrors {
+				if errors.Is(ve, errs.ErrNegativeNumber) {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, errs.ErrNegativeNumber, validationErrors)
 			}
 		})
 	}

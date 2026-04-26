@@ -214,8 +214,8 @@ func executeWorkflow(wf schedule.Workflow) error {
 			)
 		}
 
-		if step.Pause.Configured() {
-			pause := step.Pause.Duration()
+		if step.Pause > 0 {
+			pause := time.Duration(step.Pause) * time.Second
 
 			if i < numSteps-1 {
 				stdOut.Info("step", "status", "paused", "duration", pause)
