@@ -397,3 +397,82 @@ func TestWorkflowSteps_Valid(t *testing.T) {
 		})
 	}
 }
+
+const WorkflowStepArgsWhitespace = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["         "]}]
+  }
+]
+`
+
+const WorkflowStepArgsWhitespaceLeading = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": [" leading"]}]
+  }
+]
+`
+
+const WorkflowStepArgsWhitespaceTrailing = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["trailing "]}]
+  }
+]
+`
+
+const WorkflowStepArgsTooLong = `
+[
+  {
+    "name": "name",
+    "time": "10:35",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "program", "args": ["Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.."]}]
+  }
+]
+`
+
+func TestDecodeArgs_Invalid(t *testing.T) {
+	tests := []struct {
+		name      string
+		json      string
+		wantError error
+	}{
+		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: errs.ErrWhitespaceAll},
+		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrArgsTooLong},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.json)
+
+			_, validationErrors, _ := DecodeSchedule(r)
+
+			found := false
+			for _, ve := range validationErrors {
+				if errors.Is(ve, tt.wantError) {
+					found = true
+				} else {
+					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
+						tt.name, ve, tt.wantError, validationErrors)
+				}
+			}
+			if !found {
+				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
+			}
+
+		})
+	}
+}

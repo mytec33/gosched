@@ -19,9 +19,8 @@ func TestExitCode(t *testing.T) {
 			step: Step{
 				Name:    "exit 0 succeeds",
 				Program: testprog,
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("0"), types.NewArg("-role"), types.NewArg("exit 0 succeeds"),
-					types.NewArg("-exitCode"), types.NewArg("0"),
+				Args: []string{
+					"-sleep", "0", "-role", "exit 0 succeeds", "-exitCode", "0",
 				},
 			},
 			wantExitCode: 0,
@@ -31,9 +30,8 @@ func TestExitCode(t *testing.T) {
 			step: Step{
 				Name:    "exit 5 fails",
 				Program: testprog,
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("0"), types.NewArg("-role"), types.NewArg("exit 5 fails"),
-					types.NewArg("-exitCode"), types.NewArg("5"),
+				Args: []string{
+					"-sleep", "0", "-role", "exit 5 fails", "-exitCode", "5",
 				},
 			},
 			wantExitCode: 5,
@@ -43,9 +41,8 @@ func TestExitCode(t *testing.T) {
 			step: Step{
 				Name:    "program not found",
 				Program: "invalid_program_name",
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("0"), types.NewArg("-role"), types.NewArg("program not found"),
-					types.NewArg("-exitCode"), types.NewArg("5"),
+				Args: []string{
+					"-sleep", "0", "-role", "program not found", "-exitCode", "5",
 				},
 			},
 			wantExitCode: -1,
@@ -55,9 +52,8 @@ func TestExitCode(t *testing.T) {
 			step: Step{
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("2"), types.NewArg("-role"), types.NewArg("timeout earlier than sleep time"),
-					types.NewArg("-exitCode"), types.NewArg("10"),
+				Args: []string{
+					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
 				},
 				Timeout: types.NewConfiguredInt(1),
 			},
@@ -93,9 +89,8 @@ func TestTimeout(t *testing.T) {
 			step: Step{
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("2"), types.NewArg("-role"), types.NewArg("timeout earlier than sleep time"),
-					types.NewArg("-exitCode"), types.NewArg("10"),
+				Args: []string{
+					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
 				},
 				Timeout: types.NewConfiguredInt(1),
 			},
@@ -121,9 +116,8 @@ func TestDuration(t *testing.T) {
 	step := Step{
 		Name:    "duration within reasonable time",
 		Program: testprog,
-		Args: []types.ConfiguredArg{
-			types.NewArg("-sleep"), types.NewArg("1"), types.NewArg("-role"), types.NewArg("duration within reasonable time"),
-			types.NewArg("-exitCode"), types.NewArg("10"),
+		Args: []string{
+			"-sleep", "1", "-role", "duration within reasonable time", "-exitCode", "10",
 		},
 	}
 

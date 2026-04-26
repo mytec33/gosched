@@ -17,17 +17,12 @@ func RunStepCommand(step Step) StepExecutionResult {
 	var cmd *exec.Cmd
 	var cancel context.CancelFunc
 
-	args := make([]string, 0, len(step.Args))
-	for _, a := range step.Args {
-		args = append(args, a.String())
-	}
-
 	if step.Timeout.Configured() {
 		ctx, c := context.WithTimeout(context.Background(), step.Timeout.Duration())
 		cancel = c
-		cmd = exec.CommandContext(ctx, step.Program, args...)
+		cmd = exec.CommandContext(ctx, step.Program, step.Args...)
 	} else {
-		cmd = exec.Command(step.Program, args...)
+		cmd = exec.Command(step.Program, step.Args...)
 	}
 	output, err := cmd.CombinedOutput()
 	stepResult.Err = err

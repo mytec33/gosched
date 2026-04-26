@@ -24,11 +24,11 @@ type RetryConfig struct {
 }
 
 type Step struct {
-	Name    string                `json:"name"`
-	Program string                `json:"program"`
-	Args    []types.ConfiguredArg `json:"args"`
-	Timeout types.ConfiguredInt   `json:"timeout"`
-	Pause   types.ConfiguredInt   `json:"pause"`
+	Name    string              `json:"name"`
+	Program string              `json:"program"`
+	Args    []string            `json:"args"`
+	Timeout types.ConfiguredInt `json:"timeout"`
+	Pause   types.ConfiguredInt `json:"pause"`
 }
 
 func (w Workflow) Validate() []error {
@@ -64,6 +64,22 @@ func (w Workflow) Validate() []error {
 		} else if trimmedProgram != steps.Program {
 			errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
 		}
+
+		for _, arg := range steps.Args {
+			trimmed := strings.TrimSpace(arg)
+
+			switch {
+			case arg == "":
+				errorList = append(errorList, errs.ErrEmpty)
+			case trimmed == "":
+				errorList = append(errorList, errs.ErrWhitespaceAll)
+			case trimmed != arg:
+				errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
+			case len(arg) > 256:
+				errorList = append(errorList, errs.ErrArgsTooLong)
+			}
+		}
+
 	}
 
 	errorList = append(errorList, validateUniqueStepNames(w.Steps)...)

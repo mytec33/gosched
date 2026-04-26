@@ -11,6 +11,7 @@ var (
 	ErrOnFailureInvalidMode        = errors.New("invalid workflow on failure mode")
 	ErrOnFailureRequired           = errors.New("onFailure field required")
 	ErrInvalidTimeFormat           = errors.New("invalid time format")
+	ErrArgsTooLong                 = errors.New("args too long")
 	ErrTooLong                     = errors.New("too long")
 	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
 	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")

@@ -9,7 +9,6 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
@@ -44,10 +43,10 @@ func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 			{
 				Name:    "exit 5",
 				Program: testprog,
-				Args: []types.ConfiguredArg{
-					types.NewArg("-sleep"), types.NewArg("0"),
-					types.NewArg("-role"), types.NewArg("exit 5"),
-					types.NewArg("-exitCode"), types.NewArg("5"),
+				Args: []string{
+					"-sleep", "0",
+					"-role", "exit 5",
+					"-exitCode", "5",
 				},
 			},
 		},
