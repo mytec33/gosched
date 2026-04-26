@@ -3,6 +3,7 @@ package schedule
 
 import (
 	"fmt"
+	"strings"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/policy"
@@ -54,9 +55,12 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, vErrs...)
 		}
 
-		vErrs = errs.ValidateWorkflowStepProgram(steps.Program)
-		if len(vErrs) != 0 {
-			errorList = append(errorList, vErrs...)
+		if steps.Program == "" {
+			errorList = append(errorList, errs.ErrEmpty)
+		} else if strings.TrimSpace(steps.Program) == "" {
+			errorList = append(errorList, errs.ErrWhitespaceAll)
+		} else if strings.TrimSpace(steps.Program) != steps.Program {
+			errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
 		}
 	}
 

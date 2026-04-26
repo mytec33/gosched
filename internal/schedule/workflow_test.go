@@ -2,12 +2,10 @@ package schedule
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
-	"git.sr.ht/~mytec/gosched/internal/platform"
 )
 
 const WorkflowNameEmpty = `
@@ -231,7 +229,6 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: errs.ErrWhitespaceAll},
 		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
-		{name: "program too long", json: workflowStepProgramTooLongJSON(), wantError: errs.ErrTooLong},
 	}
 
 	for _, tt := range tests {
@@ -261,22 +258,6 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 			}
 		})
 	}
-}
-
-func workflowStepProgramTooLongJSON() string {
-	maxLength := platform.MaxPathLength()
-
-	tooLong := strings.Repeat("a", maxLength+1)
-
-	return fmt.Sprintf(`
-      [
-        {
-          "name": "name",
-          "time": "10:35",
-          "onFailure": "continue",          
-          "steps": [{"name": "step name", "program": "%s", "args": ["args"]}]
-        }
-      ]`, tooLong)
 }
 
 const WorkflowNamesNotUnique = `

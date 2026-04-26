@@ -3,8 +3,6 @@ package errs
 import (
 	"fmt"
 	"strings"
-
-	"git.sr.ht/~mytec/gosched/internal/platform"
 )
 
 type ValidationError struct {
@@ -100,12 +98,4 @@ var ValidateWorkflowStepName = createRuleset(
 	RequireNoWhitespace,
 	RequireNoLeadingTrailingWhitespace,
 	LimitLength(MaxWorkflowNameLength),
-)
-
-var ValidateWorkflowStepProgram = createRuleset(
-	"workflow.step.program",
-	RequireNonEmpty,
-	RequireNoWhitespace,
-	RequireNoLeadingTrailingWhitespace,
-	LimitLength(platform.MaxPathLength()),
 )
