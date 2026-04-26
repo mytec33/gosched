@@ -196,9 +196,6 @@ func executeWorkflow(wf schedule.Workflow) error {
 		err := programExists(step.Program)
 		if err != nil {
 			stdErr.Error("step", "status", "failed", "reason", "cannot find program", "program", step.Program)
-			if workflowAbortsOnFailure(wf) {
-				return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, err)
-			}
 			continue
 		}
 
@@ -218,7 +215,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 				"reason", result.Err,
 			)
 
-			if workflowAbortsOnFailure(wf) {
+			if wf.OnFailure == &policy.Abort {
 				return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, result.Err)
 			}
 		} else {
@@ -247,10 +244,6 @@ func executeWorkflow(wf schedule.Workflow) error {
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 	return nil
-}
-
-func workflowAbortsOnFailure(wf schedule.Workflow) bool {
-	return wf.OnFailure != nil && *wf.OnFailure == policy.Abort
 }
 
 func generateNewConfig() {
