@@ -55,11 +55,13 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, vErrs...)
 		}
 
+		trimmedProgram := strings.TrimSpace(steps.Program)
+
 		if steps.Program == "" {
 			errorList = append(errorList, errs.ErrEmpty)
-		} else if strings.TrimSpace(steps.Program) == "" {
+		} else if trimmedProgram == "" {
 			errorList = append(errorList, errs.ErrWhitespaceAll)
-		} else if strings.TrimSpace(steps.Program) != steps.Program {
+		} else if trimmedProgram != steps.Program {
 			errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
 		}
 	}
