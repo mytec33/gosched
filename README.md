@@ -34,16 +34,21 @@ Later files append workflows and implicitly take priority.
 ## Usage
 
 ```bash
-gosched -schedule base.json -schedule site.json
+gosched -manifest ./manifest.txt
 ```
 
-Muliple `-schedule` flags are supported. Files are merged in the order provided.
+Manifest files are plain text lists of schedule JSON files.
+Blank lines are ignored.
+Lines beginning with # are ignored.
+Use separate manifest files to define different schedule compositions for production, testing, or troubleshooting.
 
 ### Display the two configurations as they were imported.
 
 ```bash
-gosched -schedule config1.json -schedule config2.json -print-schedule config
+gosched -manifest ./manifest.txt -print-schedule config
 ```
+
+In this example the manifest file contains two configurations: config1.json and config2.json.
 
 ```
 1: 11:45  Workflow 1 (abort)
