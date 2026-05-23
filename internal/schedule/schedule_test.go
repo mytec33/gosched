@@ -113,15 +113,23 @@ func TestOneWorkFlowOneStep(t *testing.T) {
 	schedule := fmt.Sprintf(ScheduleOneWorkflowOneStep, time.Now().Format("15:04"), testprog)
 
 	dir := t.TempDir()
-	file := filepath.Join(dir, "schedule.json")
-	if err := os.WriteFile(file, []byte(schedule), 0o600); err != nil {
+	scheduleFile := filepath.Join(dir, "schedule.json")
+	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	manifestFile := filepath.Join(dir, "manifest.txt")
+	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, scheduler, "-schedule", file, "-run-once")
+	fmt.Printf("dir: %v\n", dir)
+	fmt.Printf("file: %v\n", scheduleFile)
+	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -144,15 +152,21 @@ func TestTwoWorkFlowOneStep(t *testing.T) {
 	schedule := fmt.Sprintf(ScheduleTwoWorkflowOneStep, now, testprog, now, testprog)
 
 	dir := t.TempDir()
-	file := filepath.Join(dir, "schedule.json")
-	if err := os.WriteFile(file, []byte(schedule), 0o600); err != nil {
+	scheduleFile := filepath.Join(dir, "schedule.json")
+	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	manifestFile := filepath.Join(dir, "manifest.txt")
+	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, scheduler, "-schedule", file, "-run-once")
+	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
