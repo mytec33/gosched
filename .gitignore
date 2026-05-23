@@ -1,9 +1,13 @@
 .vscode/
 .zed/
+.idea/
 
 # binaries
 /gosched
 /gosched.exe
+
+# files
+manifest.txt
+
 /testprog
-/.idea
 /qodana.yaml

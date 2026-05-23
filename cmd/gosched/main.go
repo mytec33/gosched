@@ -7,17 +7,20 @@ import (
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
+	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 const (
-	ExitSuccess     int = 0
-	ExitNoConfig    int = 1
-	ExitValidation  int = 3
-	ExitInvalidArgs int = 4
-	ExitRunOnce     int = 5
+	ExitSuccess                int = 0
+	ExitNoConfig               int = 1
+	ExitValidation             int = 3
+	ExitInvalidArgs            int = 4
+	ExitRunOnce                int = 5
+	ExitDeprecatedScheduleFlag int = 7
+	ExitManifestError          int = 8
 )
 
 type TickFunc func(now time.Time, data schedule.Schedule, runOnce bool) int
@@ -27,11 +30,12 @@ func main() {
 }
 
 func run() int {
-	var schedules schedule.ScheduleSliceFlag
+	manifestFlag := ""
 	newConfig := false
 	runOnce := false
 	printSchedule := ""
-	flag.Var(&schedules, "schedule", "file containing a schedule to run")
+
+	flag.StringVar(&manifestFlag, "manifest", "", "path to a manifest file containing schedule configuration files to load")
 	flag.BoolVar(&newConfig, "new-config", false, "create an new configuration to begin with")
 	flag.BoolVar(&runOnce, "run-once", false, "bypass any schedule and run now")
 	flag.StringVar(&printSchedule, "print-schedule", "", "configuration summary: config, operational")
@@ -42,13 +46,25 @@ func run() int {
 		return ExitSuccess
 	}
 
-	if len(schedules) == 0 {
-		logging.StdErr.Error("startup", "reason", "invalid args")
+	if manifestFlag == "" {
+		logging.StdErr.Error("startup", "reason", "missing required -manifest argument")
 		flag.Usage()
 		return ExitInvalidArgs
 	}
 
-	sched, valErrors, err := schedule.ReadScheduleFiles(schedules)
+	scheduleFiles, err := manifest.ParseManifest(manifestFlag)
+	if err != nil {
+		logging.StdErr.Error("startup", "reason", "no files found in manifest", "error", err)
+		return ExitManifestError
+	}
+
+	if len(scheduleFiles) == 0 {
+		logging.StdErr.Error("startup", "reason", "manifest contains no schedule files")
+		flag.Usage()
+		return ExitInvalidArgs
+	}
+
+	sched, valErrors, err := schedule.ReadScheduleFiles(scheduleFiles)
 	if err != nil {
 		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
@@ -67,7 +83,7 @@ func run() int {
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
 	// wish to print is shown and not logging messages. Those don't play well with JSON. :-)
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", schedules)
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
 
 	if runOnce {
 		failures := runSchedulerTick(time.Now(), sched, true)
