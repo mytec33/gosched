@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -21,6 +22,10 @@ const (
 	ExitRunOnce                int = 5
 	ExitDeprecatedScheduleFlag int = 7
 	ExitManifestError          int = 8
+)
+
+var (
+	ErrRunCommandAbortsOnError = errors.New("run command aborts on error")
 )
 
 func main() {
@@ -140,7 +145,6 @@ func runSchedule(s schedule.Schedule, runOnce bool) {
 }
 
 func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int {
-
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
@@ -191,26 +195,23 @@ func executeWorkflow(wf schedule.Workflow) error {
 		}
 
 		if result.Err != nil {
-			stdErr.Error(
-				"step",
-				"status", "failed",
-				"exitCode", result.ExitCode,
-				"duration", stepDuration,
-				"reason", result.Err,
-			)
+			stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i, "status", "failed",
+				"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err)
 
 			if workflowAbortsOnFailure(wf) {
-				return fmt.Errorf("workflow %q step %d (%s) failed: %w", wf.Name, i, step.Name, result.Err)
+				stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i,
+					"policy", "abort", "reason", "step failed")
+				return fmt.Errorf("%w: %s", ErrRunCommandAbortsOnError, result.Err)
+			}
+
+			if workflowContinuesOnFailure(wf) {
+				stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i,
+					"policy", "continue", "reason", "step failed")
+				continue
 			}
 		} else {
-			stdOut.Info(
-				"step",
-				"status", "completed",
-				"stepIndex", i,
-				"stepName", step.Name,
-				"exitCode", result.ExitCode,
-				"duration", stepDuration,
-			)
+			stdOut.Info("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i, "status", "completed",
+				"stepName", step.Name, "exitCode", result.ExitCode, "duration", stepDuration)
 		}
 
 		if step.Pause > 0 {
@@ -232,6 +233,10 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 func workflowAbortsOnFailure(wf schedule.Workflow) bool {
 	return wf.OnFailure != nil && *wf.OnFailure == policy.Abort
+}
+
+func workflowContinuesOnFailure(wf schedule.Workflow) bool {
+	return wf.OnFailure != nil && *wf.OnFailure == policy.Continue
 }
 
 func generateNewConfig() {

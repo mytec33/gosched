@@ -27,9 +27,9 @@ gosched addresses this by:
 `config1 + config2 != config2 + config1`  
 Later files append workflows and implicitly take priority.
 
-- **Failure policies**
-- `abort` — stop remaining workflows in the bucket
-- `continue` — proceed to next workflow
+- **Workflow failure policies**
+- `abort` — stop the current workflow after a failed step; use when later steps depend on earlier outputs.
+- `continue` — keep running later steps after a failed step; use when steps are independent and partial success is useful.
 
 ## Usage
 
