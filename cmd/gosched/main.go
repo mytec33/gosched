@@ -23,8 +23,6 @@ const (
 	ExitManifestError          int = 8
 )
 
-type TickFunc func(now time.Time, data schedule.Schedule, runOnce bool) int
-
 func main() {
 	os.Exit(run())
 }
@@ -85,16 +83,7 @@ func run() int {
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
 	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
 
-	if runOnce {
-		failures := runSchedulerTick(time.Now(), sched, true)
-		logging.StdOut.Info("scheduler", "event", "run-once-finished", "failures", failures)
-		if failures > 0 {
-			return ExitRunOnce
-		}
-		return ExitSuccess
-	}
-
-	runScheduler(runSchedulerTick, sched, runOnce)
+	runSchedule(sched, runOnce)
 
 	return 0
 }
@@ -118,51 +107,45 @@ func displayCfgErrors(errors []error) {
 	}
 }
 
-func runScheduler(tick TickFunc, s schedule.Schedule, runOnce bool) {
+func runSchedule(s schedule.Schedule, runOnce bool) {
 	if runOnce {
-		tick(time.Now().Truncate(time.Minute), s, runOnce)
+		currentMinute, err := types.ParseMinuteOfDay(time.Now().Format("15:04"))
+		if err != nil {
+			logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
+			return
+		}
+
+		runSchedulerTick(currentMinute, s)
+		return
 	}
 
 	// Align to the next minute boundary once, then tick.
 	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
-
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		now := time.Now().Truncate(time.Minute)
-		n := tick(now, s, runOnce)
+		currentMinute, err := types.ParseMinuteOfDay(time.Now().Format("15:04"))
+		if err != nil {
+			logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
+			return
+		}
+
+		n := runSchedulerTick(currentMinute, s)
 		if n > 0 {
 			logging.StdOut.Info("scheduler", "scheduled workflows",
-				n, "minute", now.Format("15:04"),
-			)
+				n, "minute", currentMinute.String())
 		}
 	}
 }
 
-func runSchedulerTick(now time.Time, s schedule.Schedule, runOnce bool) int {
-	currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
-	if err != nil {
-		logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
-		return 1
-	}
+func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int {
+
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
 	if len(tasks) == 0 {
 		return 0
-	}
-
-	if runOnce {
-		failures := 0
-		for _, task := range tasks {
-			err := executeWorkflow(task)
-			if err != nil {
-				failures++
-				logging.StdErr.Error("workflow", "status", "failed", "workflow", task.Name, "error", err)
-			}
-		}
-		return failures
 	}
 
 	for _, task := range tasks {

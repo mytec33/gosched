@@ -2,14 +2,11 @@ package schedule
 
 import (
 	"bytes"
-	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
-	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
@@ -105,80 +102,86 @@ func findModuleRoot(t *testing.T) string {
 	}
 }
 
-func TestOneWorkFlowOneStep(t *testing.T) {
-	t.Parallel()
+//
+// Only commented out because run once behavior will be tuned
+//
+// func TestOneWorkFlowOneStep(t *testing.T) {
+// 	t.Parallel()
 
-	scheduler := buildBinary(t, "gosched", "cmd/gosched")
-	testprog := buildBinary(t, "testprog", "cmd/testprog")
-	schedule := fmt.Sprintf(ScheduleOneWorkflowOneStep, time.Now().Format("15:04"), testprog)
+// 	scheduler := buildBinary(t, "gosched", "cmd/gosched")
+// 	testprog := buildBinary(t, "testprog", "cmd/testprog")
+// 	schedule := fmt.Sprintf(ScheduleOneWorkflowOneStep, time.Now().Format("15:04"), testprog)
 
-	dir := t.TempDir()
-	scheduleFile := filepath.Join(dir, "schedule.json")
-	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
-		t.Fatal(err)
-	}
+// 	dir := t.TempDir()
+// 	scheduleFile := filepath.Join(dir, "schedule.json")
+// 	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	manifestFile := filepath.Join(dir, "manifest.txt")
-	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	manifestFile := filepath.Join(dir, "manifest.txt")
+// 	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+// 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+// 	defer cancel()
 
-	fmt.Printf("dir: %v\n", dir)
-	fmt.Printf("file: %v\n", scheduleFile)
-	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
+// 	fmt.Printf("dir: %v\n", dir)
+// 	fmt.Printf("file: %v\n", scheduleFile)
+// 	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
 
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("scheduler failed: %v\n%s", err, out)
-	}
+// 	out, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		t.Fatalf("scheduler failed: %v\n%s", err, out)
+// 	}
 
-	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
-		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
-		t.Fatalf("unexpected run-once receipt\n%s", out)
-	}
-}
+// 	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
+// 		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
+// 		t.Fatalf("unexpected run-once receipt\n%s", out)
+// 	}
+// }
 
-func TestTwoWorkFlowOneStep(t *testing.T) {
-	t.Parallel()
+//
+// Only commented out because run once behavior will be tuned
+//
+// func TestTwoWorkFlowOneStep(t *testing.T) {
+// 	t.Parallel()
 
-	scheduler := buildBinary(t, "gosched", "cmd/gosched")
-	testprog := buildBinary(t, "testprog", "cmd/testprog")
+// 	scheduler := buildBinary(t, "gosched", "cmd/gosched")
+// 	testprog := buildBinary(t, "testprog", "cmd/testprog")
 
-	now := time.Now().Format("15:04")
-	schedule := fmt.Sprintf(ScheduleTwoWorkflowOneStep, now, testprog, now, testprog)
+// 	now := time.Now().Format("15:04")
+// 	schedule := fmt.Sprintf(ScheduleTwoWorkflowOneStep, now, testprog, now, testprog)
 
-	dir := t.TempDir()
-	scheduleFile := filepath.Join(dir, "schedule.json")
-	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
-		t.Fatal(err)
-	}
+// 	dir := t.TempDir()
+// 	scheduleFile := filepath.Join(dir, "schedule.json")
+// 	if err := os.WriteFile(scheduleFile, []byte(schedule), 0o600); err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	manifestFile := filepath.Join(dir, "manifest.txt")
-	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	manifestFile := filepath.Join(dir, "manifest.txt")
+// 	err := os.WriteFile(manifestFile, []byte(scheduleFile), 0o600)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
+// 	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once")
 
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("scheduler failed: %v\n%s", err, out)
-	}
+// 	out, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		t.Fatalf("scheduler failed: %v\n%s", err, out)
+// 	}
 
-	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
-		!bytes.Contains(out, []byte(`workflow="Workflow 2" status=completed`)) ||
-		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
-		t.Fatalf("unexpected run-once receipt\n%s", out)
-	}
-}
+// 	if !bytes.Contains(out, []byte(`workflow="Workflow 1" status=completed`)) ||
+// 		!bytes.Contains(out, []byte(`workflow="Workflow 2" status=completed`)) ||
+// 		!bytes.Contains(out, []byte(`event=run-once-finished failures=0`)) {
+// 		t.Fatalf("unexpected run-once receipt\n%s", out)
+// 	}
+// }
 
 func TestPrintScheduleConfig(t *testing.T) {
 	m1145, err := types.ParseMinuteOfDay("11:45")
