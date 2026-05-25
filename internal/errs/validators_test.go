@@ -91,27 +91,3 @@ func TestRequireNoWhitespace(t *testing.T) {
 		})
 	}
 }
-
-// func TestRequireValidTime(t *testing.T) {
-// 	tests := []struct {
-// 		name      string
-// 		value     string
-// 		wantError error
-// 	}{
-// 		{name: "valid time", value: "10:30", wantError: nil},
-// 		{name: "empty time", value: "", wantError: ErrInvalidTimeNotNumber},
-// 		{name: "missing hours", value: ":10", wantError: ErrInvalidTimeNotNumber},
-// 		{name: "missing minutes", value: "9:", wantError: ErrInvalidTimeNotNumber},
-// 		{name: "missing colon", value: "1020", wantError: ErrInvalidTimeNotNumber},
-// 		{name: "missing colon with space", value: "10 20", wantError: ErrInvalidTimeNotNumber},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			err := RequireValidTime(tt.value)
-// 			if err != tt.wantError {
-// 				t.Fatalf("%s: got %q, want %q", tt.name, err, tt.wantError)
-// 			}
-// 		})
-// 	}
-// }
