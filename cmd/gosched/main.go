@@ -179,7 +179,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
-	stdOut.Info("workflow", "status", "started")
+	stdOut.Info("workflow", "name", wf.Name, "status", "started")
 
 	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
@@ -191,27 +191,25 @@ func executeWorkflow(wf schedule.Workflow) error {
 		stepDuration := time.Since(stepStart)
 
 		if len(result.Output) != 0 {
-			stdOut.Info("step output", "data", result.Output)
+			stdOut.Info("step", "output", result.Output)
 		}
 
 		if result.Err != nil {
-			stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i, "status", "failed",
-				"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err)
+			stdErr.Error("step", "step", step.Name, "stepIndex", i, "status", "failed",
+				"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err,
+				"policy", wf.OnFailure)
 
 			if workflowAbortsOnFailure(wf) {
-				stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i,
-					"policy", "abort", "reason", "step failed")
+				stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", wf.OnFailure)
 				return fmt.Errorf("%w: %s", ErrRunCommandAbortsOnError, result.Err)
 			}
 
 			if workflowContinuesOnFailure(wf) {
-				stdErr.Error("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i,
-					"policy", "continue", "reason", "step failed")
 				continue
 			}
 		} else {
-			stdOut.Info("run step", "workflow", wf.Name, "step", step.Name, "stepIndex", i, "status", "completed",
-				"stepName", step.Name, "exitCode", result.ExitCode, "duration", stepDuration)
+			stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", "completed",
+				"exitCode", result.ExitCode, "duration", stepDuration)
 		}
 
 		if step.Pause > 0 {
