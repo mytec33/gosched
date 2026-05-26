@@ -17,7 +17,7 @@ func main() {
 
 	flag.IntVar(&sleepSeconds, "sleep", 0, "number of seconds to sleep. zero means no sleep but still run")
 	flag.StringVar(&role, "role", "", "identifier describing how this program is used in the schedule (required)")
-	flag.IntVar(&exitCode, "exitCode", -1, "exit code the program should return")
+	flag.IntVar(&exitCode, "exit-code", -1, "exit code the program should return")
 	flag.Parse()
 
 	if sleepSeconds < 0 {
@@ -35,6 +35,7 @@ func main() {
 	log("DONE", role, fmt.Sprintf("elapsed=%s", time.Since(start).Round(time.Millisecond)))
 
 	if exitCode > -1 {
+		log("EXIT", role, fmt.Sprintf("%v", exitCode))
 		os.Exit(exitCode)
 	}
 
