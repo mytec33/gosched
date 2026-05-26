@@ -1,0 +1,66 @@
+[
+	{
+		"name": "Example - Abort",
+		"time": "20:29",
+		"onFailure": "abort",
+		"steps": [
+			{
+				"name": "abort step 1",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"5",
+					"-role",
+					"run and abort after step 1",
+					"-exit-code",
+					"1"
+				],
+				"timeout": 11,
+				"pause": 3
+			},
+			{
+				"name": "abort step 2",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"50",
+					"-role",
+					"should not run"
+				],
+				"pause": 5
+			}
+		]
+	},
+	{
+		"name": "Example - Continue",
+		"time": "20:29",
+		"onFailure": "continue",
+		"steps": [
+			{
+				"name": "daily",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"2",
+					"-role",
+					"fail but continue workflow",
+					"-exit-code",
+					"1"
+				],
+				"timeout": 11,
+				"pause": 3
+			},
+			{
+				"name": "modified",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"5",
+					"-role",
+					"should run in continue mode"
+				],
+				"pause": 5
+			}
+		]
+	}
+]

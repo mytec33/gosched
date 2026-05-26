@@ -1,0 +1,34 @@
+[
+	{
+		"name": "Example - Continue",
+		"time": "19:47",
+		"onFailure": "continue",
+		"steps": [
+			{
+				"name": "daily",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"2",
+					"-role",
+					"fail but continue workflow",
+					"-exit-code",
+					"1"
+				],
+				"timeout": 11,
+				"pause": 3
+			},
+			{
+				"name": "modified",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"5",
+					"-role",
+					"should run in continue mode"
+				],
+				"pause": 5
+			}
+		]
+	}
+]
