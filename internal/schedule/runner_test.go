@@ -18,7 +18,7 @@ func TestExitCode(t *testing.T) {
 				Name:    "exit 0 succeeds",
 				Program: testprog,
 				Args: []string{
-					"-sleep", "0", "-role", "exit 0 succeeds", "-exitCode", "0",
+					"-sleep", "0", "-role", "exit 0 succeeds", "-exit-code", "0",
 				},
 			},
 			wantExitCode: 0,
@@ -29,7 +29,7 @@ func TestExitCode(t *testing.T) {
 				Name:    "exit 5 fails",
 				Program: testprog,
 				Args: []string{
-					"-sleep", "0", "-role", "exit 5 fails", "-exitCode", "5",
+					"-sleep", "0", "-role", "exit 5 fails", "-exit-code", "5",
 				},
 			},
 			wantExitCode: 5,
@@ -40,7 +40,7 @@ func TestExitCode(t *testing.T) {
 				Name:    "program not found",
 				Program: "invalid_program_name",
 				Args: []string{
-					"-sleep", "0", "-role", "program not found", "-exitCode", "5",
+					"-sleep", "0", "-role", "program not found", "-exit-code", "5",
 				},
 			},
 			wantExitCode: -1,
@@ -51,7 +51,7 @@ func TestExitCode(t *testing.T) {
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
 				Args: []string{
-					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
+					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exit-code", "10",
 				},
 				Timeout: 1,
 			},
@@ -88,7 +88,7 @@ func TestTimeout(t *testing.T) {
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
 				Args: []string{
-					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exitCode", "10",
+					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exit-code", "10",
 				},
 				Timeout: 1,
 			},
@@ -115,7 +115,7 @@ func TestDuration(t *testing.T) {
 		Name:    "duration within reasonable time",
 		Program: testprog,
 		Args: []string{
-			"-sleep", "1", "-role", "duration within reasonable time", "-exitCode", "10",
+			"-sleep", "1", "-role", "duration within reasonable time", "-exit-code", "10",
 		},
 	}
 
