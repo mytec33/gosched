@@ -118,3 +118,15 @@ func validateUniqueStepNames(steps []Step) []error {
 
 	return errors
 }
+
+func WorkflowAbortsOnFailure(wf Workflow) bool {
+	return wf.OnFailure != nil && *wf.OnFailure == policy.Abort
+}
+
+func WorkflowContinuesOnFailure(wf Workflow) bool {
+	return wf.OnFailure != nil && *wf.OnFailure == policy.Continue
+}
+
+func WorkflowRetriesOnFailure(wf Workflow) bool {
+	return wf.OnFailure != nil && *wf.OnFailure == policy.Retry
+}

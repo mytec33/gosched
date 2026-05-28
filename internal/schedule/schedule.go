@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
@@ -70,10 +71,10 @@ func (s Schedule) PrintScheduleOperational(w io.Writer) {
 func printStep(numSteps int, stepIndex int, step Step, w io.Writer) {
 	var details []string
 
-	details = append(details, fmt.Sprintf("timeout %s", secondsDuration(step.Timeout)))
+	details = append(details, fmt.Sprintf("timeout %s", helpers.SecondsDuration(step.Timeout)))
 
 	if step.Pause > 0 {
-		details = append(details, fmt.Sprintf("pause %s", secondsDuration(step.Pause)))
+		details = append(details, fmt.Sprintf("pause %s", helpers.SecondsDuration(step.Pause)))
 	}
 
 	if len(details) > 0 {

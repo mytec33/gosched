@@ -9,7 +9,7 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
 	"git.sr.ht/~mytec/gosched/internal/manifest"
-	"git.sr.ht/~mytec/gosched/internal/policy"
+	"git.sr.ht/~mytec/gosched/internal/runner"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
@@ -183,33 +183,21 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
-		stepStart := time.Now()
-
-		stdOut.Info("step", "status", "started", "stepIndex", i, "stepName", step.Name, "args", step.Args)
-
-		result := schedule.RunStepCommand(step)
-		stepDuration := time.Since(stepStart)
-
-		if len(result.Output) != 0 {
-			stdOut.Info("step", "output", result.Output)
-		}
+		result := runner.RunStepAttempt(stdOut, step, i)
 
 		if result.Err != nil {
-			stdErr.Error("step", "step", step.Name, "stepIndex", i, "status", "failed",
-				"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err,
-				"policy", wf.OnFailure)
-
-			if workflowAbortsOnFailure(wf) {
+			if schedule.WorkflowAbortsOnFailure(wf) {
 				stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", wf.OnFailure)
 				return fmt.Errorf("%w: %s", ErrRunCommandAbortsOnError, result.Err)
 			}
 
-			if workflowContinuesOnFailure(wf) {
+			if schedule.WorkflowContinuesOnFailure(wf) {
 				continue
 			}
-		} else {
-			stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", "completed",
-				"exitCode", result.ExitCode, "duration", stepDuration)
+
+			if schedule.WorkflowRetriesOnFailure(wf) {
+				runner.RunStepRetries(stdOut, step, i, wf.Retry)
+			}
 		}
 
 		if step.Pause > 0 {
@@ -227,14 +215,6 @@ func executeWorkflow(wf schedule.Workflow) error {
 	workflowDuration := time.Since(workflowStart)
 	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
 	return nil
-}
-
-func workflowAbortsOnFailure(wf schedule.Workflow) bool {
-	return wf.OnFailure != nil && *wf.OnFailure == policy.Abort
-}
-
-func workflowContinuesOnFailure(wf schedule.Workflow) bool {
-	return wf.OnFailure != nil && *wf.OnFailure == policy.Continue
 }
 
 func generateNewConfig() {
