@@ -1,21 +1,17 @@
 # goSched
 
-gosched is a task scheduler designed as simple replacement for Windows Task Scheduler. It allows multiple config files, workflows with multiple steps executed sequentially along with operational visibility. It is written in Go.
+gosched is a task scheduler designed as a simple replacement for Windows Task Scheduler. Written in Go, it's easy to deploy across myriad systems.
 
 ## Why
 
-Windows Task Scheduler makes it difficult to:
-
-- understand what runs at a given time
-- reason about job collisions
-- control execution order across multiple entries, especially those in different folders
-- see program output and exit codes
+Managing large numbers of scheduled tasks with Windows Task Scheduler can become difficult when execution order, visibility, and operational troubleshooting are spread across many independent scheduler entries.
 
 gosched addresses this by:
 
-- merging multiple config fles in declared order
+- merging multiple config files in declared order
+- executing workflow steps sequentially
 - logging program output and exit codes
-- providing operational view of scheduled work
+- providing operational visibility into scheduled work
 
 
 ## Key Concepts
@@ -30,6 +26,7 @@ Later files append workflows and implicitly take priority.
 - **Workflow failure policies**
 - `abort` — stop the current workflow after a failed step; use when later steps depend on earlier outputs.
 - `continue` — keep running later steps after a failed step; use when steps are independent and partial success is useful.
+- `retry` — if a step fails, retry the step `numberRetries` times, pausing `pauseSeconds` between retries. After retries complete (successful or exhausted), continue to the next step.
 
 ## Usage
 
@@ -38,9 +35,10 @@ gosched -manifest ./manifest.txt
 ```
 
 Manifest files are plain text lists of schedule JSON files.
-Blank lines are ignored.
-Lines beginning with # are ignored.
-Use separate manifest files to define different schedule compositions for production, testing, or troubleshooting.
+
+- Blank lines are ignored.
+- Lines beginning with # are ignored and treated as comments.
+- Separate manifest files can be used for production, testing, or troubleshooting.
 
 ### Display the two configurations as they were imported.
 
@@ -105,13 +103,11 @@ gosched is intentionally simple today. The following features are planned:
 
 ### Near Term
 
-- Retry (basic)
 - Concurrency limits per minute
 - Improved logging of workflow execution
 
 ### Medium Term
 
-- Retry policy refinement
 - Visibility into running vs queued workflows
 - Additional output modes
 
