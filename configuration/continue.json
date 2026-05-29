@@ -1,7 +1,7 @@
 [
 	{
 		"name": "Example - Continue",
-		"time": "19:47",
+		"time": "21:11",
 		"onFailure": "continue",
 		"steps": [
 			{

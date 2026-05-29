@@ -1,0 +1,23 @@
+[
+    {
+		"name": "Workflow Retry",
+		"time": "21:43",
+		"onFailure": "retry",
+		"retry": {
+			"numberRetries": 3,
+			"pauseSeconds": 10
+		},
+		"steps": [
+			{
+				"name": "daily",
+				"program": "/opt/sbin/some_script",
+				"args": [
+					"--sleep",
+					"5",
+                    "--exitCode",
+                    "50"
+				]
+			}
+		]
+	}
+]

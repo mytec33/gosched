@@ -14,8 +14,8 @@ type Workflow struct {
 	Name      string              `json:"name"`
 	Time      types.MinuteOfDay   `json:"time"`
 	OnFailure *policy.FailureMode `json:"onFailure"`
-	Retry     RetryConfig
-	Steps     []Step `json:"steps"`
+	Retry     RetryConfig         `json:"retry"`
+	Steps     []Step              `json:"steps"`
 }
 
 type RetryConfig struct {

@@ -76,7 +76,7 @@ func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retr
 		retryPause := time.Duration(retry.PauseSeconds) * time.Second
 
 		stdOut.Info("step retry", "stepName", step.Name, "stepIndex", stepIndex,
-			"attempt", attempt, "maxAttempts", retry.NumberRetries,
+			"retryAttempt", attempt, "maxRetries", retry.NumberRetries,
 			"status", "paused", "duration", retryPause,
 		)
 
@@ -89,7 +89,7 @@ func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retr
 	}
 
 	stdOut.Error("step retry", "stepName", step.Name, "stepIndex", stepIndex,
-		"status", "exhausted", "attempts", retry.NumberRetries)
+		"status", "exhausted", "retries", retry.NumberRetries)
 }
 
 func (s StepExecutionResult) Failed() bool {
