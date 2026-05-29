@@ -11,3 +11,6 @@ manifest.txt
 
 /testprog
 /qodana.yaml
+
+# Go files
+cover.out
