@@ -1,4 +1,4 @@
-image: ubuntu/22.04
+image: ubuntu/25.04
 packages:
   - golang-go
 sources:
