@@ -1,9 +1,8 @@
 package errs
 
 const (
-	MaxWorkflowNameLength int = 256
-)
-
-const (
-	MaxProgramArgsLengths int = 256
+	MaxProgramArgsLength         int = 256
+	MaxWorkflowNameLength        int = 256
+	MaxWorkflowStepProgramLength int = 256
+	MaxWorkflowStepNameLength    int = 256
 )

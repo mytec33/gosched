@@ -14,11 +14,11 @@ type Workflow struct {
 	Name      string              `json:"name"`
 	Time      types.MinuteOfDay   `json:"time"`
 	OnFailure *policy.FailureMode `json:"onFailure"`
-	Retry     RetryConfig         `json:"retry"`
+	Retry     *RetryPolicy        `json:"retry"`
 	Steps     []Step              `json:"steps"`
 }
 
-type RetryConfig struct {
+type RetryPolicy struct {
 	NumberRetries int `json:"numberRetries"`
 	PauseSeconds  int `json:"pauseSeconds"`
 }
@@ -34,10 +34,7 @@ type Step struct {
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	vErrs := errs.ValidateWorkflowName(w.Name)
-	if len(vErrs) != 0 {
-		errorList = append(errorList, vErrs...)
-	}
+	errorList = append(errorList, validateRequiredName(w.Name, errs.MaxWorkflowNameLength)...)
 
 	// The JSON field onFailure isn't tested here because it's converted
 	// from string -> enum and that boundary controls if it's valid or not
@@ -45,23 +42,23 @@ func (w Workflow) Validate() []error {
 		errorList = append(errorList, errs.ErrOnFailureRequired)
 	}
 
+	if w.Retry != nil {
+		if w.Retry.NumberRetries < 0 {
+			errorList = append(errorList, errs.ErrRetryCountNegative)
+		}
+
+		if w.Retry.PauseSeconds < 0 {
+			errorList = append(errorList, errs.ErrRetryPauseNegative)
+		}
+	}
+
 	if len(w.Steps) == 0 {
-		errorList = append(errorList, errs.ValidationError{Field: "workflow.steps", Err: errs.ErrEmpty})
-	}
-
-	if w.Retry.NumberRetries < 0 {
-		errorList = append(errorList, errs.ErrNegativeNumber)
-	}
-
-	if w.Retry.PauseSeconds < 0 {
-		errorList = append(errorList, errs.ErrNegativeNumber)
+		errorList = append(errorList, errs.ErrEmpty)
 	}
 
 	for _, steps := range w.Steps {
-		vErrs := errs.ValidateWorkflowStepName(steps.Name)
-		if len(vErrs) != 0 {
-			errorList = append(errorList, vErrs...)
-		}
+		errorList = append(errorList, validateRequiredName(steps.Name,
+			errs.MaxWorkflowStepNameLength)...)
 
 		if steps.Timeout < 0 {
 			errorList = append(errorList, errs.ErrNegativeNumber)
@@ -71,34 +68,34 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, errs.ErrNegativeNumber)
 		}
 
-		trimmedProgram := strings.TrimSpace(steps.Program)
-
-		if steps.Program == "" {
-			errorList = append(errorList, errs.ErrEmpty)
-		} else if trimmedProgram == "" {
-			errorList = append(errorList, errs.ErrWhitespaceAll)
-		} else if trimmedProgram != steps.Program {
-			errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
-		}
+		errorList = append(errorList, validateRequiredName(steps.Program,
+			errs.MaxWorkflowStepProgramLength)...)
 
 		for _, arg := range steps.Args {
-			trimmed := strings.TrimSpace(arg)
-
-			switch {
-			case arg == "":
-				errorList = append(errorList, errs.ErrEmpty)
-			case trimmed == "":
-				errorList = append(errorList, errs.ErrWhitespaceAll)
-			case trimmed != arg:
-				errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
-			case len(arg) > errs.MaxProgramArgsLengths:
-				errorList = append(errorList, errs.ErrArgsTooLong)
-			}
+			errorList = append(errorList, validateRequiredName(arg,
+				errs.MaxProgramArgsLength)...)
 		}
 
 	}
 
 	errorList = append(errorList, validateUniqueStepNames(w.Steps)...)
+
+	return errorList
+}
+
+func validateRequiredName(s string, maxLength int) []error {
+	var errorList []error
+	trimmed := strings.TrimSpace(s)
+
+	if s == "" {
+		errorList = append(errorList, errs.ErrEmpty)
+	} else if trimmed == "" {
+		errorList = append(errorList, errs.ErrWhitespaceAll)
+	} else if trimmed != s {
+		errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
+	} else if len(trimmed) > maxLength {
+		errorList = append(errorList, errs.ErrTooLong)
+	}
 
 	return errorList
 }

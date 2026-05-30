@@ -13,6 +13,8 @@ var (
 	ErrInvalidTimeFormat           = errors.New("invalid time format")
 	ErrArgsTooLong                 = errors.New("args too long")
 	ErrTooLong                     = errors.New("too long")
+	ErrRetryCountNegative          = errors.New("retry count must be 0 or greater")
+	ErrRetryPauseNegative          = errors.New("retry pause seconds must be 0 or greater")
 	ErrWhitespaceAll               = errors.New("cannot be all whitespace")
 	ErrWhitespaceLeadingOrTrailing = errors.New("leading or trailing whitespace")
 )

@@ -76,7 +76,7 @@ func RunStepAttempt(stdOut *slog.Logger, step schedule.Step, index int) StepExec
 	return result
 }
 
-func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retry schedule.RetryConfig) {
+func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retry *schedule.RetryPolicy) {
 	var retryResult StepExecutionResult
 
 	for attempt := 1; attempt <= retry.NumberRetries; attempt++ {

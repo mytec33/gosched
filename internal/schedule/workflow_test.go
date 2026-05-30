@@ -399,29 +399,58 @@ func TestWorkflowSteps_Valid(t *testing.T) {
 	}
 }
 
-func TestWorkflowConfiguredNumbers_Invalid(t *testing.T) {
+func TestWorkflowRetryConfiguredNumbers_Invalid(t *testing.T) {
 	tests := []struct {
-		name string
-		wf   Workflow
+		name          string
+		wf            Workflow
+		expectedError error
 	}{
 		{
 			name: "retry number negative",
 			wf: Workflow{
-				Name:      "workflow",
-				OnFailure: &policy.Continue,
-				Retry:     RetryConfig{NumberRetries: -1},
-				Steps:     []Step{{Name: "step", Program: "program"}},
+				Name:  "workflow",
+				Retry: &RetryPolicy{NumberRetries: -1},
+				Steps: []Step{{Name: "step", Program: "program"}},
 			},
+			expectedError: errs.ErrRetryCountNegative,
 		},
 		{
 			name: "retry pause negative",
 			wf: Workflow{
-				Name:      "workflow",
-				OnFailure: &policy.Continue,
-				Retry:     RetryConfig{PauseSeconds: -1},
-				Steps:     []Step{{Name: "step", Program: "program"}},
+				Name:  "workflow",
+				Retry: &RetryPolicy{PauseSeconds: -1},
+				Steps: []Step{{Name: "step", Program: "program"}},
 			},
+			expectedError: errs.ErrRetryPauseNegative,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			validationErrors := tt.wf.Validate()
+
+			found := false
+			for _, ve := range validationErrors {
+				if errors.Is(ve, tt.expectedError) {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Fatalf("%s: missing expected error %v. Full list: %v",
+					tt.name, tt.expectedError, validationErrors)
+			}
+		})
+	}
+}
+
+func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
+	tests := []struct {
+		name          string
+		wf            Workflow
+		expectedError error
+	}{
 		{
 			name: "step timeout negative",
 			wf: Workflow{
@@ -429,6 +458,7 @@ func TestWorkflowConfiguredNumbers_Invalid(t *testing.T) {
 				OnFailure: &policy.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Timeout: -1}},
 			},
+			expectedError: errs.ErrNegativeNumber,
 		},
 		{
 			name: "step pause negative",
@@ -437,6 +467,7 @@ func TestWorkflowConfiguredNumbers_Invalid(t *testing.T) {
 				OnFailure: &policy.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Pause: -1}},
 			},
+			expectedError: errs.ErrNegativeNumber,
 		},
 	}
 
@@ -512,7 +543,7 @@ func TestDecodeArgs_Invalid(t *testing.T) {
 		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: errs.ErrWhitespaceAll},
 		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
-		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrArgsTooLong},
+		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrTooLong},
 	}
 
 	for _, tt := range tests {
