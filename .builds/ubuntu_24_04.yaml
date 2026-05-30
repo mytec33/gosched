@@ -1,0 +1,40 @@
+image: ubuntu/26.04
+packages:
+  - golang-go
+sources:
+  - https://git.sr.ht/~mytec/gosched
+tasks:
+  - compile: |
+      cd gosched
+      go build ./...
+  - test: |
+      cd gosched
+      go test ./...
+  - build-linux: |
+      cd gosched
+      go build -o gosched-linux-amd64 ./cmd/gosched
+  - build-darwin: |
+      cd gosched
+      GOOS=darwin GOARCH=arm64 go build -o gosched-darwin-arm64 ./cmd/gosched      
+  - build-openbsd: |
+      cd gosched
+      GOOS=openbsd GOARCH=amd64 go build -o gosched-openbsd-amd64 ./cmd/gosched
+  - build-windows: |
+      cd gosched
+      GOOS=windows GOARCH=amd64 go build -o gosched-windows-amd64 ./cmd/gosched
+  - build-testprog-linux: |
+      cd gosched
+      go build -o testprog-linux-amd64 ./cmd/testprog
+  - build-testprog-darwin: |
+      cd gosched
+      GOOS=darwin GOARCH=arm64 go build -o testprog-darwin-arm64 ./cmd/testprog      
+  - build-testprog-openbsd: |
+      cd gosched
+      GOOS=openbsd GOARCH=amd64 go build -o testprog-openbsd-amd64 ./cmd/testprog
+  - build-testprog-windows: |
+      cd gosched
+      GOOS=windows GOARCH=amd64 go build -o testprog-windows-amd64 ./cmd/testprog            
+triggers:
+  - action: email
+    condition: always
+    to: sourcehut@bogoflop.com
