@@ -10,6 +10,12 @@ tasks:
   - test: |
       cd gosched
       go test ./...
+  - build-openbsd: |
+      cd gosched
+      go build -o gosched-openbsd-amd64 ./cmd/gosched
+  - build-testprog-openbsd: |
+      cd gosched
+      go build -o testprog-openbsd-amd64 ./cmd/testprog       
 triggers:
   - action: email
     condition: always
