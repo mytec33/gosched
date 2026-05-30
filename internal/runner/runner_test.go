@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -67,6 +68,7 @@ func TestExitCode(t *testing.T) {
 		t.Run(tt.step.Name, func(t *testing.T) {
 			result := RunStepCommand(tt.step)
 
+			fmt.Printf("test: %v: result: %v\n", tt.step.Name, result.ExitCode)
 			if result.ExitCode != tt.wantExitCode {
 				t.Fatalf("%s: want %v, got %v", tt.step.Name, tt.wantExitCode, result.ExitCode)
 			}

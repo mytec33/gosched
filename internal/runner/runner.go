@@ -3,6 +3,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os/exec"
 	"time"
@@ -22,10 +23,10 @@ func RunStepCommand(step schedule.Step) StepExecutionResult {
 
 	var cmd *exec.Cmd
 	var cancel context.CancelFunc
+	var ctx context.Context
 
 	if step.Timeout > 0 {
-		ctx, c := context.WithTimeout(context.Background(), helpers.SecondsDuration(step.Timeout))
-		cancel = c
+		ctx, cancel = context.WithTimeout(context.Background(), helpers.SecondsDuration(step.Timeout))
 		cmd = exec.CommandContext(ctx, step.Program, step.Args...)
 	} else {
 		cmd = exec.Command(step.Program, step.Args...)
@@ -34,15 +35,21 @@ func RunStepCommand(step schedule.Step) StepExecutionResult {
 	stepResult.Err = err
 	stepResult.Output = output
 
+	if cancel != nil {
+		defer cancel()
+	}
+
+	if ctx != nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		stepResult.ExitCode = -1
+		stepResult.Err = ctx.Err()
+		return stepResult
+	}
+
 	exitCode := -1
 	if cmd.ProcessState != nil {
 		exitCode = cmd.ProcessState.ExitCode()
 	}
 	stepResult.ExitCode = exitCode
-
-	if cancel != nil {
-		cancel()
-	}
 
 	return stepResult
 }
