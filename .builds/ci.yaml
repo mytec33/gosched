@@ -1,4 +1,4 @@
-image: ubuntu/24.04
+image: ubuntu/lts
 packages:
   - golang-go
 sources:
@@ -37,4 +37,4 @@ tasks:
 triggers:
   - action: email
     condition: always
-    to: mytec@bogoflop.com
+    to: sourcehut@bogoflop.com

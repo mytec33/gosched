@@ -1,4 +1,4 @@
-image: openbsd/7.8
+image: openbsd/latest
 packages:
   - go
 sources:
@@ -13,4 +13,4 @@ tasks:
 triggers:
   - action: email
     condition: always
-    to: mytec@bogoflop.com
+    to: sourcehut@bogoflop.com

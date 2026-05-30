@@ -1,0 +1,16 @@
+image: openbsd/7.7
+packages:
+  - go
+sources:
+  - https://git.sr.ht/~mytec/gosched
+tasks:
+  - compile: |
+      cd gosched
+      go build ./...
+  - test: |
+      cd gosched
+      go test ./...
+triggers:
+  - action: email
+    condition: always
+    to: sourcehut@bogoflop.com
