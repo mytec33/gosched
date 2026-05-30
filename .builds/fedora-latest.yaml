@@ -1,0 +1,22 @@
+image: fedora/latest
+packages:
+  - golang-go
+sources:
+  - https://git.sr.ht/~mytec/gosched
+tasks:
+  - compile: |
+      cd gosched
+      go build ./...
+  - test: |
+      cd gosched
+      go test ./...
+  - build-linux: |
+      cd gosched
+      go build -o gosched-linux-amd64 ./cmd/gosched
+  - build-testprog-linux: |
+      cd gosched
+      go build -o testprog-linux-amd64 ./cmd/testprog
+triggers:
+  - action: email
+    condition: always
+    to: sourcehut@bogoflop.com
