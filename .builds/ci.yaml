@@ -10,6 +10,13 @@ tasks:
   - test: |
       cd gosched
       go test ./...
+  - vet: |
+      cd gosched
+      go vet ./...
+  - staticcheck: |
+      go install honnef.co/go/tools/cmd/staticcheck@latest
+      cd gosched
+      "$(go env GOPATH)/bin/staticcheck" ./...
   - build-linux: |
       cd gosched
       go build -o gosched-linux-amd64 ./cmd/gosched
