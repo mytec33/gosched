@@ -1,60 +1,15 @@
 package runner
 
 import (
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
+	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 )
 
-func buildBinary(t *testing.T, name, rel string) string {
-	t.Helper()
-
-	root := findModuleRoot(t)
-
-	dir := t.TempDir()
-	bin := filepath.Join(dir, name)
-	if runtime.GOOS == "windows" {
-		bin += ".exe"
-	}
-
-	cmd := exec.Command("go", "build", "-o", bin, filepath.Join(root, rel))
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("build failed: %v\n%s", err, out)
-	}
-
-	return bin
-}
-
-func findModuleRoot(t *testing.T) string {
-	t.Helper()
-
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for {
-		_, err := os.Stat(filepath.Join(dir, "go.mod"))
-		if err == nil {
-			return dir
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			t.Fatal("go.mod not found")
-		}
-		dir = parent
-	}
-}
-
 func TestExitCode(t *testing.T) {
-	testprog := buildBinary(t, "testprog", "cmd/testprog")
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
 	tests := []struct {
 		step         schedule.Step
@@ -125,7 +80,7 @@ func TestExitCode(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	testprog := buildBinary(t, "testprog", "cmd/testprog")
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
 	tests := []struct {
 		step       schedule.Step
@@ -157,7 +112,7 @@ func TestTimeout(t *testing.T) {
 }
 
 func TestDuration(t *testing.T) {
-	testprog := buildBinary(t, "testprog", "cmd/testprog")
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
 	step := schedule.Step{
 		Name:    "duration within reasonable time",

@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -9,6 +10,10 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/types"
+)
+
+var (
+	ErrWorkflowNameNotFound = errors.New("workflow not found by name")
 )
 
 type ScheduleSliceFlag []string
@@ -25,6 +30,19 @@ func (s *ScheduleSliceFlag) Set(value string) error {
 
 func (s *ScheduleSliceFlag) String() string {
 	return fmt.Sprintf("%v", *s)
+}
+
+func (s Schedule) GetWorkflowByName(n string) (Workflow, error) {
+	name := strings.ToLower(n)
+
+	for _, v := range s.Workflows() {
+		if strings.ToLower(v.Name) == name {
+			return v, nil
+		}
+	}
+
+	// Return workflow name as it appears in the config vs lower case version
+	return Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
 }
 
 func (s Schedule) PrintScheduleConfig(w io.Writer) {

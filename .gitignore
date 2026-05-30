@@ -13,4 +13,4 @@ manifest.txt
 /qodana.yaml
 
 # Go files
-cover.out
+coverage.*

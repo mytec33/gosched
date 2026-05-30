@@ -22,6 +22,8 @@ const (
 	ExitRunOnce                int = 5
 	ExitDeprecatedScheduleFlag int = 7
 	ExitManifestError          int = 8
+	ExitWorkflowNotFoundByName int = 9
+	ExitExecuteWorkflow        int = 10
 )
 
 var (
@@ -35,12 +37,12 @@ func main() {
 func run() int {
 	manifestFlag := ""
 	newConfig := false
-	runOnce := false
+	runThisOnce := ""
 	printSchedule := ""
 
 	flag.StringVar(&manifestFlag, "manifest", "", "path to a manifest file containing schedule configuration files to load")
 	flag.BoolVar(&newConfig, "new-config", false, "create an new configuration to begin with")
-	flag.BoolVar(&runOnce, "run-once", false, "bypass any schedule and run now")
+	flag.StringVar(&runThisOnce, "run-once", "", "run a workflow by name bypassing its scheduled time")
 	flag.StringVar(&printSchedule, "print-schedule", "", "configuration summary: config, operational")
 	flag.Parse()
 
@@ -88,7 +90,17 @@ func run() int {
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
 	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
 
-	runSchedule(sched, runOnce)
+	if runThisOnce != "" {
+		logging.StdOut.Info("startup", "reason", "run once started", "workFlow", runThisOnce)
+
+		exitCode, err := runScheduleOnce(sched, runThisOnce)
+		if err != nil {
+			logging.StdOut.Info("run once", "reason", err)
+			return exitCode
+		}
+	} else {
+		runSchedule(sched)
+	}
 
 	return 0
 }
@@ -112,18 +124,7 @@ func displayCfgErrors(errors []error) {
 	}
 }
 
-func runSchedule(s schedule.Schedule, runOnce bool) {
-	if runOnce {
-		currentMinute, err := types.ParseMinuteOfDay(time.Now().Format("15:04"))
-		if err != nil {
-			logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
-			return
-		}
-
-		runSchedulerTick(currentMinute, s)
-		return
-	}
-
+func runSchedule(s schedule.Schedule) {
 	// Align to the next minute boundary once, then tick.
 	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
 	ticker := time.NewTicker(time.Minute)
@@ -142,6 +143,20 @@ func runSchedule(s schedule.Schedule, runOnce bool) {
 				n, "minute", currentMinute.String())
 		}
 	}
+}
+
+func runScheduleOnce(sched schedule.Schedule, wfName string) (int, error) {
+	wf, err := sched.GetWorkflowByName(wfName)
+	if err != nil {
+		return ExitWorkflowNotFoundByName, err
+	}
+
+	err = executeWorkflow(wf)
+	if err != nil {
+		return ExitExecuteWorkflow, err
+	}
+
+	return ExitSuccess, nil
 }
 
 func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int {
