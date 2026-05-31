@@ -232,7 +232,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		workflows: []Workflow{
 			{
 				Name:      "Workflow 1",
-				Time:      m1146,
+				Time:      &m1146,
 				OnFailure: &policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
@@ -240,7 +240,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 			{
 				Name:      "Workflow 1",
-				Time:      m1145,
+				Time:      &m1145,
 				OnFailure: &policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30, Pause: 5},
@@ -249,7 +249,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 			{
 				Name:      "Workflow 2",
-				Time:      m1145,
+				Time:      &m1145,
 				OnFailure: &policy.Continue,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
@@ -257,7 +257,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 			{
 				Name:      "Workflow 1",
-				Time:      m1247,
+				Time:      &m1247,
 				OnFailure: &policy.Retry,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 1800},
@@ -307,7 +307,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1146: {
 				{
 					Name:      "Workflow 3",
-					Time:      m1146,
+					Time:      &m1146,
 					OnFailure: &policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
@@ -317,7 +317,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1145: {
 				{
 					Name:      "Workflow 1",
-					Time:      m1145,
+					Time:      &m1145,
 					OnFailure: &policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30, Pause: 5},
@@ -326,7 +326,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 				},
 				{
 					Name:      "Workflow 2",
-					Time:      m1145,
+					Time:      &m1145,
 					OnFailure: &policy.Continue,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
@@ -336,7 +336,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1247: {
 				{
 					Name:      "Workflow 1",
-					Time:      m1247,
+					Time:      &m1247,
 					OnFailure: &policy.Retry,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 1800},

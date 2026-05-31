@@ -12,7 +12,7 @@ import (
 
 type Workflow struct {
 	Name      string              `json:"name"`
-	Time      types.MinuteOfDay   `json:"time"`
+	Time      *types.MinuteOfDay  `json:"time"`
 	OnFailure *policy.FailureMode `json:"onFailure"`
 	Retry     *RetryPolicy        `json:"retry"`
 	Steps     []Step              `json:"steps"`

@@ -37,7 +37,7 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 
 		for _, wf := range s.workflows {
 			schedule.workflows = append(schedule.workflows, wf)
-			schedule.byMinute[wf.Time] = append(schedule.byMinute[wf.Time], wf)
+			schedule.byMinute[*wf.Time] = append(schedule.byMinute[*wf.Time], wf)
 		}
 	}
 	return schedule, nil, nil
@@ -81,7 +81,7 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	// Loop once again to do normalization
 	schedule := s
 	for _, wf := range workflows {
-		schedule.byMinute[wf.Time] = append(schedule.byMinute[wf.Time], wf)
+		schedule.byMinute[*wf.Time] = append(schedule.byMinute[*wf.Time], wf)
 	}
 	schedule.workflows = workflows
 
