@@ -196,12 +196,11 @@ func executeWorkflow(wf schedule.Workflow) error {
 	stdOut := wfLog.Out
 
 	lockKey := wf.Name
-	existingID, running := schedule.RunningWorkflows.Get(lockKey)
-	if running {
+	existingID, acquired := schedule.RunningWorkflows.TryAcquire(lockKey, wfLog.WfRunID)
+	if !acquired {
 		stdOut.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
 		return nil
 	}
-	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
 	stdOut.Info("workflow", "name", wf.Name, "status", "started")

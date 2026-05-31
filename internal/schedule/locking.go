@@ -21,16 +21,15 @@ func (sm *SafeMapRWMutex) Delete(key string) {
 	delete(sm.data, key)
 }
 
-func (sm *SafeMapRWMutex) Set(key string, value string) {
+func (sm *SafeMapRWMutex) TryAcquire(key, value string) (string, bool) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
+
+	existing, ok := sm.data[key]
+	if ok {
+		return existing, false
+	}
+
 	sm.data[key] = value
-}
-
-func (sm *SafeMapRWMutex) Get(key string) (string, bool) {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	val, ok := sm.data[key]
-
-	return val, ok
+	return "", true
 }
