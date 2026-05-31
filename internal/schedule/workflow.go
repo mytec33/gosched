@@ -34,7 +34,7 @@ type Step struct {
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	errorList = append(errorList, validateRequiredName(w.Name, errs.MaxWorkflowNameLength)...)
+	errorList = append(errorList, validateStringValue(w.Name, errs.MaxWorkflowNameLength)...)
 
 	// The JSON field onFailure isn't tested here because it's converted
 	// from string -> enum and that boundary controls if it's valid or not
@@ -56,8 +56,12 @@ func (w Workflow) Validate() []error {
 		errorList = append(errorList, errs.ErrEmpty)
 	}
 
+	if len(w.Steps) > errs.MaxStepsCount {
+		errorList = append(errorList, errs.ErrStepsCount)
+	}
+
 	for _, steps := range w.Steps {
-		errorList = append(errorList, validateRequiredName(steps.Name,
+		errorList = append(errorList, validateStringValue(steps.Name,
 			errs.MaxWorkflowStepNameLength)...)
 
 		if steps.Timeout < 0 {
@@ -68,14 +72,24 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, errs.ErrNegativeNumber)
 		}
 
-		errorList = append(errorList, validateRequiredName(steps.Program,
+		errorList = append(errorList, validateStringValue(steps.Program,
 			errs.MaxWorkflowStepProgramLength)...)
 
-		for _, arg := range steps.Args {
-			errorList = append(errorList, validateRequiredName(arg,
-				errs.MaxProgramArgsLength)...)
+		if len(steps.Args) > errs.MaxStepArgsCount {
+			errorList = append(errorList, errs.ErrStepArgsTooMany)
 		}
 
+		totalArgsLength := 0
+		for _, arg := range steps.Args {
+			totalArgsLength += len(arg)
+
+			errorList = append(errorList, validateStringValue(arg,
+				errs.MaxStepArgLength)...)
+		}
+
+		if totalArgsLength > errs.MaxStepArgsTotalLength {
+			errorList = append(errorList, errs.ErrStepArgsTotalLength)
+		}
 	}
 
 	errorList = append(errorList, validateUniqueStepNames(w.Steps)...)
@@ -83,7 +97,7 @@ func (w Workflow) Validate() []error {
 	return errorList
 }
 
-func validateRequiredName(s string, maxLength int) []error {
+func validateStringValue(s string, maxLength int) []error {
 	var errorList []error
 	trimmed := strings.TrimSpace(s)
 

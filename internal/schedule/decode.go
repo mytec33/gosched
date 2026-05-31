@@ -77,6 +77,7 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	}
 
 	valErrs = append(valErrs, validateUniqueWorkflowNames(workflows)...)
+	valErrs = append(valErrs, validateWorkflowCount(workflows)...)
 
 	if len(valErrs) > 0 {
 		return Schedule{}, valErrs, nil
@@ -108,4 +109,12 @@ func validateUniqueWorkflowNames(wfs []Workflow) []error {
 	}
 
 	return errorList
+}
+
+func validateWorkflowCount(wfs []Workflow) []error {
+	if len(wfs) > errs.MaxWorkflowCount {
+		return []error{errs.ErrWorkflowCount}
+	}
+
+	return nil
 }
