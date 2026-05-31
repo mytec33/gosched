@@ -40,6 +40,8 @@ func (w Workflow) Validate() []error {
 	// Validation checks that the field was provided.
 	if w.OnFailure == nil {
 		errorList = append(errorList, errs.ErrOnFailureRequired)
+	} else if *w.OnFailure == policy.Retry && w.Retry == nil {
+		errorList = append(errorList, errs.ErrRetryRequired)
 	}
 
 	if w.Retry != nil {

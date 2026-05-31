@@ -12,6 +12,7 @@ var (
 	ErrOnFailureInvalidMode        = errors.New("invalid workflow on failure mode")
 	ErrOnFailureRequired           = errors.New("onFailure field required")
 	ErrInvalidTimeFormat           = errors.New("invalid time format")
+	ErrRetryRequired               = errors.New("retry config required when onFailure is set to retry")
 	ErrStepArgsTooMany             = fmt.Errorf("too many args provided: max is %d", MaxStepArgsCount)
 	ErrStepArgsTotalLength         = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
 	ErrStepsCount                  = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)

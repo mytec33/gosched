@@ -521,3 +521,62 @@ func TestDecodeArgs_Invalid(t *testing.T) {
 		})
 	}
 }
+
+const MissingRetryConfigOnPolicyRetry = `
+[
+  {
+    "name": "workflow 1",
+    "time": "10:35",
+    "onFailure": "retry",
+    "steps": [
+      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}     
+    ]
+  }
+]
+`
+
+const ValidateRetryConfigOnPolicyRetry = `
+[
+  {
+    "name": "workflow 1",
+    "onFailure": "retry",
+	"retry": {
+		"numberRetries": 0,
+		"pauseSeconds": 60
+	},
+    "steps": [
+      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}     
+    ]
+  }
+]
+`
+
+func TestMissingRetryConfigOnPolicyRetry(t *testing.T) {
+	r := strings.NewReader(MissingRetryConfigOnPolicyRetry)
+
+	_, validationErrors, err := DecodeSchedule(r)
+	if err != nil {
+		t.Fatalf("unexpected decode error: %v", err)
+	}
+
+	if !hasError(validationErrors, errs.ErrRetryRequired) {
+		t.Fatalf("expected %v, got %v", errs.ErrRetryRequired, validationErrors)
+	}
+}
+
+func TestValidateRetryConfigOnPolicyRetry(t *testing.T) {
+	r := strings.NewReader(ValidateRetryConfigOnPolicyRetry)
+
+	_, validationErrors, err := DecodeSchedule(r)
+	if err != nil {
+		t.Fatalf("unexpected decode error: %v", err)
+	}
+
+	if len(validationErrors) != 0 {
+		t.Fatalf("unexpected validation errors: %v", validationErrors)
+	}
+
+	if hasError(validationErrors, errs.ErrRetryRequired) {
+		t.Fatalf("unexpected %v, got %v", errs.ErrRetryRequired, validationErrors)
+	}
+}
