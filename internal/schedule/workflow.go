@@ -34,7 +34,9 @@ type Step struct {
 func (w Workflow) Validate() []error {
 	var errorList []error
 
-	errorList = append(errorList, validateStringValue(w.Name, errs.MaxWorkflowNameLength)...)
+	field := "workflow.name"
+	errorList = append(errorList, validateStringValue(field, w.Name,
+		errs.MaxWorkflowNameLength)...)
 
 	if w.Time == nil {
 		errorList = append(errorList, errs.ErrTimeFieldNotPresent)
@@ -59,15 +61,16 @@ func (w Workflow) Validate() []error {
 	}
 
 	if len(w.Steps) == 0 {
-		errorList = append(errorList, errs.ErrEmpty)
+		errorList = append(errorList, errs.ErrStepsMissing)
 	}
 
 	if len(w.Steps) > errs.MaxStepsCount {
 		errorList = append(errorList, errs.ErrStepsCount)
 	}
 
-	for _, steps := range w.Steps {
-		errorList = append(errorList, validateStringValue(steps.Name,
+	for i, steps := range w.Steps {
+		field := fmt.Sprintf("workflow.steps[%d].name", i+1)
+		errorList = append(errorList, validateStringValue(field, steps.Name,
 			errs.MaxWorkflowStepNameLength)...)
 
 		if steps.Timeout < 0 {
@@ -78,7 +81,8 @@ func (w Workflow) Validate() []error {
 			errorList = append(errorList, errs.ErrNegativeNumber)
 		}
 
-		errorList = append(errorList, validateStringValue(steps.Program,
+		field = fmt.Sprintf("workflow.steps[%d].program", i+1)
+		errorList = append(errorList, validateStringValue(field, steps.Program,
 			errs.MaxWorkflowStepProgramLength)...)
 
 		if len(steps.Args) > errs.MaxStepArgsCount {
@@ -86,10 +90,11 @@ func (w Workflow) Validate() []error {
 		}
 
 		totalArgsLength := 0
-		for _, arg := range steps.Args {
+		for j, arg := range steps.Args {
 			totalArgsLength += len(arg)
 
-			errorList = append(errorList, validateStringValue(arg,
+			field = fmt.Sprintf("workflow.steps[%d].args[%d]", i+1, j+1)
+			errorList = append(errorList, validateStringValue(field, arg,
 				errs.MaxStepArgLength)...)
 		}
 
@@ -103,18 +108,18 @@ func (w Workflow) Validate() []error {
 	return errorList
 }
 
-func validateStringValue(s string, maxLength int) []error {
+func validateStringValue(field string, s string, maxLength int) []error {
 	var errorList []error
 	trimmed := strings.TrimSpace(s)
 
 	if s == "" {
-		errorList = append(errorList, errs.ErrEmpty)
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrEmpty))
 	} else if trimmed == "" {
-		errorList = append(errorList, errs.ErrWhitespaceAll)
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrWhitespaceAll))
 	} else if trimmed != s {
-		errorList = append(errorList, errs.ErrWhitespaceLeadingOrTrailing)
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrWhitespaceLeadingOrTrailing))
 	} else if len(trimmed) > maxLength {
-		errorList = append(errorList, errs.ErrTooLong)
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrTooLong))
 	}
 
 	return errorList

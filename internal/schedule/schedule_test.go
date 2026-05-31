@@ -147,7 +147,7 @@ func TestRunOnceWorkflowNotFound(t *testing.T) {
 	}
 
 	expected := [][]byte{
-		[]byte(`workflows loaded" count=1`),
+		[]byte(`schedule files read" count=1`),
 		[]byte(`reason="run once started"`),
 		[]byte(`workFlow="Workflow 11"`),
 		[]byte(`workflow not found by name: Workflow 11`),
@@ -192,7 +192,7 @@ func TestTwoWorkFlowOneStep(t *testing.T) {
 	}
 
 	expected := [][]byte{
-		[]byte(`reason="workflows loaded" count=2`),
+		[]byte(`reason="schedule files read" count=2`),
 		[]byte(`reason="run once started"`),
 		[]byte(`workFlow="Workflow 2"`),
 		[]byte(`msg=workflow`),

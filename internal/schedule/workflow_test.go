@@ -86,7 +86,7 @@ func TestWorkflow_Invalid(t *testing.T) {
 		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "name too long", json: WorkflowNameTooLong, wantError: errs.ErrTooLong},
-		{name: "missing steps", json: WorkflowNoSteps, wantError: errs.ErrEmpty},
+		{name: "missing steps", json: WorkflowNoSteps, wantError: errs.ErrStepsMissing},
 	}
 
 	for _, tt := range tests {

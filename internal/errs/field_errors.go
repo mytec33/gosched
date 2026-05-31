@@ -16,6 +16,7 @@ var (
 	ErrStepArgsTooMany             = fmt.Errorf("too many args provided: max is %d", MaxStepArgsCount)
 	ErrStepArgsTotalLength         = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
 	ErrStepsCount                  = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
+	ErrStepsMissing                = fmt.Errorf("steps are required")
 	ErrTimeFieldNotPresent         = fmt.Errorf("time field is required")
 	ErrTooLong                     = errors.New("too long")
 	ErrRetryCountNegative          = errors.New("retry count must be 0 or greater")
