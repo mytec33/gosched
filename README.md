@@ -28,6 +28,13 @@ Later files append workflows and implicitly take priority.
 - `continue` — keep running later steps after a failed step; use when steps are independent and partial success is useful.
 - `retry` — if a step fails, retry the step `numberRetries` times, pausing `pauseSeconds` between retries. After retries complete (successful or exhausted), continue to the next step.
 
+## Logging
+
+gosched writes all structured application logs to stdout.  
+
+Log severity is represented by the level field, such as level=ERROR, level=WARN, and level=INFO. This keeps logs in one chronological stream while still making severity easy to extract with grep and other tools.
+
+
 ## Usage
 
 ```bash
