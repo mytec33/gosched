@@ -36,6 +36,10 @@ func (w Workflow) Validate() []error {
 
 	errorList = append(errorList, validateStringValue(w.Name, errs.MaxWorkflowNameLength)...)
 
+	if w.Time == nil {
+		errorList = append(errorList, errs.ErrTimeFieldNotPresent)
+	}
+
 	// Invalid onFailure values are rejected during JSON decoding.
 	// Validation checks that the field was provided.
 	if w.OnFailure == nil {

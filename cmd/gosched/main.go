@@ -77,7 +77,9 @@ func run() int {
 	}
 
 	// Let's user see in terminal output the files loaded that lead to this conclusion
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
+	logging.StdOut.Info("startup", "reason", "schedule files read", "count", sched.WorkflowCount(),
+		"filename", scheduleFiles,
+	)
 
 	if len(decodeErrors) > 0 {
 		displayCfgErrors(decodeErrors)
