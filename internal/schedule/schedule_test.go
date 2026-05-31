@@ -3,6 +3,7 @@ package schedule
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
@@ -364,4 +366,123 @@ func TestPrintScheduleOperational(t *testing.T) {
 	if got != want {
 		t.Fatalf("unexpected output\ngot:\n%s\nwant:\n%s", got, want)
 	}
+}
+
+func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
+	tests := []struct {
+		name     string
+		schedule Schedule
+	}{
+		{
+			name: "Identical",
+			schedule: Schedule{
+				workflows: []Workflow{
+					{Name: "Workflow 1"},
+					{Name: "Workflow 2"},
+					{Name: "Workflow 1"},
+				},
+			},
+		},
+		{
+			name: "Leading/trailing whitespace",
+			schedule: Schedule{
+				workflows: []Workflow{
+					{Name: "Workflow 1\t"},
+					{Name: " Workflow 1"},
+				},
+			},
+		},
+		{
+			name: "Mixed case",
+			schedule: Schedule{
+				workflows: []Workflow{
+					{Name: "Workflow 1"},
+					{Name: "worKfLow 1"},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			errorList := tt.schedule.Validate()
+
+			found := false
+			for _, e := range errorList {
+				if errors.Is(e, errs.ErrDuplicateWorkflowName) {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Fatalf("expected %v, got %v", errs.ErrDuplicateWorkflowName, errorList)
+			}
+		})
+	}
+}
+
+func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
+	s := Schedule{
+		workflows: []Workflow{
+			{Name: "Workflow 1"},
+			{Name: "Workflow 2"},
+			{Name: "workflow 3"},
+		},
+	}
+
+	errorList := s.Validate()
+
+	found := false
+	for _, e := range errorList {
+		if errors.Is(e, errs.ErrDuplicateWorkflowName) {
+			found = true
+			break
+		}
+	}
+
+	if found {
+		t.Fatalf("expected %v", errs.ErrDuplicateWorkflowName)
+	}
+}
+
+func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
+	s := Schedule{workflows: makeWorkflows(errs.MaxWorkflowCount)}
+
+	errorList := s.Validate()
+
+	if hasError(errorList, errs.ErrWorkflowCount) {
+		t.Fatalf("unexpected %v in %v", errs.ErrWorkflowCount, errorList)
+	}
+}
+
+func TestScheduleValidate_WorkflowCount_InvalidOverLimit(t *testing.T) {
+	s := Schedule{workflows: makeWorkflows(errs.MaxWorkflowCount + 1)}
+
+	errorList := s.Validate()
+
+	if !hasError(errorList, errs.ErrWorkflowCount) {
+		t.Fatalf("expected %v, got %v", errs.ErrWorkflowCount, errorList)
+	}
+}
+
+func hasError(errorList []error, target error) bool {
+	for _, e := range errorList {
+		if errors.Is(e, target) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func makeWorkflows(n int) []Workflow {
+	workflows := make([]Workflow, 0, n)
+	for i := range n {
+		workflows = append(workflows, Workflow{
+			Name: fmt.Sprintf("Workflow %d", i),
+		})
+	}
+	return workflows
 }

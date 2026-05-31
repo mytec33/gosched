@@ -24,6 +24,7 @@ const (
 	ExitManifestError          int = 8
 	ExitWorkflowNotFoundByName int = 9
 	ExitExecuteWorkflow        int = 10
+	ExitScheduleValidation     int = 11
 )
 
 var (
@@ -69,15 +70,24 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	sched, valErrors, err := schedule.ReadScheduleFiles(scheduleFiles)
+	sched, decodeErrors, err := schedule.ReadScheduleFiles(scheduleFiles)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
 	}
 
-	if len(valErrors) > 0 {
-		displayCfgErrors(valErrors)
+	// Let's user see in terminal output the files loaded that lead to this conclusion
+	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
+
+	if len(decodeErrors) > 0 {
+		displayCfgErrors(decodeErrors)
 		return ExitValidation
+	}
+
+	valErrors := sched.Validate()
+	if len(valErrors) > 0 {
+		logging.StdOut.Error("startup", "reason", "failed to validate schedule", "error(s)", valErrors)
+		return ExitScheduleValidation
 	}
 
 	if printSchedule != "" {
@@ -88,7 +98,6 @@ func run() int {
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
 	// wish to print is shown and not logging messages. Those don't play well with JSON. :-)
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
-	logging.StdOut.Info("startup", "reason", "workflows loaded", "count", sched.WorkflowCount(), "filename", scheduleFiles)
 
 	if runThisOnce != "" {
 		logging.StdOut.Info("startup", "reason", "run once started", "workFlow", runThisOnce)

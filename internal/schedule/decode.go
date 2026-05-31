@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
@@ -76,9 +74,6 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 		}
 	}
 
-	valErrs = append(valErrs, validateUniqueWorkflowNames(workflows)...)
-	valErrs = append(valErrs, validateWorkflowCount(workflows)...)
-
 	if len(valErrs) > 0 {
 		return Schedule{}, valErrs, nil
 	}
@@ -91,30 +86,4 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	schedule.workflows = workflows
 
 	return schedule, nil, nil
-}
-
-func validateUniqueWorkflowNames(wfs []Workflow) []error {
-	wfNames := make(map[string]string)
-	var errorList []error
-
-	for _, wf := range wfs {
-		key := strings.ToLower(strings.TrimSpace(wf.Name))
-
-		v, exists := wfNames[key]
-		if exists {
-			errorList = append(errorList, fmt.Errorf("%w: '%v' duplicates '%v'", errs.ErrDuplicateWorkflowName, wf.Name, v))
-		} else {
-			wfNames[key] = wf.Name
-		}
-	}
-
-	return errorList
-}
-
-func validateWorkflowCount(wfs []Workflow) []error {
-	if len(wfs) > errs.MaxWorkflowCount {
-		return []error{errs.ErrWorkflowCount}
-	}
-
-	return nil
 }

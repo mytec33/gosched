@@ -36,8 +36,8 @@ func (w Workflow) Validate() []error {
 
 	errorList = append(errorList, validateStringValue(w.Name, errs.MaxWorkflowNameLength)...)
 
-	// The JSON field onFailure isn't tested here because it's converted
-	// from string -> enum and that boundary controls if it's valid or not
+	// Invalid onFailure values are rejected during JSON decoding.
+	// Validation checks that the field was provided.
 	if w.OnFailure == nil {
 		errorList = append(errorList, errs.ErrOnFailureRequired)
 	}
