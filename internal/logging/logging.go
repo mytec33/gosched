@@ -14,10 +14,6 @@ var StdOut = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 	Level: slog.LevelInfo,
 }))
 
-var StdErr = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-	Level: slog.LevelWarn,
-}))
-
 type WorkflowLogger struct {
 	WfRunID string
 	Out     *slog.Logger
@@ -32,9 +28,6 @@ func NewWorkflowLogger(workflowName string) WorkflowLogger {
 	return WorkflowLogger{
 		WfRunID: wfID,
 		Out: StdOut.With(
-			slog.String("wfRunID", wfID),
-		),
-		Err: StdErr.With(
 			slog.String("wfRunID", wfID),
 		),
 	}

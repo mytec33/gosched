@@ -52,26 +52,26 @@ func run() int {
 	}
 
 	if manifestFlag == "" {
-		logging.StdErr.Error("startup", "reason", "missing required -manifest argument")
+		logging.StdOut.Error("startup", "reason", "missing required -manifest argument")
 		flag.Usage()
 		return ExitInvalidArgs
 	}
 
 	scheduleFiles, err := manifest.ParseManifest(manifestFlag)
 	if err != nil {
-		logging.StdErr.Error("startup", "reason", "no files found in manifest", "error", err)
+		logging.StdOut.Error("startup", "reason", "no files found in manifest", "error", err)
 		return ExitManifestError
 	}
 
 	if len(scheduleFiles) == 0 {
-		logging.StdErr.Error("startup", "reason", "manifest contains no schedule files")
+		logging.StdOut.Error("startup", "reason", "manifest contains no schedule files")
 		flag.Usage()
 		return ExitInvalidArgs
 	}
 
 	sched, valErrors, err := schedule.ReadScheduleFiles(scheduleFiles)
 	if err != nil {
-		logging.StdErr.Error("startup", "reason", "failed to load schedule", "error", err)
+		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
 	}
 
@@ -117,10 +117,10 @@ func printConfiguration(method string, s schedule.Schedule) {
 }
 
 func displayCfgErrors(errors []error) {
-	logging.StdErr.Error("startup", "reason", "configuration invalid")
+	logging.StdOut.Error("startup", "reason", "configuration invalid")
 
 	for _, err := range errors {
-		logging.StdErr.Error("startup", "reason", err)
+		logging.StdOut.Error("startup", "reason", err)
 	}
 }
 
@@ -133,7 +133,7 @@ func runSchedule(s schedule.Schedule) {
 	for range ticker.C {
 		currentMinute, err := types.ParseMinuteOfDay(time.Now().Format("15:04"))
 		if err != nil {
-			logging.StdErr.Error("run scheduler tick", "status", "failed", "reason", err)
+			logging.StdOut.Error("run scheduler tick", "status", "failed", "reason", err)
 			return
 		}
 
@@ -171,7 +171,7 @@ func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int 
 		go func(w schedule.Workflow) {
 			err := executeWorkflow(w)
 			if err != nil {
-				logging.StdErr.Error("workflow", "status", "failed", "error", err)
+				logging.StdOut.Error("workflow", "status", "failed", "error", err)
 			}
 		}(task)
 	}
@@ -183,12 +183,11 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 	wfLog := logging.NewWorkflowLogger(wf.Name)
 	stdOut := wfLog.Out
-	stdErr := wfLog.Err
 
 	lockKey := wf.Name
 	existingID, running := schedule.RunningWorkflows.Get(lockKey)
 	if running {
-		stdErr.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
+		stdOut.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
 		return nil
 	}
 	schedule.RunningWorkflows.Set(lockKey, wfLog.WfRunID)
