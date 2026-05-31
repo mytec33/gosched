@@ -539,6 +539,7 @@ const ValidateRetryConfigOnPolicyRetry = `
 [
   {
     "name": "workflow 1",
+    "time": "10:35",
     "onFailure": "retry",
 	"retry": {
 		"numberRetries": 0,
