@@ -1,3 +1,4 @@
+// Package types provides types specific to this program
 package types
 
 import (
