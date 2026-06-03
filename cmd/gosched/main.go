@@ -207,7 +207,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 
 	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
-		result := runner.RunStepAttempt(stdOut, step, i)
+		result := runner.RunStepAttempt(stdOut, wf.Name, step, i)
 
 		if result.Err != nil {
 			if schedule.WorkflowAbortsOnFailure(wf) {
@@ -220,7 +220,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 			}
 
 			if schedule.WorkflowRetriesOnFailure(wf) {
-				runner.RunStepRetries(stdOut, step, i, wf.Retry)
+				runner.RunStepRetries(stdOut, wf.Name, step, i, wf.Retry)
 			}
 		}
 
@@ -237,7 +237,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	stdOut.Info("workflow", "status", "completed", "duration", workflowDuration)
+	stdOut.Info("workflow", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
 	return nil
 }
 

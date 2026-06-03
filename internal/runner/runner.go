@@ -54,8 +54,9 @@ func RunStepCommand(step schedule.Step) StepExecutionResult {
 	return stepResult
 }
 
-func RunStepAttempt(stdOut *slog.Logger, step schedule.Step, index int) StepExecutionResult {
-	stdOut.Info("step", "status", "started", "stepIndex", index, "stepName", step.Name, "args", step.Args)
+func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, index int) StepExecutionResult {
+	stdOut.Info("step", "status", "started", "workflow", wfName, "stepIndex", index, "stepName", step.Name,
+		"args", step.Args)
 	stepStart := time.Now()
 
 	result := RunStepCommand(step)
@@ -66,17 +67,17 @@ func RunStepAttempt(stdOut *slog.Logger, step schedule.Step, index int) StepExec
 	}
 
 	if result.Err != nil {
-		stdOut.Error("step", "step", step.Name, "stepIndex", index, "status", "failed",
+		stdOut.Error("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "failed",
 			"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err)
 	} else {
-		stdOut.Info("step", "step", step.Name, "stepIndex", index, "status", "completed",
+		stdOut.Info("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "completed",
 			"exitCode", result.ExitCode, "duration", stepDuration)
 	}
 
 	return result
 }
 
-func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retry *schedule.RetryPolicy) {
+func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step, stepIndex int, retry *schedule.RetryPolicy) {
 	var retryResult StepExecutionResult
 
 	for attempt := 1; attempt <= retry.NumberRetries; attempt++ {
@@ -89,7 +90,7 @@ func RunStepRetries(stdOut *slog.Logger, step schedule.Step, stepIndex int, retr
 
 		time.Sleep(retryPause)
 
-		retryResult = RunStepAttempt(stdOut, step, stepIndex)
+		retryResult = RunStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
 			return
 		}
