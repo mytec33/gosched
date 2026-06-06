@@ -49,10 +49,11 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 	s := Schedule{byMinute: make(map[types.MinuteOfDay][]Workflow)}
 	var workflows []Workflow
+	var workflowsRaw []WorkflowRaw
 
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
-	err := dec.Decode(&workflows)
+	err := dec.Decode(&workflowsRaw)
 	if err != nil {
 		return s, nil, fmt.Errorf("%w: %w", ErrDecodeSchedule, err)
 	}
@@ -67,11 +68,16 @@ func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
 
 	// Loop through workflows to validate and bail if anything found
 	var valErrs []error
-	for _, wf := range workflows {
-		valErrors := wf.Validate()
+	for _, wfRaw := range workflowsRaw {
+		wf, valErrors := wfRaw.Validate()
 		if len(valErrors) > 0 {
 			valErrs = append(valErrs, valErrors...)
+			continue
 		}
+
+		// Keep workflows as the trusted set; invalid raw workflows never cross
+		// the decode boundary.
+		workflows = append(workflows, wf)
 	}
 
 	if len(valErrs) > 0 {

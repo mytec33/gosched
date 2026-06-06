@@ -236,22 +236,22 @@ func TestPrintScheduleConfig(t *testing.T) {
 		workflows: []Workflow{
 			{
 				Name: "Workflow 1",
-				Trigger: &types.Trigger{
+				Trigger: types.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1146,
 				},
-				OnFailure: &policy.Abort,
+				OnFailure: policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
 				Name: "Workflow 1",
-				Trigger: &types.Trigger{
+				Trigger: types.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: &policy.Abort,
+				OnFailure: policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30, Pause: 5},
 					{Name: "step 2", Timeout: 30},
@@ -259,22 +259,22 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 			{
 				Name: "Workflow 2",
-				Trigger: &types.Trigger{
+				Trigger: types.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: &policy.Continue,
+				OnFailure: policy.Continue,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
 				Name: "Workflow 1",
-				Trigger: &types.Trigger{
+				Trigger: types.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1247,
 				},
-				OnFailure: &policy.Retry,
+				OnFailure: policy.Retry,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 1800},
 				},
@@ -328,11 +328,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1146: {
 				{
 					Name: "Workflow 3",
-					Trigger: &types.Trigger{
+					Trigger: types.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1146,
 					},
-					OnFailure: &policy.Abort,
+					OnFailure: policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
 					},
@@ -341,11 +341,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1145: {
 				{
 					Name: "Workflow 1",
-					Trigger: &types.Trigger{
+					Trigger: types.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: &policy.Abort,
+					OnFailure: policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30, Pause: 5},
 						{Name: "step 2", Timeout: 30},
@@ -353,11 +353,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 				},
 				{
 					Name: "Workflow 2",
-					Trigger: &types.Trigger{
+					Trigger: types.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: &policy.Continue,
+					OnFailure: policy.Continue,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
 					},
@@ -366,11 +366,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1247: {
 				{
 					Name: "Workflow 1",
-					Trigger: &types.Trigger{
+					Trigger: types.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1247,
 					},
-					OnFailure: &policy.Retry,
+					OnFailure: policy.Retry,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 1800},
 					},

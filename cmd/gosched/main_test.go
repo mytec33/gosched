@@ -10,10 +10,9 @@ import (
 )
 
 func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
-	abort := policy.Abort
 	wf := schedule.Workflow{
 		Name:      "missing program aborts",
-		OnFailure: &abort,
+		OnFailure: policy.Abort,
 		Steps: []schedule.Step{
 			{
 				Name:    "missing",
@@ -33,10 +32,9 @@ func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
 
 func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	abort := policy.Abort
 	wf := schedule.Workflow{
 		Name:      "command failure aborts",
-		OnFailure: &abort,
+		OnFailure: policy.Abort,
 		Steps: []schedule.Step{
 			{
 				Name:    "exit 5",
