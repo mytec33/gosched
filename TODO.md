@@ -1,11 +1,11 @@
 # TODO
 
-- ~~add flag -print-schedule=config~~
+- graceful scheduler shutdown
 - add flag print-schedule-time
 
 - think about Configuration as Code (CaC) might be how this scheduler can work
 
-
+- ~~add flag -print-schedule=config~~
 - ~~add flag -create-new to create a sample configuration file to work off of~~
 
 ### Validation

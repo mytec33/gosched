@@ -17,7 +17,7 @@ var (
 	ErrStepArgsTotalLength           = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
 	ErrStepsCount                    = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
 	ErrStepsMissing                  = fmt.Errorf("steps are required")
-	ErrTriggerFieldNotPresent        = fmt.Errorf("time field is required")
+	ErrTriggerFieldNotPresent        = fmt.Errorf("trigger field is required")
 	ErrTooLong                       = errors.New("too long")
 	ErrTriggerBeginAtFieldNotPresent = errors.New("trigger beginAt field is required")
 	ErrTriggerEveryFieldNotPresent   = errors.New("trigger every field is required")
