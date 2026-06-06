@@ -21,24 +21,20 @@ var (
 
 type Cadence struct {
 	Repetition int
-	Measure    string
+	Measure    CadenceMeasure
 }
 
 func (c *Cadence) validateCadence() error {
-	if c.Repetition > 60 || c.Repetition < 1 {
-		return ErrCadenceBoundsInvalid
-	}
-
 	switch c.Measure {
-	case "d":
+	case CadenceDay:
 		if c.Repetition > 1 {
 			return ErrCadenceDayExceeded
 		}
-	case "h":
+	case CadenceHour:
 		if c.Repetition > 23 {
 			return ErrCadenceHourExceeded
 		}
-	case "m":
+	case CadenceMinute:
 		if c.Repetition > 59 {
 			return ErrCadenceMinuteExceeded
 		}
@@ -47,6 +43,19 @@ func (c *Cadence) validateCadence() error {
 	}
 
 	return nil
+}
+
+func parseMeasure(unit string) (CadenceMeasure, error) {
+	switch unit {
+	case "d":
+		return CadenceDay, nil
+	case "h":
+		return CadenceHour, nil
+	case "m":
+		return CadenceMinute, nil
+	default:
+		return CadenceMeasure{}, ErrCadenceUnitInvalid
+	}
 }
 
 func ParseCadence(s string) (Cadence, error) {
@@ -64,11 +73,18 @@ func ParseCadence(s string) (Cadence, error) {
 	if err != nil {
 		return Cadence{}, ErrCadenceNumInvalid
 	}
-	cadence.Repetition = v
-	cadence.Measure = strings.ToLower(string(s[len(s)-1:]))
 
-	err = cadence.validateCadence()
+	if v > 60 || v < 1 {
+		return Cadence{}, ErrCadenceBoundsInvalid
+	}
+	cadence.Repetition = v
+
+	cadence.Measure, err = parseMeasure(strings.ToLower(string(s[len(s)-1:])))
 	if err != nil {
+		return Cadence{}, err
+	}
+
+	if err := cadence.validateCadence(); err != nil {
 		return Cadence{}, err
 	}
 

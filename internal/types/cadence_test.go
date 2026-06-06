@@ -11,28 +11,28 @@ func TestParseCadence(t *testing.T) {
 		name        string
 		input       string
 		wantRep     int
-		wantMeasure string
+		wantMeasure CadenceMeasure
 		wantErr     error
 	}{
 		// Success cases
-		{"Valid minute", "45m", 45, "m", nil},
-		{"Valid hour", "12h", 12, "h", nil},
-		{"Valid day", "1d", 1, "d", nil},
-		{"Uppercase normalization", "15H", 15, "h", nil},
+		{"valid minute", "45m", 45, CadenceMinute, nil},
+		{"valid hour", "12h", 12, CadenceHour, nil},
+		{"valid day", "1d", 1, CadenceDay, nil},
+		{"uppercase normalization", "15H", 15, CadenceHour, nil},
 
 		// Structural / Parsing failures
-		{"Empty string", "", 0, "", ErrCadenceEmpty},
-		{"Too short missing unit", "5", 0, "", ErrCadenceTooShort},
-		{"Invalid integer payload", "abcde", 0, "", ErrCadenceNumInvalid},
-		{"Non-numeric prefix", "1a2h", 0, "", ErrCadenceNumInvalid},
+		{"empty string", "", 0, CadenceMeasure{}, ErrCadenceEmpty},
+		{"too short missing unit", "5", 0, CadenceMeasure{}, ErrCadenceTooShort},
+		{"invalid integer payload", "abcde", 0, CadenceMeasure{}, ErrCadenceNumInvalid},
+		{"non-numeric prefix", "1a2h", 0, CadenceMeasure{}, ErrCadenceNumInvalid},
 
 		// Business / Boundary failures
-		{"Invalid measure unit", "12s", 0, "", ErrCadenceUnitInvalid},
-		{"Global repetition max breach", "99m", 0, "", ErrCadenceBoundsInvalid},
-		{"Global repetition min breach", "0m", 0, "", ErrCadenceBoundsInvalid},
-		{"Day boundary breach", "2d", 0, "", ErrCadenceDayExceeded},
-		{"Hour boundary breach", "24h", 0, "", ErrCadenceHourExceeded},
-		{"Minute boundary breach", "60m", 0, "", ErrCadenceMinuteExceeded},
+		{"Invalid measure unit", "12s", 0, CadenceMeasure{}, ErrCadenceUnitInvalid},
+		{"repetition max breach", "99m", 0, CadenceMeasure{}, ErrCadenceBoundsInvalid},
+		{"repetition min breach", "0m", 0, CadenceMeasure{}, ErrCadenceBoundsInvalid},
+		{"day boundary breach", "2d", 0, CadenceMeasure{}, ErrCadenceDayExceeded},
+		{"hour boundary breach", "24h", 0, CadenceMeasure{}, ErrCadenceHourExceeded},
+		{"minute boundary breach", "60m", 0, CadenceMeasure{}, ErrCadenceMinuteExceeded},
 	}
 
 	// 2. Iterate through each test case sequentially
