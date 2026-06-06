@@ -1,7 +1,7 @@
 [
   {
     "name": "Slot Ratings",
-    "time": "14:31",
+    "trigger": { "every": "1d", "beginAt": "14:31" },
     "onFailure": "continue",
     "steps": [
       {
@@ -31,7 +31,7 @@
   },
   {
     "name": "Table Ratings",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",
     "steps": [
       {
@@ -58,7 +58,7 @@
   },
   {
     "name": "Jackpots",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "retry",
     "retry": {
       "numberRetries": 1,

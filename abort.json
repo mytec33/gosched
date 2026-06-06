@@ -1,7 +1,7 @@
 [
 	{
 		
-		"time": "19:40",
+		"trigger": { "every": "1d", "beginAt": "19:40" },
 		"onFailure": "abort",
 		"steps": [
 			{

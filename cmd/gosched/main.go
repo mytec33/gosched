@@ -246,7 +246,7 @@ func generateNewConfig() {
 [
 	{
 		"name": "Workflow 1",
-		"time": "10:00",
+		"trigger": { "every": "1d", "beginAt": "10:00" },
 		"onFailure": "continue",
 		"steps": [
 			{
@@ -270,7 +270,7 @@ func generateNewConfig() {
 	},
 	{
 		"name": "Workflow 2",
-		"time": "10:35",
+		"trigger": { "every": "1d", "beginAt": "10:35" },
 		"onFailure": "abort",
 		"steps": [
 			{
@@ -285,7 +285,7 @@ func generateNewConfig() {
 	},
 	{
 		"name": "Workflow 2",
-		"time": "10:35",
+		"trigger": { "every": "1d", "beginAt": "10:35" },
 		"onFailure": "retry",
 		"retry": {
 			"numberRetries": 3,

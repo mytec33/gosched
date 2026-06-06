@@ -7,8 +7,8 @@ import (
 )
 
 // Covers the lock-acquisition race found during review by LLM.
-func TestSafeMapRWMutexTryAcquire(t *testing.T) {
-	running := NewSafeMapMutex()
+func TestSafeMapTryAcquire(t *testing.T) {
+	running := NewSafeMap()
 
 	existing, acquired := running.TryAcquire("workflow", "run-1")
 	if !acquired {
@@ -38,8 +38,8 @@ func TestSafeMapRWMutexTryAcquire(t *testing.T) {
 }
 
 // Covers the lock-acquisition race found during review by LLM.
-func TestSafeMapRWMutexTryAcquireConcurrent(t *testing.T) {
-	running := NewSafeMapMutex()
+func TestSafeMapTryAcquireConcurrent(t *testing.T) {
+	running := NewSafeMap()
 
 	const attempts = 64
 	start := make(chan struct{})
@@ -73,7 +73,7 @@ func TestSafeMapRWMutexTryAcquireConcurrent(t *testing.T) {
 }
 
 func TestSafeMapConcurrentDifferentKeys(t *testing.T) {
-	running := NewSafeMapMutex()
+	running := NewSafeMap()
 
 	// Workflow A and Workflow B should be able to run at the same time
 	_, acquiredA := running.TryAcquire("workflow-A", "run-1")

@@ -51,7 +51,7 @@ func (s Schedule) PrintScheduleConfig(w io.Writer) {
 	wfWidth := len(strconv.Itoa(len(workflows)))
 
 	for i, v := range workflows {
-		fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, v.Time, v.Name, v.OnFailure)
+		fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure)
 
 		numSteps := len(strconv.Itoa(len(v.Steps)))
 		for j, step := range v.Steps {
@@ -77,7 +77,7 @@ func (s Schedule) PrintScheduleOperational(w io.Writer) {
 		wfWidth := len(strconv.Itoa(len(workflows)))
 
 		for i, v := range workflows {
-			fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, m, v.Name, v.OnFailure)
+			fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, m.String(), v.Name, v.OnFailure)
 
 			numSteps := len(strconv.Itoa(len(v.Steps)))
 			for j, step := range v.Steps {

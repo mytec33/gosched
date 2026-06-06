@@ -13,7 +13,7 @@ const WorkflowNameEmpty = `
 [
   {
     "name": "",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -24,7 +24,7 @@ const WorkflowNameWhitespace = `
 [
   {
     "name": "        ",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -35,7 +35,7 @@ const WorkflowNameWhitespaceLeading = `
 [
   {
     "name": " name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -46,7 +46,7 @@ const WorkflowNameWhitespaceTrailing = `
 [
   {
     "name": "name ",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -57,7 +57,7 @@ const WorkflowNameTooLong = `
 [
   {
     "name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -68,7 +68,7 @@ const WorkflowNoSteps = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": []
   }
@@ -120,7 +120,7 @@ const WorkflowStepNameEmpty = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "", "program": "program", "args": ["args"]}]
   }
@@ -131,7 +131,7 @@ const WorkflowStepNameWhitespace = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "   ", "program": "program", "args": ["args"]}]
   }
@@ -142,7 +142,7 @@ const WorkflowStepNameWhitespaceLeading = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": " leading", "program": "program", "args": ["args"]}]
   }
@@ -153,7 +153,7 @@ const WorkflowStepNameWhitespaceTrailing = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "trailing ", "program": "program", "args": ["args"]}]
   }
@@ -164,7 +164,7 @@ const WorkflowStepNameTooLong = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..", "program": "program", "args": ["args"]}]
   }
@@ -175,7 +175,7 @@ const WorkflowStepProgramEmpty = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "", "args": ["args"]}]
   }
@@ -186,7 +186,7 @@ const WorkflowStepProgramWhitespace = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "     ", "args": ["args"]}]
   }
@@ -197,7 +197,7 @@ const WorkflowStepProgramWhitespaceLeading = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": " foo", "args": ["args"]}]
   }
@@ -208,9 +208,44 @@ const WorkflowStepProgramWhitespaceTrailing = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "foo ", "args": ["args"]}]
+  }
+]
+`
+
+// 1. Tests what happens when the entire "trigger" block is missing entirely
+const WorkflowMissingTriggerBlock = `
+[
+  {
+    "name": "Missing Trigger Test",
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
+  }
+]
+`
+
+// 2. Tests when the "trigger" block exists, but the "every" field is missing
+const WorkflowMissingTriggerEvery = `
+[
+  {
+    "name": "Missing Every Test",
+    "trigger": { "beginAt": "10:35" },
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
+  }
+]
+`
+
+// 3. Tests when the "trigger" block exists, but the "beginAt" field is missing
+const WorkflowMissingTriggerBeginAt = `
+[
+  {
+    "name": "Missing BeginAt Test",
+    "trigger": { "every": "1d" },
+    "onFailure": "continue",    
+    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
   }
 ]
 `
@@ -230,6 +265,10 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: errs.ErrWhitespaceAll},
 		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: errs.ErrWhitespaceLeadingOrTrailing},
 		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: errs.ErrWhitespaceLeadingOrTrailing},
+
+		{name: "trigger block missing", json: WorkflowMissingTriggerBlock, wantError: errs.ErrTriggerFieldNotPresent},
+		{name: "trigger 'every' field missing", json: WorkflowMissingTriggerEvery, wantError: errs.ErrTriggerEveryFieldNotPresent},
+		{name: "trigger 'beginAt' field missing", json: WorkflowMissingTriggerBeginAt, wantError: errs.ErrTriggerBeginAtFieldNotPresent},
 	}
 
 	for _, tt := range tests {
@@ -265,7 +304,7 @@ const StepNamesNotUnique = `
 [
   {
     "name": "workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",
     "steps": [
       {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600},
@@ -275,7 +314,7 @@ const StepNamesNotUnique = `
   {
     "name": "workflow 2",
     "onFailure": "continue",    
-    "time": "11:35",
+    "trigger": { "every": "1d", "beginAt": "11:35" },
     "steps": [{"name": "step name 2", "program": "program 1", "args": ["args 1"], "timeout": 0, "pause": 0}]
   }
 ]
@@ -315,14 +354,14 @@ const WorkflowValid = `
 [
   {
     "name": "workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",
     "steps": [{"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}]
   },
   {
     "name": "workflow 2",
     "onFailure": "continue",    
-    "time": "11:35",
+    "trigger": { "every": "1d", "beginAt": "11:35" },
     "steps": [{"name": "step name 2", "program": "program 1", "args": ["args 1"], "timeout": 0, "pause": 0}]
   }
 ]
@@ -447,7 +486,7 @@ const WorkflowStepArgsWhitespace = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": ["         "]}]
   }
@@ -458,7 +497,7 @@ const WorkflowStepArgsWhitespaceLeading = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": [" leading"]}]
   }
@@ -469,7 +508,7 @@ const WorkflowStepArgsWhitespaceTrailing = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": ["trailing "]}]
   }
@@ -480,7 +519,7 @@ const WorkflowStepArgsTooLong = `
 [
   {
     "name": "name",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "continue",    
     "steps": [{"name": "step name", "program": "program", "args": ["Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.."]}]
   }
@@ -526,7 +565,7 @@ const MissingRetryConfigOnPolicyRetry = `
 [
   {
     "name": "workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "retry",
     "steps": [
       {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}     
@@ -539,7 +578,7 @@ const ValidateRetryConfigOnPolicyRetry = `
 [
   {
     "name": "workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "retry",
 	"retry": {
 		"numberRetries": 0,

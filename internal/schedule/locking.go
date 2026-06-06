@@ -2,14 +2,14 @@ package schedule
 
 import "sync"
 
-var RunningWorkflows = NewSafeMapMutex()
+var RunningWorkflows = NewSafeMap()
 
 type SafeMap struct {
 	mu   sync.Mutex
 	data map[string]string
 }
 
-func NewSafeMapMutex() *SafeMap {
+func NewSafeMap() *SafeMap {
 	return &SafeMap{
 		data: make(map[string]string),
 	}

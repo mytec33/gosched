@@ -12,7 +12,7 @@ const validOneWorkflowOneStep = `
 [
   {
     "name": "Workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
       {
@@ -29,7 +29,7 @@ const validOneWorkflowTwoSteps = `
 [
   {
     "name": "Workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
       {
@@ -51,7 +51,7 @@ const validTwoWorkflows = `
 [
   {
     "name": "Workflow 1",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
       {
@@ -68,7 +68,7 @@ const validTwoWorkflows = `
   },
   {
     "name": "Workflow 2",
-    "time": "10:35",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
       {
@@ -147,7 +147,7 @@ const WorkflowTimeEmpty = `
 [
   {
     "name": "foo",
-    "time": "",
+    "trigger": {"every": "1d", "beginAt": ""},
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -158,7 +158,7 @@ const WorkflowTimeBadHour = `
 [
   {
     "name": "foo",
-    "time": "99:35",
+    "trigger": { "every": "1d", "beginAt": "99:35" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -169,7 +169,7 @@ const WorkflowTimeBadMinute = `
 [
   {
     "name": "foo",
-    "time": "10:123",
+    "trigger": { "every": "1d", "beginAt": "10:123" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -180,7 +180,7 @@ const WorkflowTimeMissingColon = `
 [
   {
     "name": "name",
-    "time": "1001",
+    "trigger": { "every": "1d", "beginAt": "1001" },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }
@@ -191,7 +191,7 @@ const WorkflowTimeWhitespace = `
 [
   {
     "name": "name",
-    "time": " ",
+    "trigger": { "every": "1d", "beginAt": " " },
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
   }

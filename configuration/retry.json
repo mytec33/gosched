@@ -1,7 +1,7 @@
 [
     {
 		"name": "Workflow Retry",
-		"time": "21:43",
+		"trigger": { "every": "1d", "beginAt": "21:43" },
 		"onFailure": "retry",
 		"retry": {
 			"numberRetries": 3,

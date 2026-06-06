@@ -12,7 +12,7 @@ import (
 
 type Workflow struct {
 	Name      string              `json:"name"`
-	Time      *types.MinuteOfDay  `json:"time"`
+	Trigger   *types.Trigger      `json:"trigger"`
 	OnFailure *policy.FailureMode `json:"onFailure"`
 	Retry     *RetryPolicy        `json:"retry"`
 	Steps     []Step              `json:"steps"`
@@ -38,8 +38,17 @@ func (w Workflow) Validate() []error {
 	errorList = append(errorList, validateStringValue(field, w.Name,
 		errs.MaxWorkflowNameLength)...)
 
-	if w.Time == nil {
-		errorList = append(errorList, errs.ErrTimeFieldNotPresent)
+	if w.Trigger == nil {
+		errorList = append(errorList, errs.ErrTriggerFieldNotPresent)
+	} else {
+
+		if w.Trigger.Every == nil {
+			errorList = append(errorList, errs.ErrTriggerEveryFieldNotPresent)
+		}
+
+		if w.Trigger.BeginAt == nil {
+			errorList = append(errorList, errs.ErrTriggerBeginAtFieldNotPresent)
+		}
 	}
 
 	// Invalid onFailure values are rejected during JSON decoding.

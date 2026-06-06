@@ -23,7 +23,7 @@ const ScheduleOneWorkflowOneStep = `
 [
   {
     "name": "Workflow 1",
-    "time": "%s",
+    "trigger": { "every": "1d", "beginAt": "%s" },
 	"onFailure": "continue",
     "steps": [
       {
@@ -40,7 +40,7 @@ const ScheduleTwoWorkflowOneStep = `
 [
   {
     "name": "Workflow 1",
-    "time": "%s",
+    "trigger": { "every": "1d", "beginAt": "%s" },
 	"onFailure": "continue",	
     "steps": [
       {
@@ -52,7 +52,7 @@ const ScheduleTwoWorkflowOneStep = `
   },
   {
     "name": "Workflow 2",
-    "time": "%s",
+    "trigger": { "every": "1d", "beginAt": "%s" },
     "onFailure": "continue",	
     "steps": [
       {
@@ -228,19 +228,29 @@ func TestPrintScheduleConfig(t *testing.T) {
 		t.Fatalf("parse 12:47: %v", err)
 	}
 
+	c15m, err := types.ParseCadence("1h")
+	if err != nil {
+		t.Fatalf("parse cadence 1h: %v", err)
+	}
 	s := Schedule{
 		workflows: []Workflow{
 			{
-				Name:      "Workflow 1",
-				Time:      &m1146,
+				Name: "Workflow 1",
+				Trigger: &types.Trigger{
+					Every:   &c15m,
+					BeginAt: &m1146,
+				},
 				OnFailure: &policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
-				Name:      "Workflow 1",
-				Time:      &m1145,
+				Name: "Workflow 1",
+				Trigger: &types.Trigger{
+					Every:   &c15m,
+					BeginAt: &m1145,
+				},
 				OnFailure: &policy.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30, Pause: 5},
@@ -248,16 +258,22 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 			},
 			{
-				Name:      "Workflow 2",
-				Time:      &m1145,
+				Name: "Workflow 2",
+				Trigger: &types.Trigger{
+					Every:   &c15m,
+					BeginAt: &m1145,
+				},
 				OnFailure: &policy.Continue,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
 			},
 			{
-				Name:      "Workflow 1",
-				Time:      &m1247,
+				Name: "Workflow 1",
+				Trigger: &types.Trigger{
+					Every:   &c15m,
+					BeginAt: &m1247,
+				},
 				OnFailure: &policy.Retry,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 1800},
@@ -270,14 +286,14 @@ func TestPrintScheduleConfig(t *testing.T) {
 	s.PrintScheduleConfig(&buf)
 
 	got := buf.String()
-	want := `1: 11:46  Workflow 1 (abort)
+	want := `1: 1h 11:46  Workflow 1 (abort)
 		1: step 1 (timeout 30s)
-2: 11:45  Workflow 1 (abort)
+2: 1h 11:45  Workflow 1 (abort)
 		1: step 1 (timeout 30s, pause 5s)
 		2: step 2 (timeout 30s)
-3: 11:45  Workflow 2 (continue)
+3: 1h 11:45  Workflow 2 (continue)
 		1: step 1 (timeout 30s)
-4: 12:47  Workflow 1 (retry)
+4: 1h 12:47  Workflow 1 (retry)
 		1: step 1 (timeout 30m0s)
 `
 
@@ -287,6 +303,11 @@ func TestPrintScheduleConfig(t *testing.T) {
 }
 
 func TestPrintScheduleOperational(t *testing.T) {
+	c15m, err := types.ParseCadence("1h")
+	if err != nil {
+		t.Fatalf("parse cadence 1h: %v", err)
+	}
+
 	m1145, err := types.ParseMinuteOfDay("11:45")
 	if err != nil {
 		t.Fatalf("parse 11:45: %v", err)
@@ -306,8 +327,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 		byMinute: map[types.MinuteOfDay][]Workflow{
 			m1146: {
 				{
-					Name:      "Workflow 3",
-					Time:      &m1146,
+					Name: "Workflow 3",
+					Trigger: &types.Trigger{
+						Every:   &c15m,
+						BeginAt: &m1146,
+					},
 					OnFailure: &policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
@@ -316,8 +340,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 			},
 			m1145: {
 				{
-					Name:      "Workflow 1",
-					Time:      &m1145,
+					Name: "Workflow 1",
+					Trigger: &types.Trigger{
+						Every:   &c15m,
+						BeginAt: &m1145,
+					},
 					OnFailure: &policy.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30, Pause: 5},
@@ -325,8 +352,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 				},
 				{
-					Name:      "Workflow 2",
-					Time:      &m1145,
+					Name: "Workflow 2",
+					Trigger: &types.Trigger{
+						Every:   &c15m,
+						BeginAt: &m1145,
+					},
 					OnFailure: &policy.Continue,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
@@ -335,8 +365,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 			},
 			m1247: {
 				{
-					Name:      "Workflow 1",
-					Time:      &m1247,
+					Name: "Workflow 1",
+					Trigger: &types.Trigger{
+						Every:   &c15m,
+						BeginAt: &m1247,
+					},
 					OnFailure: &policy.Retry,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 1800},

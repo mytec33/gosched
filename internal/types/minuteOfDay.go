@@ -20,9 +20,9 @@ func ParseMinuteOfDay(s string) (MinuteOfDay, error) {
 	return MinuteOfDay(t.Hour()*60 + t.Minute()), nil
 }
 
-func (m MinuteOfDay) String() string {
-	h := int(m) / 60
-	min := int(m) % 60
+func (m *MinuteOfDay) String() string {
+	h := int(*m) / 60
+	min := int(*m) % 60
 
 	return fmt.Sprintf("%02d:%02d", h, min)
 }
