@@ -71,3 +71,15 @@ func TestSafeMapRWMutexTryAcquireConcurrent(t *testing.T) {
 		t.Fatalf("expected exactly one successful acquire, got %d", acquiredCount)
 	}
 }
+
+func TestSafeMapConcurrentDifferentKeys(t *testing.T) {
+	running := NewSafeMapMutex()
+
+	// Workflow A and Workflow B should be able to run at the same time
+	_, acquiredA := running.TryAcquire("workflow-A", "run-1")
+	_, acquiredB := running.TryAcquire("workflow-B", "run-2")
+
+	if !acquiredA || !acquiredB {
+		t.Errorf("expected both different workflows to be acquired, A: %v, B: %v", acquiredA, acquiredB)
+	}
+}

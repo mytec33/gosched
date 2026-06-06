@@ -4,24 +4,24 @@ import "sync"
 
 var RunningWorkflows = NewSafeMapMutex()
 
-type SafeMapRWMutex struct {
-	mu   sync.RWMutex
+type SafeMap struct {
+	mu   sync.Mutex
 	data map[string]string
 }
 
-func NewSafeMapMutex() *SafeMapRWMutex {
-	return &SafeMapRWMutex{
+func NewSafeMapMutex() *SafeMap {
+	return &SafeMap{
 		data: make(map[string]string),
 	}
 }
 
-func (sm *SafeMapRWMutex) Delete(key string) {
+func (sm *SafeMap) Delete(key string) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	delete(sm.data, key)
 }
 
-func (sm *SafeMapRWMutex) TryAcquire(key, value string) (string, bool) {
+func (sm *SafeMap) TryAcquire(key, value string) (string, bool) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
