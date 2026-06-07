@@ -14,7 +14,7 @@ type MinuteOfDay int
 func ParseMinuteOfDay(s string) (MinuteOfDay, error) {
 	t, err := time.Parse("15:04", s)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errs.ErrInvalidTimeFormat, err)
+		return 0, fmt.Errorf("%w: %w", errs.ErrTimeFormatInvalid, err)
 	}
 
 	return MinuteOfDay(t.Hour()*60 + t.Minute()), nil

@@ -27,14 +27,14 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	workflow.Name = raw.Name
 
 	if raw.Trigger == nil {
-		errorList = append(errorList, errs.ErrTriggerFieldNotPresent)
+		errorList = append(errorList, errs.ErrTriggerRequired)
 	} else {
 		if raw.Trigger.Every == nil {
-			errorList = append(errorList, errs.ErrTriggerEveryFieldNotPresent)
+			errorList = append(errorList, errs.ErrTriggerEveryRequired)
 		}
 
 		if raw.Trigger.BeginAt == nil {
-			errorList = append(errorList, errs.ErrTriggerBeginAtFieldNotPresent)
+			errorList = append(errorList, errs.ErrTriggerBeginAtRequired)
 		}
 
 		workflow.Trigger = *raw.Trigger
@@ -63,11 +63,11 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	}
 
 	if len(raw.Steps) == 0 {
-		errorList = append(errorList, errs.ErrStepsMissing)
+		errorList = append(errorList, errs.ErrStepsRequired)
 	}
 
 	if len(raw.Steps) > errs.MaxStepsCount {
-		errorList = append(errorList, errs.ErrStepsCount)
+		errorList = append(errorList, errs.ErrStepCountExceeded)
 	}
 
 	for i, steps := range raw.Steps {
@@ -76,11 +76,11 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 			errs.MaxWorkflowStepNameLength)...)
 
 		if steps.Timeout < 0 {
-			errorList = append(errorList, errs.ErrNegativeNumber)
+			errorList = append(errorList, errs.ErrNumberNegative)
 		}
 
 		if steps.Pause < 0 {
-			errorList = append(errorList, errs.ErrNegativeNumber)
+			errorList = append(errorList, errs.ErrNumberNegative)
 		}
 
 		field = fmt.Sprintf("workflow.steps[%d].program", i+1)
@@ -88,7 +88,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 			errs.MaxWorkflowStepProgramLength)...)
 
 		if len(steps.Args) > errs.MaxStepArgsCount {
-			errorList = append(errorList, errs.ErrStepArgsTooMany)
+			errorList = append(errorList, errs.ErrStepArgsCountExceeded)
 		}
 
 		totalArgsLength := 0
@@ -101,7 +101,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 		}
 
 		if totalArgsLength > errs.MaxStepArgsTotalLength {
-			errorList = append(errorList, errs.ErrStepArgsTotalLength)
+			errorList = append(errorList, errs.ErrStepArgsTotalLengthExceeded)
 		}
 	}
 	// Steps (and the entire schedule) are treated as immutable config after
@@ -118,13 +118,13 @@ func validateStringValue(field string, s string, maxLength int) []error {
 	trimmed := strings.TrimSpace(s)
 
 	if s == "" {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrEmpty))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldEmpty))
 	} else if trimmed == "" {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrWhitespaceAll))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldWhitespaceOnly))
 	} else if trimmed != s {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrWhitespaceLeadingOrTrailing))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldWhitespacePadded))
 	} else if len(trimmed) > maxLength {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrTooLong))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldTooLong))
 	}
 
 	return errorList

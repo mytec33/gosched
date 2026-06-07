@@ -18,8 +18,8 @@ const (
 )
 
 var (
-	ErrTriggerInterval      = errors.New("trigger interval cannot be zero")
-	ErrWorkflowNameNotFound = errors.New("workflow not found by name")
+	ErrTriggerIntervalInvalid = errors.New("trigger interval must be greater than zero")
+	ErrWorkflowNameNotFound   = errors.New("workflow not found by name")
 )
 
 type ScheduleSliceFlag []string
@@ -54,7 +54,7 @@ func expandCadence(trigger types.Trigger) ([]types.MinuteOfDay, error) {
 	}
 
 	if interval <= 0 {
-		return minutes, ErrTriggerInterval
+		return minutes, ErrTriggerIntervalInvalid
 	}
 
 	for minute := int(*trigger.BeginAt); minute < MinutesPerDay; minute += interval {
@@ -170,7 +170,7 @@ func (s Schedule) validateWorkflowCount() []error {
 
 	count := s.WorkflowCount()
 	if count > errs.MaxWorkflowCount {
-		errorList = append(errorList, fmt.Errorf("%w: got %d", errs.ErrWorkflowCount, count))
+		errorList = append(errorList, fmt.Errorf("%w: got %d", errs.ErrWorkflowCountExceeded, count))
 	}
 
 	return errorList

@@ -485,8 +485,8 @@ func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
 
 	errorList := s.Validate()
 
-	if hasError(errorList, errs.ErrWorkflowCount) {
-		t.Fatalf("unexpected %v in %v", errs.ErrWorkflowCount, errorList)
+	if hasError(errorList, errs.ErrWorkflowCountExceeded) {
+		t.Fatalf("unexpected %v in %v", errs.ErrWorkflowCountExceeded, errorList)
 	}
 }
 
@@ -495,8 +495,8 @@ func TestScheduleValidate_WorkflowCount_InvalidOverLimit(t *testing.T) {
 
 	errorList := s.Validate()
 
-	if !hasError(errorList, errs.ErrWorkflowCount) {
-		t.Fatalf("expected %v, got %v", errs.ErrWorkflowCount, errorList)
+	if !hasError(errorList, errs.ErrWorkflowCountExceeded) {
+		t.Fatalf("expected %v, got %v", errs.ErrWorkflowCountExceeded, errorList)
 	}
 }
 

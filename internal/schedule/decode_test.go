@@ -204,11 +204,11 @@ func TestWorkflowTimes_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrInvalidTimeFormat},
-		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrInvalidTimeFormat},
-		{name: "time bad minute", json: WorkflowTimeBadMinute, wantError: errs.ErrInvalidTimeFormat},
-		{name: "time missing colon", json: WorkflowTimeMissingColon, wantError: errs.ErrInvalidTimeFormat},
-		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrInvalidTimeFormat},
+		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrTimeFormatInvalid},
+		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrTimeFormatInvalid},
+		{name: "time bad minute", json: WorkflowTimeBadMinute, wantError: errs.ErrTimeFormatInvalid},
+		{name: "time missing colon", json: WorkflowTimeMissingColon, wantError: errs.ErrTimeFormatInvalid},
+		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrTimeFormatInvalid},
 	}
 
 	for _, tt := range tests {

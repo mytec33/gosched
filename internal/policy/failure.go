@@ -40,7 +40,7 @@ func (f *FailureMode) UnmarshalJSON(data []byte) error {
 	case "retry":
 		*f = Retry
 	default:
-		return fmt.Errorf("%w: %q", errs.ErrOnFailureInvalidMode, s)
+		return fmt.Errorf("%w: %q", errs.ErrOnFailureInvalid, s)
 	}
 
 	return nil

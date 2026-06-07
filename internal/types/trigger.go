@@ -2,12 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-)
-
-var (
-	ErrTriggerBeginAtMissing = errors.New("trigger requires a valid 'beginAt' field")
 )
 
 type Trigger struct {
