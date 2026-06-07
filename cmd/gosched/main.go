@@ -100,8 +100,7 @@ func run() int {
 	}
 
 	if printSchedule != "" {
-		printConfiguration(printSchedule, sched)
-		return ExitSuccess
+		return printConfiguration(printSchedule, sched)
 	}
 
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
@@ -123,7 +122,7 @@ func run() int {
 	return 0
 }
 
-func printConfiguration(method string, s schedule.Schedule) {
+func printConfiguration(method string, s schedule.Schedule) int {
 	switch method {
 	case "config":
 		s.PrintScheduleConfig(os.Stdout)
@@ -131,7 +130,10 @@ func printConfiguration(method string, s schedule.Schedule) {
 		s.PrintScheduleOperational(os.Stdout)
 	default:
 		fmt.Printf("Unknown print config method: %s\n", method)
+		return ExitInvalidArgs
 	}
+
+	return ExitSuccess
 }
 
 func displayCfgErrors(fileErrors []error) {
