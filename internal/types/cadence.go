@@ -19,6 +19,10 @@ var (
 	ErrCadenceMinuteExceeded = errors.New("minute cadence cannot be greater than 59m")
 )
 
+// Unexported fields due to these values changing or being overwritten could have a huge impact
+// on the program. A repetition of 0 could be an endless loop. It was worth protecting this
+// further than the typical opaque pattern like MinuteOfDay.
+
 type Cadence struct {
 	repetition int
 	measure    CadenceMeasure
@@ -34,15 +38,15 @@ func (c Cadence) Measure() CadenceMeasure {
 
 func (c Cadence) validateCadence() error {
 	switch c.measure {
-	case CadenceDay():
+	case CadenceDay:
 		if c.repetition > 1 {
 			return ErrCadenceDayExceeded
 		}
-	case CadenceHour():
+	case CadenceHour:
 		if c.repetition > 23 {
 			return ErrCadenceHourExceeded
 		}
-	case CadenceMinute():
+	case CadenceMinute:
 		if c.repetition > 59 {
 			return ErrCadenceMinuteExceeded
 		}
@@ -56,11 +60,11 @@ func (c Cadence) validateCadence() error {
 func parseMeasure(unit string) (CadenceMeasure, error) {
 	switch unit {
 	case "d":
-		return CadenceDay(), nil
+		return CadenceDay, nil
 	case "h":
-		return CadenceHour(), nil
+		return CadenceHour, nil
 	case "m":
-		return CadenceMinute(), nil
+		return CadenceMinute, nil
 	default:
 		return CadenceMeasure{}, ErrCadenceUnitInvalid
 	}
