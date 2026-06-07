@@ -47,11 +47,11 @@ func TestParseCadence(t *testing.T) {
 
 			// If we didn't expect an error, verify the struct values are correct
 			if tt.wantErr == nil {
-				if got.Repetition != tt.wantRep {
-					t.Errorf("ParseCadence(%q) Repetition = %d, want %d", tt.input, got.Repetition, tt.wantRep)
+				if got.Repetition() != tt.wantRep {
+					t.Errorf("ParseCadence(%q) Repetition = %d, want %d", tt.input, got.Repetition(), tt.wantRep)
 				}
-				if got.Measure != tt.wantMeasure {
-					t.Errorf("ParseCadence(%q) Measure = %q, want %q", tt.input, got.Measure, tt.wantMeasure)
+				if got.Measure() != tt.wantMeasure {
+					t.Errorf("ParseCadence(%q) Measure = %q, want %q", tt.input, got.Measure(), tt.wantMeasure)
 				}
 			}
 		})

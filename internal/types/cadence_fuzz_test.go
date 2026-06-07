@@ -16,14 +16,14 @@ func FuzzParseCadence(f *testing.F) {
 			return
 		}
 
-		if c.Repetition < 1 || c.Repetition > 60 {
-			t.Fatalf("repetition out of bounds: %d", c.Repetition)
+		if c.Repetition() < 1 || c.Repetition() > 60 {
+			t.Fatalf("repetition out of bounds: %d", c.Repetition())
 		}
 
-		switch c.Measure {
+		switch c.Measure() {
 		case CadenceDay, CadenceHour, CadenceMinute:
 		default:
-			t.Fatalf("invalid measure: %v", c.Measure)
+			t.Fatalf("invalid measure: %v", c.Measure())
 		}
 
 		if _, err := ParseCadence(c.String()); err != nil {
