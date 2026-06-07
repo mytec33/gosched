@@ -519,3 +519,113 @@ func makeWorkflows(n int) []Workflow {
 	}
 	return workflows
 }
+
+func TestExpandCadence(t *testing.T) {
+	tests := []struct {
+		name      string
+		every     string
+		beginAt   string
+		wantCount int
+		wantFirst string
+		wantLast  string
+	}{
+		{"daily pinned", "1d", "03:15", 1, "03:15", "03:15"},
+		{"15 minutes all day", "15m", "00:00", 96, "00:00", "23:45"},
+		{"15 minutes half day", "15m", "12:00", 48, "12:00", "23:45"},
+		{"6 hours all day", "6h", "00:00", 4, "00:00", "18:00"},
+		{"6 hours late start", "6h", "21:00", 1, "21:00", "21:00"},
+		{"7 hours uneven day", "7h", "00:00", 4, "00:00", "21:00"},
+		{"1 minute all day", "1m", "00:00", 1440, "00:00", "23:59"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cadence, err := types.ParseCadence(tt.every)
+			if err != nil {
+				t.Fatalf("parse cadence %q: %v", tt.every, err)
+			}
+
+			beginAt, err := types.ParseMinuteOfDay(tt.beginAt)
+			if err != nil {
+				t.Fatalf("parse beginAt %q: %v", tt.beginAt, err)
+			}
+
+			trigger := types.Trigger{
+				Every:   &cadence,
+				BeginAt: &beginAt,
+			}
+
+			got, err := expandCadence(trigger)
+			if err != nil {
+				t.Fatalf("expand cadence: %v", err)
+			}
+
+			if len(got) != tt.wantCount {
+				t.Fatalf("got %d minutes, want %d: %v", len(got), tt.wantCount, got)
+			}
+
+			if got[0].String() != tt.wantFirst {
+				t.Fatalf("first minute = %s, want %s", got[0].String(), tt.wantFirst)
+			}
+
+			last := got[len(got)-1]
+			if last.String() != tt.wantLast {
+				t.Fatalf("last minute = %s, want %s", last.String(), tt.wantLast)
+			}
+		})
+	}
+}
+
+func TestExpandSchedule_Idempotent(t *testing.T) {
+	cadence, err := types.ParseCadence("15m")
+	if err != nil {
+		t.Fatalf("parse cadence: %v", err)
+	}
+
+	beginAt, err := types.ParseMinuteOfDay("00:00")
+	if err != nil {
+		t.Fatalf("parse beginAt: %v", err)
+	}
+
+	s := Schedule{
+		workflows: []Workflow{
+			{
+				Name: "Jackpots",
+				Trigger: types.Trigger{
+					Every:   &cadence,
+					BeginAt: &beginAt,
+				},
+				OnFailure: policy.Retry,
+				Steps: []Step{
+					{Name: "step 1", Program: "program"},
+				},
+			},
+		},
+	}
+
+	if err := s.ExpandSchedule(); err != nil {
+		t.Fatalf("first expansion: %v", err)
+	}
+
+	firstCount := 0
+	for _, workflows := range s.byMinute {
+		firstCount += len(workflows)
+	}
+
+	if err := s.ExpandSchedule(); err != nil {
+		t.Fatalf("second expansion: %v", err)
+	}
+
+	secondCount := 0
+	for _, workflows := range s.byMinute {
+		secondCount += len(workflows)
+	}
+
+	if firstCount != 96 {
+		t.Fatalf("first expansion count = %d, want 96", firstCount)
+	}
+
+	if secondCount != firstCount {
+		t.Fatalf("second expansion count = %d, want %d", secondCount, firstCount)
+	}
+}

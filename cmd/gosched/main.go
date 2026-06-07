@@ -25,6 +25,7 @@ const (
 	ExitWorkflowNotFoundByName int = 9
 	ExitExecuteWorkflow        int = 10
 	ExitScheduleValidation     int = 11
+	ExitScheduleExpansion      int = 12
 )
 
 var (
@@ -90,6 +91,12 @@ func run() int {
 	if len(valErrors) > 0 {
 		logging.StdOut.Error("startup", "reason", "failed to validate schedule", "error(s)", valErrors)
 		return ExitScheduleValidation
+	}
+
+	err = sched.ExpandSchedule()
+	if err != nil {
+		logging.StdOut.Error("startup", "reason", "schedule expansion failed", "error", err)
+		return ExitScheduleExpansion
 	}
 
 	if printSchedule != "" {

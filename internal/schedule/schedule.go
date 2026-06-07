@@ -13,7 +13,12 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
+const (
+	MinutesPerDay int = 24 * 60
+)
+
 var (
+	ErrTriggerInterval      = errors.New("trigger interval cannot be zero")
 	ErrWorkflowNameNotFound = errors.New("workflow not found by name")
 )
 
@@ -31,6 +36,54 @@ func (s *ScheduleSliceFlag) Set(value string) error {
 
 func (s *ScheduleSliceFlag) String() string {
 	return fmt.Sprintf("%v", *s)
+}
+
+func expandCadence(trigger types.Trigger) ([]types.MinuteOfDay, error) {
+	var interval int
+	var minutes []types.MinuteOfDay
+
+	// Minutes are the key focus of this scheduler. Minute is also the smallest
+	// unit of time so we can calc against minutes in day as our upper boundary
+	switch trigger.Every.Measure {
+	case types.CadenceDay:
+		interval = trigger.Every.Repetition * MinutesPerDay
+	case types.CadenceHour:
+		interval = trigger.Every.Repetition * 60
+	case types.CadenceMinute:
+		interval = trigger.Every.Repetition
+	}
+
+	if interval <= 0 {
+		return minutes, ErrTriggerInterval
+	}
+
+	for minute := int(*trigger.BeginAt); minute < MinutesPerDay; minute += interval {
+		minutes = append(minutes, types.MinuteOfDay(minute))
+	}
+
+	return minutes, nil
+}
+
+func (s *Schedule) ExpandSchedule() error {
+	var newByMinute = make(map[types.MinuteOfDay][]Workflow)
+
+	for _, wf := range s.workflows {
+		minutes, err := expandCadence(wf.Trigger)
+		if err != nil {
+			return fmt.Errorf("%s interval %s: %w", wf.Name, wf.Trigger.Every, err)
+		}
+
+		for _, m := range minutes {
+			newByMinute[m] = append(newByMinute[m], wf)
+		}
+	}
+
+	// Replace old schedule with new schedule to avoid comparing
+	// new entries against previous entries. It is simpler to create
+	// a new schedule than to patch an existing schedule.
+	s.byMinute = newByMinute
+
+	return nil
 }
 
 func (s Schedule) GetWorkflowByName(n string) (Workflow, error) {
