@@ -34,15 +34,15 @@ func (c Cadence) Measure() CadenceMeasure {
 
 func (c Cadence) validateCadence() error {
 	switch c.measure {
-	case CadenceDay:
+	case CadenceDay():
 		if c.repetition > 1 {
 			return ErrCadenceDayExceeded
 		}
-	case CadenceHour:
+	case CadenceHour():
 		if c.repetition > 23 {
 			return ErrCadenceHourExceeded
 		}
-	case CadenceMinute:
+	case CadenceMinute():
 		if c.repetition > 59 {
 			return ErrCadenceMinuteExceeded
 		}
@@ -56,11 +56,11 @@ func (c Cadence) validateCadence() error {
 func parseMeasure(unit string) (CadenceMeasure, error) {
 	switch unit {
 	case "d":
-		return CadenceDay, nil
+		return CadenceDay(), nil
 	case "h":
-		return CadenceHour, nil
+		return CadenceHour(), nil
 	case "m":
-		return CadenceMinute, nil
+		return CadenceMinute(), nil
 	default:
 		return CadenceMeasure{}, ErrCadenceUnitInvalid
 	}

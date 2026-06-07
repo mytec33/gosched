@@ -45,11 +45,11 @@ func expandCadence(trigger types.Trigger) ([]types.MinuteOfDay, error) {
 	// Minutes are the key focus of this scheduler. Minute is also the smallest
 	// unit of time so we can calc against minutes in day as our upper boundary
 	switch trigger.Every.Measure() {
-	case types.CadenceDay:
+	case types.CadenceDay():
 		interval = trigger.Every.Repetition() * MinutesPerDay
-	case types.CadenceHour:
+	case types.CadenceHour():
 		interval = trigger.Every.Repetition() * 60
-	case types.CadenceMinute:
+	case types.CadenceMinute():
 		interval = trigger.Every.Repetition()
 	}
 

@@ -84,7 +84,7 @@ func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
 		t.Fatalf("expected continue workflow to finish: %v\n%s", err, out)
 	}
 
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial))
+	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial()))
 	assertOutputContains(t, out, []byte(`role=continues`))
 }
 
@@ -115,7 +115,7 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 	}
 
 	assertOutputContains(t, out, []byte(`status=exhausted`))
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial))
+	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial()))
 }
 
 func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
@@ -146,8 +146,8 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 		t.Fatalf("expected retry workflow to finish: %v\n%s", err, out)
 	}
 
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusCompleted))
-	if bytes.Contains(out, workflowStatusLog(types.WorkflowStatusPartial)) {
+	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusCompleted()))
+	if bytes.Contains(out, workflowStatusLog(types.WorkflowStatusPartial())) {
 		t.Fatalf("expected output not to contain partial status\n%s", out)
 	}
 }

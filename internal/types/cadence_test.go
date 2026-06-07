@@ -15,10 +15,10 @@ func TestParseCadence(t *testing.T) {
 		wantErr     error
 	}{
 		// Success cases
-		{"valid minute", "45m", 45, CadenceMinute, nil},
-		{"valid hour", "12h", 12, CadenceHour, nil},
-		{"valid day", "1d", 1, CadenceDay, nil},
-		{"uppercase normalization", "15H", 15, CadenceHour, nil},
+		{"valid minute", "45m", 45, CadenceMinute(), nil},
+		{"valid hour", "12h", 12, CadenceHour(), nil},
+		{"valid day", "1d", 1, CadenceDay(), nil},
+		{"uppercase normalization", "15H", 15, CadenceHour(), nil},
 
 		// Structural / Parsing failures
 		{"empty string", "", 0, CadenceMeasure{}, ErrCadenceEmpty},

@@ -21,7 +21,7 @@ func FuzzParseCadence(f *testing.F) {
 		}
 
 		switch c.Measure() {
-		case CadenceDay, CadenceHour, CadenceMinute:
+		case CadenceDay(), CadenceHour(), CadenceMinute():
 		default:
 			t.Fatalf("invalid measure: %v", c.Measure())
 		}

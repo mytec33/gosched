@@ -94,14 +94,14 @@ func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step,
 
 		retryResult = RunStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
-			return types.WorkflowStatusCompleted
+			return types.WorkflowStatusCompleted()
 		}
 	}
 
 	stdOut.Error("step retry", "stepName", step.Name, "stepIndex", stepIndex,
 		"status", "exhausted", "retries", retry.NumberRetries)
 
-	return types.WorkflowStatusPartial
+	return types.WorkflowStatusPartial()
 }
 
 func (s StepExecutionResult) Failed() bool {
