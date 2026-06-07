@@ -23,7 +23,10 @@ func (e FileValidationError) Unwrap() error {
 	return e.Err
 }
 
-var ErrDecodeSchedule = errors.New("decode schedule")
+var (
+	ErrDecodeSchedule = errors.New("decode schedule")
+	ErrFileIOError    = errors.New("error opening file")
+)
 
 // ReadScheduleFiles opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
@@ -34,15 +37,9 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 	schedule.byMinute = make(map[types.MinuteOfDay][]Workflow)
 
 	for _, file := range filename {
-		f, err := os.Open(file)
+		s, validationErrors, err := decodeScheduleFile(file)
 		if err != nil {
-			return Schedule{}, nil, fmt.Errorf("open workflows file %q: %w", file, err)
-		}
-		defer f.Close() // Keep in mind with many files this could be an issue but not yet
-
-		s, validationErrors, err := DecodeWorkflows(f)
-		if err != nil {
-			return Schedule{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
+			return Schedule{}, validationErrors, err
 		}
 
 		if len(validationErrors) > 0 {
@@ -66,6 +63,21 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 	}
 
 	return schedule, nil, nil
+}
+
+func decodeScheduleFile(file string) (Schedule, []error, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return Schedule{}, nil, fmt.Errorf("%w: %q: %w", ErrFileIOError, file, err)
+	}
+	defer f.Close()
+
+	s, validationErrors, err := DecodeWorkflows(f)
+	if err != nil {
+		return Schedule{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
+	}
+
+	return s, validationErrors, nil
 }
 
 // DecodeWorkflows reads JSON and performs validation.
