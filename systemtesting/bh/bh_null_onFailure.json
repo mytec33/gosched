@@ -1,0 +1,10 @@
+[
+  {
+    "name": "null onFailure",
+    "trigger": { "every": "1d", "beginAt": "10:35" },
+    "onFailure": null,
+    "steps": [
+      { "name": "step", "program": "echo", "args": ["hello"] }
+    ]
+  }
+]

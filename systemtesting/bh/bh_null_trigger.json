@@ -1,0 +1,10 @@
+[
+  {
+    "name": "null trigger",
+    "trigger": null,
+    "onFailure": "continue",
+    "steps": [
+      { "name": "step", "program": "echo", "args": ["hello"] }
+    ]
+  }
+]

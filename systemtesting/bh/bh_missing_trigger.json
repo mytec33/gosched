@@ -1,0 +1,9 @@
+[
+  {
+    "name": "missing trigger",
+    "onFailure": "continue",
+    "steps": [
+      { "name": "step", "program": "echo", "args": ["hello"] }
+    ]
+  }
+]

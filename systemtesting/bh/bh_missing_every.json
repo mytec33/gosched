@@ -1,0 +1,10 @@
+[
+  {
+    "name": "missing every",
+    "trigger": { "beginAt": "10:35" },
+    "onFailure": "continue",
+    "steps": [
+      { "name": "step", "program": "echo", "args": ["hello"] }
+    ]
+  }
+]
