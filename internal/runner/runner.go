@@ -10,6 +10,7 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 type StepExecutionResult struct {
@@ -77,7 +78,8 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, inde
 	return result
 }
 
-func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step, stepIndex int, retry *schedule.RetryPolicy) {
+func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step,
+	stepIndex int, retry *schedule.RetryPolicy) types.WorkflowStatus {
 	var retryResult StepExecutionResult
 
 	for attempt := 1; attempt <= retry.NumberRetries; attempt++ {
@@ -92,12 +94,14 @@ func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step, step
 
 		retryResult = RunStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
-			return
+			return types.WorkflowStatusCompleted
 		}
 	}
 
 	stdOut.Error("step retry", "stepName", step.Name, "stepIndex", stepIndex,
 		"status", "exhausted", "retries", retry.NumberRetries)
+
+	return types.WorkflowStatusPartial
 }
 
 func (s StepExecutionResult) Failed() bool {

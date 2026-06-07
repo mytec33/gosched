@@ -14,8 +14,8 @@
 				"args": [
 					"--sleep",
 					"5",
-                    "--exitCode",
-                    "50"
+					"--exit-code",
+					"50"
 				]
 			}
 		]

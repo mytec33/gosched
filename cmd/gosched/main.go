@@ -198,7 +198,8 @@ func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int 
 		go func(w schedule.Workflow) {
 			err := executeWorkflow(w)
 			if err != nil {
-				logging.StdOut.Error("workflow", "status", "failed", "error", err)
+				logging.StdOut.Error("workflow", "status", types.WorkflowStatusFailed.String(),
+					"error", err)
 			}
 		}(task)
 	}
@@ -214,12 +215,15 @@ func executeWorkflow(wf schedule.Workflow) error {
 	lockKey := wf.Name
 	existingID, acquired := schedule.RunningWorkflows.TryAcquire(lockKey, wfLog.WfRunID)
 	if !acquired {
-		stdOut.Error("workflow", "status", "skipped", "reason", "workflow already running", "existingRunID", existingID)
+		stdOut.Error("workflow", "status", types.WorkflowStatusSkipped.String(), "reason",
+			"workflow already running", "existingRunID", existingID)
 		return nil
 	}
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
 	stdOut.Info("workflow", "name", wf.Name, "status", "started")
+
+	workflowStatus := types.WorkflowStatusCompleted
 
 	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
@@ -232,11 +236,15 @@ func executeWorkflow(wf schedule.Workflow) error {
 			}
 
 			if schedule.WorkflowContinuesOnFailure(wf) {
+				workflowStatus = types.WorkflowStatusPartial
 				continue
 			}
 
 			if schedule.WorkflowRetriesOnFailure(wf) {
-				runner.RunStepRetries(stdOut, wf.Name, step, i, wf.Retry)
+				retryStatus := runner.RunStepRetries(stdOut, wf.Name, step, i, wf.Retry)
+				if retryStatus == types.WorkflowStatusPartial {
+					workflowStatus = types.WorkflowStatusPartial
+				}
 			}
 		}
 
@@ -253,7 +261,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 	}
 
 	workflowDuration := time.Since(workflowStart)
-	stdOut.Info("workflow", "workflow", wf.Name, "status", "completed", "duration", workflowDuration)
+	stdOut.Info("workflow", "workflow", wf.Name, "status", workflowStatus.String(), "duration", workflowDuration)
 	return nil
 }
 
