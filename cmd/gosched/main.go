@@ -127,11 +127,18 @@ func printConfiguration(method string, s schedule.Schedule) {
 	}
 }
 
-func displayCfgErrors(errors []error) {
+func displayCfgErrors(fileErrors []error) {
 	logging.StdOut.Error("startup", "reason", "configuration invalid")
 
-	for _, err := range errors {
-		logging.StdOut.Error("startup", "reason", err)
+	for _, err := range fileErrors {
+		var fileErr schedule.FileValidationError
+
+		if errors.As(err, &fileErr) {
+			logging.StdOut.Error("startup", "file", fileErr.File,
+				"reason", fileErr.Err)
+		} else {
+			logging.StdOut.Error("startup", "reason", err)
+		}
 	}
 }
 

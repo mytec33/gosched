@@ -10,12 +10,26 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
+type FileValidationError struct {
+	File string
+	Err  error
+}
+
+func (e FileValidationError) Error() string {
+	return fmt.Sprintf("%s: %v", e.File, e.Err)
+}
+
+func (e FileValidationError) Unwrap() error {
+	return e.Err
+}
+
 var ErrDecodeSchedule = errors.New("decode schedule")
 
 // ReadScheduleFiles opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
 func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
+	var allValidationErrors []error
 	var schedule Schedule
 	schedule.byMinute = make(map[types.MinuteOfDay][]Workflow)
 
@@ -26,13 +40,20 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 		}
 		defer f.Close() // Keep in mind with many files this could be an issue but not yet
 
-		s, validationErrors, err := DecodeSchedule(f)
+		s, validationErrors, err := DecodeWorkflows(f)
 		if err != nil {
 			return Schedule{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
 		}
 
 		if len(validationErrors) > 0 {
-			return Schedule{}, validationErrors, nil
+			for _, vErr := range validationErrors {
+				allValidationErrors = append(allValidationErrors,
+					FileValidationError{
+						File: file,
+						Err:  vErr,
+					})
+			}
+			continue
 		}
 
 		for _, wf := range s.workflows {
@@ -40,13 +61,17 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 			schedule.byMinute[*wf.Trigger.BeginAt] = append(schedule.byMinute[*wf.Trigger.BeginAt], wf)
 		}
 	}
+	if len(allValidationErrors) > 0 {
+		return Schedule{}, allValidationErrors, nil
+	}
+
 	return schedule, nil, nil
 }
 
-// DecodeSchedule reads JSON and performs validation.
+// DecodeWorkflows reads JSON and performs validation.
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
-func DecodeSchedule(r io.Reader) (Schedule, []error, error) {
+func DecodeWorkflows(r io.Reader) (Schedule, []error, error) {
 	s := Schedule{byMinute: make(map[types.MinuteOfDay][]Workflow)}
 	var workflows []Workflow
 	var workflowsRaw []WorkflowRaw

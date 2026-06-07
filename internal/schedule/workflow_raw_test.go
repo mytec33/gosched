@@ -92,7 +92,7 @@ func TestWorkflow_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeSchedule(r)
+			_, validationErrors, err := DecodeWorkflows(r)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -274,7 +274,7 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeSchedule(r)
+			_, validationErrors, err := DecodeWorkflows(r)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -332,7 +332,7 @@ func TestStepNamesNotUnique(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, _ := DecodeSchedule(r)
+			_, validationErrors, _ := DecodeWorkflows(r)
 
 			found := false
 			for _, ve := range validationErrors {
@@ -378,7 +378,7 @@ func TestWorkflowSteps_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeSchedule(r)
+			_, validationErrors, err := DecodeWorkflows(r)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/IO error: %v, expected no error", tt.name, err)
@@ -542,7 +542,7 @@ func TestDecodeArgs_Invalid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, validationErrors, _ := DecodeSchedule(r)
+			_, validationErrors, _ := DecodeWorkflows(r)
 
 			found := false
 			for _, ve := range validationErrors {
@@ -594,7 +594,7 @@ const ValidateRetryConfigOnPolicyRetry = `
 func TestMissingRetryConfigOnPolicyRetry(t *testing.T) {
 	r := strings.NewReader(MissingRetryConfigOnPolicyRetry)
 
-	_, validationErrors, err := DecodeSchedule(r)
+	_, validationErrors, err := DecodeWorkflows(r)
 	if err != nil {
 		t.Fatalf("unexpected decode error: %v", err)
 	}
@@ -607,7 +607,7 @@ func TestMissingRetryConfigOnPolicyRetry(t *testing.T) {
 func TestValidateRetryConfigOnPolicyRetry(t *testing.T) {
 	r := strings.NewReader(ValidateRetryConfigOnPolicyRetry)
 
-	_, validationErrors, err := DecodeSchedule(r)
+	_, validationErrors, err := DecodeWorkflows(r)
 	if err != nil {
 		t.Fatalf("unexpected decode error: %v", err)
 	}
