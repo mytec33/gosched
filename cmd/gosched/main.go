@@ -26,10 +26,12 @@ const (
 	ExitExecuteWorkflow        int = 10
 	ExitScheduleValidation     int = 11
 	ExitScheduleExpansion      int = 12
+	ExitScheduleFailed         int = 13
 )
 
 var (
 	ErrRunCommandAbortsOnError = errors.New("run command aborts on error")
+	ErrSchedulerMinuteParse    = errors.New("scheduler minute parse failed")
 )
 
 func main() {
@@ -77,9 +79,9 @@ func run() int {
 		return ExitNoConfig
 	}
 
-	// Let's user see in terminal output the files loaded that lead to this conclusion
-	logging.StdOut.Info("startup", "reason", "schedule files read", "count", sched.WorkflowCount(),
-		"filename", scheduleFiles,
+	// Show which files were loaded to produce this schedule.
+	logging.StdOut.Info("startup", "fileCount", len(scheduleFiles), "workflowCount", sched.WorkflowCount(),
+		"files", scheduleFiles,
 	)
 
 	if len(decodeErrors) > 0 {
@@ -112,11 +114,15 @@ func run() int {
 
 		exitCode, err := runScheduleOnce(sched, runThisOnce)
 		if err != nil {
-			logging.StdOut.Info("run once", "reason", err)
+			logging.StdOut.Info("run once stopped", "reason", err)
 			return exitCode
 		}
 	} else {
-		runSchedule(sched)
+		err := runSchedule(sched)
+		if err != nil {
+			logging.StdOut.Error("scheduler stopped", "reason", err)
+			return ExitScheduleFailed
+		}
 	}
 
 	return 0
@@ -151,24 +157,39 @@ func displayCfgErrors(fileErrors []error) {
 	}
 }
 
-func runSchedule(s schedule.Schedule) {
-	// Align to the next minute boundary once, then tick.
-	time.Sleep(time.Until(time.Now().Truncate(time.Minute).Add(time.Minute)))
-	ticker := time.NewTicker(time.Minute)
-	defer ticker.Stop()
+func runSchedule(s schedule.Schedule) error {
+	scheduleBegan := time.Now()
 
-	for range ticker.C {
-		currentMinute, err := types.ParseMinuteOfDay(time.Now().Format("15:04"))
+	lastProcessed, err := types.ParseMinuteOfDay(scheduleBegan.Format("15:04"))
+	if err != nil {
+		return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, scheduleBegan, err)
+	}
+
+	// Align to the next clean minute boundary once
+	nextBoundary := scheduleBegan.Truncate(time.Minute).Add(time.Minute)
+	logging.StdOut.Info("scheduler syncing to next clean minute boundary", "next_boundary", nextBoundary)
+	time.Sleep(time.Until(nextBoundary))
+
+	for {
+		now := time.Now()
+		currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
 		if err != nil {
-			logging.StdOut.Error("run scheduler tick", "status", "failed", "reason", err)
-			return
+			return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, now, err)
 		}
 
-		n := runSchedulerTick(currentMinute, s)
-		if n > 0 {
-			logging.StdOut.Info("scheduler", "scheduled workflows",
-				n, "minute", currentMinute.String())
+		if currentMinute != lastProcessed {
+			n := runSchedulerTick(currentMinute, s)
+			if n > 0 {
+				logging.StdOut.Info("scheduler", "scheduled workflows",
+					n, "minute", currentMinute.String())
+			}
+
+			lastProcessed = currentMinute
 		}
+
+		// Fresh time so we sleep as close to the next minute boundary as possible.
+		nextMinute := time.Now().Truncate(time.Minute).Add(time.Minute)
+		time.Sleep(time.Until(nextMinute))
 	}
 }
 
@@ -187,7 +208,7 @@ func runScheduleOnce(sched schedule.Schedule, wfName string) (int, error) {
 }
 
 func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int {
-	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute)
+	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute.String())
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
 	if len(tasks) == 0 {
@@ -221,11 +242,10 @@ func executeWorkflow(wf schedule.Workflow) error {
 	}
 	defer schedule.RunningWorkflows.Delete(lockKey)
 
-	stdOut.Info("workflow", "name", wf.Name, "status", "started")
+	numSteps := len(wf.Steps)
+	stdOut.Info("workflow", "name", wf.Name, "status", "started", "stepCount", numSteps)
 
 	workflowStatus := types.WorkflowStatusCompleted
-
-	numSteps := len(wf.Steps)
 	for i, step := range wf.Steps {
 		result := runner.RunStepAttempt(stdOut, wf.Name, step, i)
 
