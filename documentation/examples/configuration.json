@@ -3,31 +3,7 @@
     "name": "Slot Ratings",
     "trigger": { "every": "1d", "beginAt": "14:31" },
     "onFailure": "continue",
-    "steps": [
-      {
-        "name": "daily",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
-        "args": [
-            "--sleep",
-            "10",
-            "--role",
-            "daily slot ratings"
-          ],
-        "timeout": 11,
-        "pause": 3
-      },
-      {
-        "name": "modified",
-        "program": "/Users/bill/MySource/go/gosched/testprog",
-        "args": [
-            "--sleep",
-            "50",
-            "--role",
-            "modified-slot-ratings"
-          ],
-        "pause": 5
-      }
-    ]
+    "steps": [{}]
   },
   {
     "name": "Table Ratings",

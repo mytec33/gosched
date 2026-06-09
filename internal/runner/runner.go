@@ -60,22 +60,22 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, inde
 		"args", step.Args)
 	stepStart := time.Now()
 
-	result := RunStepCommand(step)
+	stepResult := RunStepCommand(step)
 	stepDuration := time.Since(stepStart)
 
-	if len(result.Output) != 0 {
-		stdOut.Info("step", "output", result.Output)
+	if len(stepResult.Output) != 0 {
+		stdOut.Info("step", "output", stepResult.Output)
 	}
 
-	if result.Err != nil {
+	if stepResult.Err != nil {
 		stdOut.Error("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "failed",
-			"exitCode", result.ExitCode, "duration", stepDuration, "reason", result.Err)
+			"exitCode", stepResult.ExitCode, "duration", stepDuration, "reason", stepResult.Err)
 	} else {
 		stdOut.Info("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "completed",
-			"exitCode", result.ExitCode, "duration", stepDuration)
+			"exitCode", stepResult.ExitCode, "duration", stepDuration)
 	}
 
-	return result
+	return stepResult
 }
 
 func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step,
