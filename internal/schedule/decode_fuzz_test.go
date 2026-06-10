@@ -21,8 +21,8 @@ func FuzzDecodeWorkflows(f *testing.F) {
 			return
 		}
 
-		s.PrintScheduleConfig(io.Discard)
-		s.PrintScheduleOperational(io.Discard)
+		s.printScheduleConfig(io.Discard)
+		s.printScheduleOperational(io.Discard)
 
 		for _, wf := range s.Workflows() {
 			_ = wf.Trigger.String()

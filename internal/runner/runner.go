@@ -19,7 +19,7 @@ type StepExecutionResult struct {
 	ExitCode int
 }
 
-func RunStepCommand(step schedule.Step) StepExecutionResult {
+func runStepCommand(step schedule.Step) StepExecutionResult {
 	var stepResult StepExecutionResult
 
 	var cmd *exec.Cmd
@@ -60,7 +60,7 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, inde
 		"args", step.Args)
 	stepStart := time.Now()
 
-	stepResult := RunStepCommand(step)
+	stepResult := runStepCommand(step)
 	stepDuration := time.Since(stepStart)
 
 	if len(stepResult.Output) != 0 {

@@ -99,7 +99,20 @@ func (s Schedule) GetWorkflowByName(n string) (Workflow, error) {
 	return Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
 }
 
-func (s Schedule) PrintScheduleConfig(w io.Writer) {
+func (s Schedule) Print(method string, w io.Writer) error {
+	switch method {
+	case "config":
+		s.printScheduleConfig(w)
+	case "operational":
+		s.printScheduleOperational(w)
+	default:
+		return fmt.Errorf("unknown print config method: %s", method)
+	}
+
+	return nil
+}
+
+func (s Schedule) printScheduleConfig(w io.Writer) {
 	workflows := s.Workflows()
 	wfWidth := len(strconv.Itoa(len(workflows)))
 
@@ -113,7 +126,7 @@ func (s Schedule) PrintScheduleConfig(w io.Writer) {
 	}
 }
 
-func (s Schedule) PrintScheduleOperational(w io.Writer) {
+func (s Schedule) printScheduleOperational(w io.Writer) {
 	minutes := make([]types.MinuteOfDay, 0, len(s.byMinute))
 	for m := range s.byMinute {
 		minutes = append(minutes, m)

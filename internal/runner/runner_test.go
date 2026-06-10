@@ -66,7 +66,7 @@ func TestExitCode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.step.Name, func(t *testing.T) {
-			result := RunStepCommand(tt.step)
+			result := runStepCommand(tt.step)
 
 			fmt.Printf("test: %v: result: %v\n", tt.step.Name, result.ExitCode)
 			if result.ExitCode != tt.wantExitCode {
@@ -103,7 +103,7 @@ func TestTimeout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.step.Name, func(t *testing.T) {
-			result := RunStepCommand(tt.step)
+			result := runStepCommand(tt.step)
 
 			if result.Failed() != tt.wantFailed {
 				t.Fatalf("%s: failure check failed: want %v got failure %v", tt.step.Name,
@@ -125,7 +125,7 @@ func TestDuration(t *testing.T) {
 	}
 
 	start := time.Now()
-	_ = RunStepCommand(step)
+	_ = runStepCommand(step)
 	elapsed := time.Since(start)
 
 	if elapsed > 2000*time.Millisecond {

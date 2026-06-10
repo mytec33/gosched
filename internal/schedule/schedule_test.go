@@ -283,7 +283,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	s.PrintScheduleConfig(&buf)
+	s.printScheduleConfig(&buf)
 
 	got := buf.String()
 	want := `1: 1h 11:46  Workflow 1 (abort)
@@ -380,7 +380,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	s.PrintScheduleOperational(&buf)
+	s.printScheduleOperational(&buf)
 
 	got := buf.String()
 	want := `1: 11:45  Workflow 1 (abort)

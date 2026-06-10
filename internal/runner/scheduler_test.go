@@ -1,4 +1,4 @@
-package main
+package runner
 
 import (
 	"bytes"
@@ -152,6 +152,18 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 	}
 }
 
+func assertOutputContains(t *testing.T, out []byte, want []byte) {
+	t.Helper()
+
+	if !bytes.Contains(out, want) {
+		t.Fatalf("expected output to contain %q\n%s", want, out)
+	}
+}
+
+func workflowStatusLog(status types.WorkflowStatus) []byte {
+	return []byte(`status=` + status.String())
+}
+
 func executeWorkflowWithCapturedOutput(t *testing.T, wf schedule.Workflow) ([]byte, error) {
 	t.Helper()
 
@@ -166,16 +178,4 @@ func executeWorkflowWithCapturedOutput(t *testing.T, wf schedule.Workflow) ([]by
 
 	err := executeWorkflow(wf)
 	return buf.Bytes(), err
-}
-
-func assertOutputContains(t *testing.T, out []byte, want []byte) {
-	t.Helper()
-
-	if !bytes.Contains(out, want) {
-		t.Fatalf("expected output to contain %q\n%s", want, out)
-	}
-}
-
-func workflowStatusLog(status types.WorkflowStatus) []byte {
-	return []byte(`status=` + status.String())
 }
