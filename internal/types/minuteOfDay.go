@@ -9,7 +9,13 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
+const MinutesInDay int = 24 * 60
+
 type MinuteOfDay int
+
+func (m *MinuteOfDay) MinutesSince(previous MinuteOfDay) int {
+	return (int(*m) - int(previous) + MinutesInDay) % MinutesInDay
+}
 
 func ParseMinuteOfDay(s string) (MinuteOfDay, error) {
 	t, err := time.Parse("15:04", s)

@@ -28,6 +28,12 @@ Later files append workflows and implicitly take priority.
 - `continue` — keep running later steps after a failed step; use when steps are independent and partial success is useful.
 - `retry` — if a step fails, retry the step `numberRetries` times, pausing `pauseSeconds` between retries. After retries complete (successful or exhausted), continue to the next step.
 
+## Scheduling
+
+Due to OS jitter, VM pause/resume, or clock drift, scheduling may not always align perfectly with wall-clock time. This can result in skipped minutes.
+
+When one or more minutes are skipped, gosched logs a warning and processes only the current observed minute. Missed minutes are not replayed or retried.
+
 ## Logging
 
 gosched writes all structured application logs to stdout.  

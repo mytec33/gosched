@@ -177,7 +177,20 @@ func runSchedule(s schedule.Schedule) error {
 			return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, now, err)
 		}
 
-		if currentMinute != lastProcessed {
+		// duplicate = 0, normal = 1, skipped = > 1
+		minuteDiff := currentMinute.MinutesSince(lastProcessed)
+
+		switch {
+		case minuteDiff == 0:
+			logging.StdOut.Warn("scheduler", "reason", "duplicate suppression", "currentMinute",
+				currentMinute.String(), "lastProcessed", lastProcessed.String())
+		case minuteDiff > 1:
+			logging.StdOut.Warn("scheduler", "reason", "skipped minute(s)", "missed", minuteDiff-1,
+				"currentMinute", currentMinute.String(), "lastProcessed", lastProcessed.String())
+
+			// We have skipped one or more minutes but we can still run the current minute
+			fallthrough
+		default:
 			n := runSchedulerTick(currentMinute, s)
 			if n > 0 {
 				logging.StdOut.Info("scheduler", "scheduled workflows",
