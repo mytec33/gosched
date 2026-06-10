@@ -105,7 +105,7 @@ func run() int {
 	logging.StdOut.Info("startup", "reason", "scheduler service started")
 
 	if runThisOnce != "" {
-		logging.StdOut.Info("startup", "reason", "run once started", "workFlow", runThisOnce)
+		logging.StdOut.Info("startup", "reason", "run once started", "workflow", runThisOnce)
 
 		var exitCode int
 
@@ -131,7 +131,7 @@ func run() int {
 		}
 	}
 
-	return 0
+	return ExitSuccess
 }
 
 func printConfiguration(method string, s schedule.Schedule) int {
