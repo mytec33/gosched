@@ -31,6 +31,10 @@ func RunSchedule(s schedule.Schedule) error {
 	time.Sleep(time.Until(nextBoundary))
 
 	for {
+		logging.StdOut.Info("scheduler", "reason", "wake diagnostic",
+			"wake", time.Now().Format(time.RFC3339Nano),
+		)
+
 		now := time.Now()
 		currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
 		if err != nil {
@@ -61,7 +65,9 @@ func RunSchedule(s schedule.Schedule) error {
 		}
 
 		// Fresh time so we sleep as close to the next minute boundary as possible.
-		nextMinute := time.Now().Truncate(time.Minute).Add(time.Minute)
+		nextMinute := time.Now().Truncate(time.Minute).Add(time.Minute).Add(5 * time.Millisecond)
+		logging.StdOut.Info("scheduler", "reason", "sleep diagnostic", "current", time.Now().String(),
+			"sleep", nextMinute.String())
 		time.Sleep(time.Until(nextMinute))
 	}
 }
