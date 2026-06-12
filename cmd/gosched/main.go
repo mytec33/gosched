@@ -121,7 +121,10 @@ func run() int {
 			exitCode = ExitRunOnceUnexpected
 		}
 
-		logging.StdOut.Info("run once stopped", "reason", err)
+		if err != nil {
+			logging.StdOut.Info("run once stopped", "reason", err)
+		}
+
 		return exitCode
 	} else {
 		err := runner.RunSchedule(sched)
