@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
@@ -27,6 +30,7 @@ const (
 	ExitScheduleExpansion      int = 12
 	ExitScheduleFailed         int = 13
 	ExitRunOnceUnexpected      int = 14
+	ExitInterruptSignal        int = 15
 )
 
 func main() {
@@ -127,14 +131,21 @@ func run() int {
 
 		return exitCode
 	} else {
-		err := runner.RunSchedule(sched)
-		if err != nil {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+
+		err := runner.RunSchedule(ctx, sched)
+		switch {
+		case err == nil:
+			return ExitSuccess
+		case errors.Is(err, runner.ErrSignalInterrupt):
+			logging.StdOut.Error("scheduler interrupted", "reason", err)
+			return ExitInterruptSignal
+		default:
 			logging.StdOut.Error("scheduler stopped", "reason", err)
 			return ExitScheduleFailed
 		}
 	}
-
-	return ExitSuccess
 }
 
 func printConfiguration(method string, s schedule.Schedule) int {

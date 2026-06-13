@@ -1,8 +1,10 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
@@ -15,11 +17,13 @@ var (
 	ErrSchedulerMinuteParse    = errors.New("scheduler minute parse failed")
 	ErrWorkflowNotFoundByName  = errors.New("work flow not found in file(s) loaded by name")
 	ErrExecutingWorkflow       = errors.New("execute workflow failure")
+	ErrSignalInterrupt         = errors.New("received interrupt signal")
 )
 
-func RunSchedule(s schedule.Schedule) error {
-	scheduleBegan := time.Now()
+func RunSchedule(ctx context.Context, s schedule.Schedule) error {
+	var running sync.WaitGroup
 
+	scheduleBegan := time.Now()
 	lastProcessed, err := types.ParseMinuteOfDay(scheduleBegan.Format("15:04"))
 	if err != nil {
 		return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, scheduleBegan, err)
@@ -31,17 +35,11 @@ func RunSchedule(s schedule.Schedule) error {
 	time.Sleep(time.Until(nextBoundary))
 
 	for {
-		logging.StdOut.Info("scheduler", "reason", "wake diagnostic",
-			"wake", time.Now().Format(time.RFC3339Nano),
-		)
-
 		now := time.Now()
 		currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
 		if err != nil {
 			return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, now, err)
 		}
-
-		// duplicate = 0, normal = 1, skipped = > 1
 		minuteDiff := currentMinute.MinutesSince(lastProcessed)
 
 		switch {
@@ -55,7 +53,7 @@ func RunSchedule(s schedule.Schedule) error {
 			// We have skipped one or more minutes but we can still run the current minute
 			fallthrough
 		default:
-			n := runSchedulerTick(currentMinute, s)
+			n := runSchedulerTick(currentMinute, s, &running)
 			if n > 0 {
 				logging.StdOut.Info("scheduler", "scheduled workflows",
 					n, "minute", currentMinute.String())
@@ -64,12 +62,29 @@ func RunSchedule(s schedule.Schedule) error {
 			lastProcessed = currentMinute
 		}
 
-		// Fresh time so we sleep as close to the next minute boundary as possible.
-		nextMinute := time.Now().Truncate(time.Minute).Add(time.Minute).Add(5 * time.Millisecond)
-		logging.StdOut.Info("scheduler", "reason", "sleep diagnostic", "current", time.Now().String(),
-			"sleep", nextMinute.String())
-		time.Sleep(time.Until(nextMinute))
+		timerDuration := nextWakeDuration()
+
+		select {
+		case <-ctx.Done():
+			logging.StdOut.Error("scheduler", "reason", "signal interrupt received; waiting for running workflows to finish")
+			running.Wait()
+			return ErrSignalInterrupt
+		case <-time.After(timerDuration):
+			logging.StdOut.Info("scheduler", "reason", "wake diagnostic", "wake", time.Now().Format(time.RFC3339Nano))
+		}
 	}
+}
+
+func nextWakeDuration() time.Duration {
+	// Fresh time reading so we sleep as close to the next minute boundary as possible.
+	now := time.Now()
+	nextMinute := now.Truncate(time.Minute).Add(time.Minute).Add(5 * time.Millisecond)
+	timerDuration := nextMinute.Sub(now)
+
+	logging.StdOut.Info("scheduler", "reason", "sleep diagnostic", "current", now.String(),
+		"sleep", nextMinute.String())
+
+	return timerDuration
 }
 
 func RunScheduleOnce(sched schedule.Schedule, wfName string) error {
@@ -86,7 +101,7 @@ func RunScheduleOnce(sched schedule.Schedule, wfName string) error {
 	return nil
 }
 
-func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int {
+func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule, running *sync.WaitGroup) int {
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute.String())
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
@@ -95,7 +110,10 @@ func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule) int 
 	}
 
 	for _, task := range tasks {
+		running.Add(1)
 		go func(w schedule.Workflow) {
+			defer running.Done()
+
 			err := executeWorkflow(w)
 			if err != nil {
 				logging.StdOut.Error("workflow", "status", types.WorkflowStatusFailed.String(),
