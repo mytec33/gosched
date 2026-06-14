@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var (
 	ErrCadenceEmpty          = errors.New("cadence string cannot be empty")
 	ErrCadenceTooShort       = errors.New("cadence string must include both a number and a unit")
+	ErrCadenceTooLong        = errors.New("cadence string is too long")
+	ErrCadenceNumNonASCII    = errors.New("cadence numeric value must use ASCII digits 0-9")
 	ErrCadenceNumInvalid     = errors.New("cadence numeric value is invalid")
 	ErrCadenceBoundsInvalid  = errors.New("cadence value must be between 1 and 60")
 	ErrCadenceUnitInvalid    = errors.New("cadence unit must be d, h, or m")
@@ -57,6 +60,19 @@ func (c Cadence) validateCadence() error {
 	return nil
 }
 
+func validateCadenceNumberPayload(num string) error {
+	for _, r := range num {
+		switch {
+		case r > unicode.MaxASCII:
+			return ErrCadenceNumNonASCII
+		case r < '0' || r > '9':
+			return ErrCadenceNumInvalid
+		}
+	}
+
+	return nil
+}
+
 func parseMeasure(unit string) (CadenceMeasure, error) {
 	switch unit {
 	case "d":
@@ -79,7 +95,17 @@ func ParseCadence(s string) (Cadence, error) {
 		return Cadence{}, ErrCadenceTooShort
 	}
 
-	v, err := strconv.Atoi(s[:len(s)-1])
+	num := s[:len(s)-1]
+	if err := validateCadenceNumberPayload(num); err != nil {
+		return Cadence{}, err
+	}
+
+	// Done after we look for unicode values to report them as unicode rather than "too long"
+	if len(s) > 3 {
+		return Cadence{}, ErrCadenceTooLong
+	}
+
+	v, err := strconv.Atoi(num)
 	if err != nil {
 		return Cadence{}, ErrCadenceNumInvalid
 	}
