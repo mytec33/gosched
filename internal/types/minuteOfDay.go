@@ -13,6 +13,14 @@ const MinutesInDay int = 24 * 60
 
 type MinuteOfDay int
 
+func minuteOfDayFromTime(t time.Time) int {
+	return t.Hour()*60 + t.Minute()
+}
+
+func MinuteOfDayFromTime(t time.Time) MinuteOfDay {
+	return MinuteOfDay(minuteOfDayFromTime(t))
+}
+
 func (m *MinuteOfDay) MinutesSince(previous MinuteOfDay) int {
 	return (int(*m) - int(previous) + MinutesInDay) % MinutesInDay
 }
