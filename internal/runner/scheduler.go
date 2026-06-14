@@ -12,6 +12,10 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
+const (
+	diagnosticTimeLayout = "15:04:05.000000000"
+)
+
 var (
 	ErrRunCommandAbortsOnError = errors.New("run command aborts on error")
 	ErrSchedulerMinuteParse    = errors.New("scheduler minute parse failed")
@@ -20,26 +24,45 @@ var (
 	ErrSignalInterrupt         = errors.New("received interrupt signal")
 )
 
+type nextWakeTiming struct {
+	Current time.Time
+	Target  time.Time
+	Wait    time.Duration
+}
+
+func alignToNextMinuteBoundary(ctx context.Context) error {
+	wake := nextWakeDuration()
+	logging.StdOut.Info("scheduler", "reason", "align to next minute boundary",
+		"current", wake.Current.Format(diagnosticTimeLayout),
+		"target_wake", wake.Target.Format(diagnosticTimeLayout),
+		"sleep", wake.Wait.String(),
+	)
+
+	select {
+	case <-ctx.Done():
+		logging.StdOut.Error("scheduler", "reason", "signal interrupt received before scheduler loop started")
+		return ErrSignalInterrupt
+	case <-time.After(wake.Wait):
+	}
+
+	return nil
+}
+
 func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 	var running sync.WaitGroup
 
-	scheduleBegan := time.Now()
-	lastProcessed, err := types.ParseMinuteOfDay(scheduleBegan.Format("15:04"))
-	if err != nil {
-		return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, scheduleBegan, err)
-	}
+	// Capture lastProcessed before aligning so the first post-alignment minute
+	// is treated as new work rather than a duplicate time.
+	lastProcessed := types.MinuteOfDayFromTime(time.Now())
 
-	// Align to the next clean minute boundary once
-	nextBoundary := scheduleBegan.Truncate(time.Minute).Add(time.Minute)
-	logging.StdOut.Info("scheduler syncing to next clean minute boundary", "next_boundary", nextBoundary)
-	time.Sleep(time.Until(nextBoundary))
+	err := alignToNextMinuteBoundary(ctx)
+	if err != nil {
+		return err
+	}
 
 	for {
 		now := time.Now()
-		currentMinute, err := types.ParseMinuteOfDay(now.Format("15:04"))
-		if err != nil {
-			return fmt.Errorf("%w: %q: %w", ErrSchedulerMinuteParse, now, err)
-		}
+		currentMinute := types.MinuteOfDayFromTime(now)
 		minuteDiff := currentMinute.MinutesSince(lastProcessed)
 
 		switch {
@@ -62,29 +85,36 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 			lastProcessed = currentMinute
 		}
 
-		timerDuration := nextWakeDuration()
+		wake := nextWakeDuration()
+		logging.StdOut.Info("scheduler", "reason", "sleep diagnostic",
+			"current", wake.Current.Format(diagnosticTimeLayout),
+			"target_wake", wake.Target.Format(diagnosticTimeLayout),
+			"sleep", wake.Wait.String(),
+		)
+		timer := time.NewTimer(wake.Wait)
 
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			logging.StdOut.Error("scheduler", "reason", "signal interrupt received; waiting for running workflows to finish")
 			running.Wait()
 			return ErrSignalInterrupt
-		case <-time.After(timerDuration):
-			logging.StdOut.Info("scheduler", "reason", "wake diagnostic", "wake", time.Now().Format(time.RFC3339Nano))
+		case <-timer.C:
+			logging.StdOut.Info("scheduler", "reason", "wake diagnostic", "wake", time.Now().Format(diagnosticTimeLayout))
 		}
 	}
 }
 
-func nextWakeDuration() time.Duration {
-	// Fresh time reading so we sleep as close to the next minute boundary as possible.
+func nextWakeDuration() nextWakeTiming {
+	// Add extra milliseconds to avoid landing .999 and creating a duplicate minute occurrence
 	now := time.Now()
 	nextMinute := now.Truncate(time.Minute).Add(time.Minute).Add(5 * time.Millisecond)
-	timerDuration := nextMinute.Sub(now)
 
-	logging.StdOut.Info("scheduler", "reason", "sleep diagnostic", "current", now.String(),
-		"sleep", nextMinute.String())
-
-	return timerDuration
+	return nextWakeTiming{
+		Current: now,
+		Target:  nextMinute,
+		Wait:    nextMinute.Sub(now),
+	}
 }
 
 func RunScheduleOnce(sched schedule.Schedule, wfName string) error {

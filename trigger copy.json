@@ -3,7 +3,7 @@
 		"name": "Example - Abort",
 		"trigger": {
             "every": "1d",
-            "beginAt": "12:12"
+            "beginAt": "19:40"
         },
 		"onFailure": "abort",
 		"steps": [
