@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 const validOneWorkflowOneStep = `
@@ -204,11 +204,11 @@ func TestWorkflowTimes_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "time empty", json: WorkflowTimeEmpty, wantError: errs.ErrTimeFormatInvalid},
-		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: errs.ErrTimeFormatInvalid},
-		{name: "time bad minute", json: WorkflowTimeBadMinute, wantError: errs.ErrTimeFormatInvalid},
-		{name: "time missing colon", json: WorkflowTimeMissingColon, wantError: errs.ErrTimeFormatInvalid},
-		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: errs.ErrTimeFormatInvalid},
+		{name: "time empty", json: WorkflowTimeEmpty, wantError: types.ErrTimeFormatInvalid},
+		{name: "time bad hour", json: WorkflowTimeBadHour, wantError: types.ErrTimeFormatInvalid},
+		{name: "time bad minute", json: WorkflowTimeBadMinute, wantError: types.ErrTimeFormatInvalid},
+		{name: "time missing colon", json: WorkflowTimeMissingColon, wantError: types.ErrTimeFormatInvalid},
+		{name: "time bad whitespace", json: WorkflowTimeWhitespace, wantError: types.ErrTimeFormatInvalid},
 	}
 
 	for _, tt := range tests {

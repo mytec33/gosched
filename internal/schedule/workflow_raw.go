@@ -1,11 +1,44 @@
 package schedule
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/types"
+)
+
+const (
+	MaxStepArgLength             int = 256
+	MaxStepArgsCount             int = 64
+	MaxStepArgsTotalLength       int = 4096
+	MaxStepsCount                int = 32
+	MaxWorkflowNameLength        int = 256
+	MaxWorkflowStepProgramLength int = 256
+	MaxWorkflowStepNameLength    int = 256
+)
+
+var (
+	ErrFieldEmpty            = errors.New("cannot be empty")
+	ErrFieldTooLong          = errors.New("too long")
+	ErrFieldWhitespaceOnly   = errors.New("cannot be all whitespace")
+	ErrFieldWhitespacePadded = errors.New("leading or trailing whitespace")
+	ErrNumberNegative        = errors.New("number cannot be negative, must be zero (indefinite) or greater")
+
+	ErrOnFailureRequired  = errors.New("onFailure field required")
+	ErrRetryCountNegative = errors.New("retry count must be 0 or greater")
+	ErrRetryPauseNegative = errors.New("retry pause seconds must be 0 or greater")
+	ErrRetryRequired      = errors.New("retry config required when onFailure is set to retry")
+
+	ErrStepDuplicateName           = errors.New("step name is a duplicate")
+	ErrStepArgsCountExceeded       = fmt.Errorf("too many args provided: max is %d", MaxStepArgsCount)
+	ErrStepArgsTotalLengthExceeded = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
+	ErrStepCountExceeded           = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
+	ErrStepsRequired               = fmt.Errorf("steps are required")
+
+	ErrTriggerRequired        = fmt.Errorf("trigger field is required")
+	ErrTriggerBeginAtRequired = errors.New("trigger beginAt field is required")
+	ErrTriggerEveryRequired   = errors.New("trigger every field is required")
 )
 
 type WorkflowRaw struct {
@@ -22,18 +55,18 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 
 	field := "workflow.name"
 	errorList = append(errorList, validateStringValue(field, raw.Name,
-		errs.MaxWorkflowNameLength)...)
+		MaxWorkflowNameLength)...)
 	workflow.Name = raw.Name
 
 	if raw.Trigger == nil {
-		errorList = append(errorList, errs.ErrTriggerRequired)
+		errorList = append(errorList, ErrTriggerRequired)
 	} else {
 		if raw.Trigger.Every == nil {
-			errorList = append(errorList, errs.ErrTriggerEveryRequired)
+			errorList = append(errorList, ErrTriggerEveryRequired)
 		}
 
 		if raw.Trigger.BeginAt == nil {
-			errorList = append(errorList, errs.ErrTriggerBeginAtRequired)
+			errorList = append(errorList, ErrTriggerBeginAtRequired)
 		}
 
 		workflow.Trigger = *raw.Trigger
@@ -42,9 +75,9 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	// Invalid onFailure values are rejected during JSON decoding.
 	// Validation checks that the field was provided.
 	if raw.OnFailure == nil {
-		errorList = append(errorList, errs.ErrOnFailureRequired)
+		errorList = append(errorList, ErrOnFailureRequired)
 	} else if *raw.OnFailure == types.Retry && raw.Retry == nil {
-		errorList = append(errorList, errs.ErrRetryRequired)
+		errorList = append(errorList, ErrRetryRequired)
 	} else {
 		workflow.OnFailure = *raw.OnFailure
 	}
@@ -53,41 +86,41 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 		workflow.Retry = raw.Retry
 
 		if raw.Retry.NumberRetries < 0 {
-			errorList = append(errorList, errs.ErrRetryCountNegative)
+			errorList = append(errorList, ErrRetryCountNegative)
 		}
 
 		if raw.Retry.PauseSeconds < 0 {
-			errorList = append(errorList, errs.ErrRetryPauseNegative)
+			errorList = append(errorList, ErrRetryPauseNegative)
 		}
 	}
 
 	if len(raw.Steps) == 0 {
-		errorList = append(errorList, errs.ErrStepsRequired)
+		errorList = append(errorList, ErrStepsRequired)
 	}
 
-	if len(raw.Steps) > errs.MaxStepsCount {
-		errorList = append(errorList, errs.ErrStepCountExceeded)
+	if len(raw.Steps) > MaxStepsCount {
+		errorList = append(errorList, ErrStepCountExceeded)
 	}
 
 	for i, steps := range raw.Steps {
 		field := fmt.Sprintf("workflow.steps[%d].name", i+1)
 		errorList = append(errorList, validateStringValue(field, steps.Name,
-			errs.MaxWorkflowStepNameLength)...)
+			MaxWorkflowStepNameLength)...)
 
 		if steps.Timeout < 0 {
-			errorList = append(errorList, errs.ErrNumberNegative)
+			errorList = append(errorList, ErrNumberNegative)
 		}
 
 		if steps.Pause < 0 {
-			errorList = append(errorList, errs.ErrNumberNegative)
+			errorList = append(errorList, ErrNumberNegative)
 		}
 
 		field = fmt.Sprintf("workflow.steps[%d].program", i+1)
 		errorList = append(errorList, validateStringValue(field, steps.Program,
-			errs.MaxWorkflowStepProgramLength)...)
+			MaxWorkflowStepProgramLength)...)
 
-		if len(steps.Args) > errs.MaxStepArgsCount {
-			errorList = append(errorList, errs.ErrStepArgsCountExceeded)
+		if len(steps.Args) > MaxStepArgsCount {
+			errorList = append(errorList, ErrStepArgsCountExceeded)
 		}
 
 		totalArgsLength := 0
@@ -96,11 +129,11 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 
 			field = fmt.Sprintf("workflow.steps[%d].args[%d]", i+1, j+1)
 			errorList = append(errorList, validateStringValue(field, arg,
-				errs.MaxStepArgLength)...)
+				MaxStepArgLength)...)
 		}
 
-		if totalArgsLength > errs.MaxStepArgsTotalLength {
-			errorList = append(errorList, errs.ErrStepArgsTotalLengthExceeded)
+		if totalArgsLength > MaxStepArgsTotalLength {
+			errorList = append(errorList, ErrStepArgsTotalLengthExceeded)
 		}
 	}
 	// Steps (and the entire schedule) are treated as immutable config after
@@ -117,13 +150,13 @@ func validateStringValue(field string, s string, maxLength int) []error {
 	trimmed := strings.TrimSpace(s)
 
 	if s == "" {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldEmpty))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrFieldEmpty))
 	} else if trimmed == "" {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldWhitespaceOnly))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrFieldWhitespaceOnly))
 	} else if trimmed != s {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldWhitespacePadded))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrFieldWhitespacePadded))
 	} else if len(trimmed) > maxLength {
-		errorList = append(errorList, fmt.Errorf("%s: %w", field, errs.ErrFieldTooLong))
+		errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrFieldTooLong))
 	}
 
 	return errorList
@@ -136,7 +169,7 @@ func validateUniqueStepNames(steps []Step) []error {
 	for _, step := range steps {
 		_, exists := stepNames[step.Name]
 		if exists {
-			errors = append(errors, fmt.Errorf("%w: %s", errs.ErrDuplicateStepName, step.Name))
+			errors = append(errors, fmt.Errorf("%w: %s", ErrStepDuplicateName, step.Name))
 		} else {
 			stepNames[step.Name] = struct{}{}
 		}

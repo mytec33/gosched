@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
@@ -442,14 +441,14 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 
 			found := false
 			for _, e := range errorList {
-				if errors.Is(e, errs.ErrDuplicateWorkflowName) {
+				if errors.Is(e, ErrDuplicateWorkflowName) {
 					found = true
 					break
 				}
 			}
 
 			if !found {
-				t.Fatalf("expected %v, got %v", errs.ErrDuplicateWorkflowName, errorList)
+				t.Fatalf("expected %v, got %v", ErrDuplicateWorkflowName, errorList)
 			}
 		})
 	}
@@ -468,34 +467,34 @@ func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
 
 	found := false
 	for _, e := range errorList {
-		if errors.Is(e, errs.ErrDuplicateWorkflowName) {
+		if errors.Is(e, ErrDuplicateWorkflowName) {
 			found = true
 			break
 		}
 	}
 
 	if found {
-		t.Fatalf("expected %v", errs.ErrDuplicateWorkflowName)
+		t.Fatalf("expected %v", ErrDuplicateWorkflowName)
 	}
 }
 
 func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
-	s := Schedule{workflows: makeWorkflows(errs.MaxWorkflowCount)}
+	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount)}
 
 	errorList := s.Validate()
 
-	if hasError(errorList, errs.ErrWorkflowCountExceeded) {
-		t.Fatalf("unexpected %v in %v", errs.ErrWorkflowCountExceeded, errorList)
+	if hasError(errorList, ErrWorkflowCountExceeded) {
+		t.Fatalf("unexpected %v in %v", ErrWorkflowCountExceeded, errorList)
 	}
 }
 
 func TestScheduleValidate_WorkflowCount_InvalidOverLimit(t *testing.T) {
-	s := Schedule{workflows: makeWorkflows(errs.MaxWorkflowCount + 1)}
+	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount + 1)}
 
 	errorList := s.Validate()
 
-	if !hasError(errorList, errs.ErrWorkflowCountExceeded) {
-		t.Fatalf("expected %v, got %v", errs.ErrWorkflowCountExceeded, errorList)
+	if !hasError(errorList, ErrWorkflowCountExceeded) {
+		t.Fatalf("expected %v, got %v", ErrWorkflowCountExceeded, errorList)
 	}
 }
 

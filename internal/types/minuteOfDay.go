@@ -3,13 +3,16 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
-
-	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 const MinutesInDay int = 24 * 60
+
+var (
+	ErrTimeFormatInvalid = errors.New("invalid time format")
+)
 
 type MinuteOfDay int
 
@@ -28,7 +31,7 @@ func (m *MinuteOfDay) MinutesSince(previous MinuteOfDay) int {
 func ParseMinuteOfDay(s string) (MinuteOfDay, error) {
 	t, err := time.Parse("15:04", s)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errs.ErrTimeFormatInvalid, err)
+		return 0, fmt.Errorf("%w: %w", ErrTimeFormatInvalid, err)
 	}
 
 	return MinuteOfDay(t.Hour()*60 + t.Minute()), nil

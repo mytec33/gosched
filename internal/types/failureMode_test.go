@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
-
-	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 func TestFailureModeString(t *testing.T) {
@@ -61,9 +59,9 @@ func TestFailureModeUnmarshalJSON_Invalid(t *testing.T) {
 		input   string
 		wantErr error
 	}{
-		{"empty string", `""`, errs.ErrOnFailureInvalid},
-		{"unknown failure mode", `"stop"`, errs.ErrOnFailureInvalid},
-		{"uppercase failure mode", `"ABORT"`, errs.ErrOnFailureInvalid},
+		{"empty string", `""`, ErrOnFailureInvalid},
+		{"unknown failure mode", `"stop"`, ErrOnFailureInvalid},
+		{"uppercase failure mode", `"ABORT"`, ErrOnFailureInvalid},
 		{"non-string json value", `123`, new(json.UnmarshalTypeError)},
 	}
 

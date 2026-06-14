@@ -5,8 +5,6 @@ import (
 	"errors"
 	"testing"
 	"time"
-
-	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 func TestMinuteOfDayFromTime(t *testing.T) {
@@ -98,27 +96,27 @@ func TestParseMinuteOfDay_Invalid(t *testing.T) {
 		{
 			name:    "empty string",
 			input:   "",
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 		{
 			name:    "invalid hour",
 			input:   "24:00",
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 		{
 			name:    "invalid minute",
 			input:   "12:60",
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 		{
 			name:    "missing colon",
 			input:   "105",
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 		{
 			name:    "invalid input",
 			input:   "abc",
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 	}
 
@@ -254,7 +252,7 @@ func TestMinuteOfDayUnmarshalJSON_Invalid(t *testing.T) {
 		{
 			name:    "invalid time string",
 			input:   `"25:00"`,
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 		{
 			name:    "non-string json value",
@@ -264,7 +262,7 @@ func TestMinuteOfDayUnmarshalJSON_Invalid(t *testing.T) {
 		{
 			name:    "invalid milliseconds",
 			input:   `"6:45.000"`,
-			wantErr: errs.ErrTimeFormatInvalid,
+			wantErr: ErrTimeFormatInvalid,
 		},
 	}
 

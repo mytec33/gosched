@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
@@ -17,7 +16,13 @@ const (
 	MinutesPerDay int = 24 * 60
 )
 
+const (
+	MaxWorkflowCount int = 64
+)
+
 var (
+	ErrDuplicateWorkflowName  = errors.New("duplicate workflow name")
+	ErrWorkflowCountExceeded  = fmt.Errorf("too many workflows in schedule: max is %d", MaxWorkflowCount)
 	ErrTriggerIntervalInvalid = errors.New("trigger interval must be greater than zero")
 	ErrWorkflowNameNotFound   = errors.New("workflow not found by name")
 )
@@ -182,8 +187,8 @@ func (s Schedule) validateWorkflowCount() []error {
 	var errorList []error
 
 	count := s.WorkflowCount()
-	if count > errs.MaxWorkflowCount {
-		errorList = append(errorList, fmt.Errorf("%w: got %d", errs.ErrWorkflowCountExceeded, count))
+	if count > MaxWorkflowCount {
+		errorList = append(errorList, fmt.Errorf("%w: got %d", ErrWorkflowCountExceeded, count))
 	}
 
 	return errorList
@@ -199,7 +204,7 @@ func (s Schedule) validateWorkflowNameDuplicates() []error {
 		key, ok := seen[wfKey]
 		if ok {
 			errorList = append(errorList, fmt.Errorf("%w: duplicate workflow name: '%v' duplicates '%v'",
-				errs.ErrDuplicateWorkflowName, wf.Name, key))
+				ErrDuplicateWorkflowName, wf.Name, key))
 		} else {
 			seen[wfKey] = wf.Name
 		}

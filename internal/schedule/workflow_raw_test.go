@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
@@ -81,12 +80,12 @@ func TestWorkflow_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "name empty", json: WorkflowNameEmpty, wantError: errs.ErrFieldEmpty},
-		{name: "name whitespace", json: WorkflowNameWhitespace, wantError: errs.ErrFieldWhitespaceOnly},
-		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "name too long", json: WorkflowNameTooLong, wantError: errs.ErrFieldTooLong},
-		{name: "missing steps", json: WorkflowNoSteps, wantError: errs.ErrStepsRequired},
+		{name: "name empty", json: WorkflowNameEmpty, wantError: ErrFieldEmpty},
+		{name: "name whitespace", json: WorkflowNameWhitespace, wantError: ErrFieldWhitespaceOnly},
+		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
+		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
+		{name: "name too long", json: WorkflowNameTooLong, wantError: ErrFieldTooLong},
+		{name: "missing steps", json: WorkflowNoSteps, wantError: ErrStepsRequired},
 	}
 
 	for _, tt := range tests {
@@ -256,19 +255,19 @@ func TestWorkflowSteps_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "name empty", json: WorkflowStepNameEmpty, wantError: errs.ErrFieldEmpty},
-		{name: "name whitespace", json: WorkflowStepNameWhitespace, wantError: errs.ErrFieldWhitespaceOnly},
-		{name: "name whitespace leading", json: WorkflowStepNameWhitespaceLeading, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "name whitespace trailing", json: WorkflowStepNameWhitespaceTrailing, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "name too long", json: WorkflowStepNameTooLong, wantError: errs.ErrFieldTooLong},
-		{name: "program empty", json: WorkflowStepProgramEmpty, wantError: errs.ErrFieldEmpty},
-		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: errs.ErrFieldWhitespaceOnly},
-		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: errs.ErrFieldWhitespacePadded},
+		{name: "name empty", json: WorkflowStepNameEmpty, wantError: ErrFieldEmpty},
+		{name: "name whitespace", json: WorkflowStepNameWhitespace, wantError: ErrFieldWhitespaceOnly},
+		{name: "name whitespace leading", json: WorkflowStepNameWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
+		{name: "name whitespace trailing", json: WorkflowStepNameWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
+		{name: "name too long", json: WorkflowStepNameTooLong, wantError: ErrFieldTooLong},
+		{name: "program empty", json: WorkflowStepProgramEmpty, wantError: ErrFieldEmpty},
+		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: ErrFieldWhitespaceOnly},
+		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
+		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
 
-		{name: "trigger block missing", json: WorkflowMissingTriggerBlock, wantError: errs.ErrTriggerRequired},
-		{name: "trigger 'every' field missing", json: WorkflowMissingTriggerEvery, wantError: errs.ErrTriggerEveryRequired},
-		{name: "trigger 'beginAt' field missing", json: WorkflowMissingTriggerBeginAt, wantError: errs.ErrTriggerBeginAtRequired},
+		{name: "trigger block missing", json: WorkflowMissingTriggerBlock, wantError: ErrTriggerRequired},
+		{name: "trigger 'every' field missing", json: WorkflowMissingTriggerEvery, wantError: ErrTriggerEveryRequired},
+		{name: "trigger 'beginAt' field missing", json: WorkflowMissingTriggerBeginAt, wantError: ErrTriggerBeginAtRequired},
 	}
 
 	for _, tt := range tests {
@@ -326,7 +325,7 @@ func TestStepNamesNotUnique(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "duplicate step names", json: StepNamesNotUnique, wantError: errs.ErrDuplicateStepName},
+		{name: "duplicate step names", json: StepNamesNotUnique, wantError: ErrStepDuplicateName},
 	}
 
 	for _, tt := range tests {
@@ -404,7 +403,7 @@ func TestWorkflowRetryConfiguredNumbers_Invalid(t *testing.T) {
 				Retry: &RetryPolicy{NumberRetries: -1},
 				Steps: []Step{{Name: "step", Program: "program"}},
 			},
-			expectedError: errs.ErrRetryCountNegative,
+			expectedError: ErrRetryCountNegative,
 		},
 		{
 			name: "retry pause negative",
@@ -413,7 +412,7 @@ func TestWorkflowRetryConfiguredNumbers_Invalid(t *testing.T) {
 				Retry: &RetryPolicy{PauseSeconds: -1},
 				Steps: []Step{{Name: "step", Program: "program"}},
 			},
-			expectedError: errs.ErrRetryPauseNegative,
+			expectedError: ErrRetryPauseNegative,
 		},
 	}
 
@@ -450,7 +449,7 @@ func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
 				OnFailure: &types.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Timeout: -1}},
 			},
-			expectedError: errs.ErrNumberNegative,
+			expectedError: ErrNumberNegative,
 		},
 		{
 			name: "step pause negative",
@@ -459,7 +458,7 @@ func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
 				OnFailure: &types.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Pause: -1}},
 			},
-			expectedError: errs.ErrNumberNegative,
+			expectedError: ErrNumberNegative,
 		},
 	}
 
@@ -469,14 +468,14 @@ func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
 
 			found := false
 			for _, ve := range validationErrors {
-				if errors.Is(ve, errs.ErrNumberNegative) {
+				if errors.Is(ve, ErrNumberNegative) {
 					found = true
 					break
 				}
 			}
 
 			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, errs.ErrNumberNegative, validationErrors)
+				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, ErrNumberNegative, validationErrors)
 			}
 		})
 	}
@@ -532,10 +531,10 @@ func TestDecodeArgs_Invalid(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: errs.ErrFieldWhitespaceOnly},
-		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: errs.ErrFieldWhitespacePadded},
-		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: errs.ErrFieldTooLong},
+		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: ErrFieldWhitespaceOnly},
+		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
+		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
+		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: ErrFieldTooLong},
 	}
 
 	for _, tt := range tests {
@@ -599,8 +598,8 @@ func TestMissingRetryConfigOnPolicyRetry(t *testing.T) {
 		t.Fatalf("unexpected decode error: %v", err)
 	}
 
-	if !hasError(validationErrors, errs.ErrRetryRequired) {
-		t.Fatalf("expected %v, got %v", errs.ErrRetryRequired, validationErrors)
+	if !hasError(validationErrors, ErrRetryRequired) {
+		t.Fatalf("expected %v, got %v", ErrRetryRequired, validationErrors)
 	}
 }
 
@@ -616,7 +615,7 @@ func TestValidateRetryConfigOnPolicyRetry(t *testing.T) {
 		t.Fatalf("unexpected validation errors: %v", validationErrors)
 	}
 
-	if hasError(validationErrors, errs.ErrRetryRequired) {
-		t.Fatalf("unexpected %v, got %v", errs.ErrRetryRequired, validationErrors)
+	if hasError(validationErrors, ErrRetryRequired) {
+		t.Fatalf("unexpected %v, got %v", ErrRetryRequired, validationErrors)
 	}
 }

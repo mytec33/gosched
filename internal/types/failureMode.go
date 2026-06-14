@@ -2,9 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-
-	"git.sr.ht/~mytec/gosched/internal/errs"
 )
 
 type FailureMode struct {
@@ -15,6 +14,10 @@ var (
 	Abort    = FailureMode{"abort"}
 	Continue = FailureMode{"continue"}
 	Retry    = FailureMode{"retry"}
+)
+
+var (
+	ErrOnFailureInvalid = errors.New("invalid workflow on failure mode")
 )
 
 func (f FailureMode) String() string {
@@ -39,7 +42,7 @@ func (f *FailureMode) UnmarshalJSON(data []byte) error {
 	case "retry":
 		*f = Retry
 	default:
-		return fmt.Errorf("%w: %q", errs.ErrOnFailureInvalid, s)
+		return fmt.Errorf("%w: %q", ErrOnFailureInvalid, s)
 	}
 
 	return nil
