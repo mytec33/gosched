@@ -74,7 +74,7 @@ const validFullExample = `
   },
   {
     "name": "Workflow 2",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
+    "trigger": { "every": "1m", "beginAt": "08:35" },
     "onFailure": "continue",      
     "steps": [
       {
@@ -91,7 +91,7 @@ const validFullExample = `
   },
   {
     "name": "Workflow 3",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
+    "trigger": { "every": "10h", "beginAt": "7:35" },
     "retry": {
       "numberRetries": 1,
       "pauseSeconds": 30
