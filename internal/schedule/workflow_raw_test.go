@@ -2,620 +2,276 @@ package schedule
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
-const WorkflowNameEmpty = `
-[
-  {
-    "name": "",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
+func assertOnlyValidationError(t *testing.T, validationErrors []error, want error) {
+	t.Helper()
 
-const WorkflowNameWhitespace = `
-[
-  {
-    "name": "        ",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowNameWhitespaceLeading = `
-[
-  {
-    "name": " name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowNameWhitespaceTrailing = `
-[
-  {
-    "name": "name ",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowNameTooLong = `
-[
-  {
-    "name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowNoSteps = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": []
-  }
-]
-`
-
-func TestWorkflow_Invalid(t *testing.T) {
-	tests := []struct {
-		name      string
-		json      string
-		wantError error
-	}{
-		{name: "name empty", json: WorkflowNameEmpty, wantError: ErrFieldEmpty},
-		{name: "name whitespace", json: WorkflowNameWhitespace, wantError: ErrFieldWhitespaceOnly},
-		{name: "name whitespace leading", json: WorkflowNameWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
-		{name: "name whitespace trailing", json: WorkflowNameWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
-		{name: "name too long", json: WorkflowNameTooLong, wantError: ErrFieldTooLong},
-		{name: "missing steps", json: WorkflowNoSteps, wantError: ErrStepsRequired},
+	if len(validationErrors) == 0 {
+		t.Fatalf("expected validation error %v, got none", want)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeWorkflows(r)
+	found := false
+	for _, err := range validationErrors {
+		if !errors.Is(err, want) {
+			t.Fatalf("unexpected validation error: %v (expected only %v). Full list: %v",
+				err, want, validationErrors)
+		}
 
-			if err != nil {
-				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
-			}
+		found = true
+	}
 
-			if len(validationErrors) == 0 {
-				t.Fatalf("%v: expected validation error(s), got none", tt.name)
-			}
-
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, tt.wantError) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Fatalf("%s: got %v, want an error matching %v", tt.name, validationErrors, tt.wantError)
-			}
-		})
+	if !found {
+		t.Fatalf("missing expected error %v. Full list: %v", want, validationErrors)
 	}
 }
 
-const WorkflowStepNameEmpty = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "", "program": "program", "args": ["args"]}]
-  }
-]
-`
+func validWorkflowRaw() WorkflowRaw {
+	onFailure := types.Continue
+	every, _ := types.ParseCadence("1d")
+	beginAt, _ := types.ParseMinuteOfDay("10:35")
 
-const WorkflowStepNameWhitespace = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "   ", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepNameWhitespaceLeading = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": " leading", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepNameWhitespaceTrailing = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "trailing ", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepNameTooLong = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,..", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepProgramEmpty = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepProgramWhitespace = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "     ", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepProgramWhitespaceLeading = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": " foo", "args": ["args"]}]
-  }
-]
-`
-
-const WorkflowStepProgramWhitespaceTrailing = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "foo ", "args": ["args"]}]
-  }
-]
-`
-
-// 1. Tests what happens when the entire "trigger" block is missing entirely
-const WorkflowMissingTriggerBlock = `
-[
-  {
-    "name": "Missing Trigger Test",
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
-  }
-]
-`
-
-// 2. Tests when the "trigger" block exists, but the "every" field is missing
-const WorkflowMissingTriggerEvery = `
-[
-  {
-    "name": "Missing Every Test",
-    "trigger": { "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
-  }
-]
-`
-
-// 3. Tests when the "trigger" block exists, but the "beginAt" field is missing
-const WorkflowMissingTriggerBeginAt = `
-[
-  {
-    "name": "Missing BeginAt Test",
-    "trigger": { "every": "1d" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "foo", "args": ["args"]}]
-  }
-]
-`
-
-func TestWorkflowSteps_Invalid(t *testing.T) {
-	tests := []struct {
-		name      string
-		json      string
-		wantError error
-	}{
-		{name: "name empty", json: WorkflowStepNameEmpty, wantError: ErrFieldEmpty},
-		{name: "name whitespace", json: WorkflowStepNameWhitespace, wantError: ErrFieldWhitespaceOnly},
-		{name: "name whitespace leading", json: WorkflowStepNameWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
-		{name: "name whitespace trailing", json: WorkflowStepNameWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
-		{name: "name too long", json: WorkflowStepNameTooLong, wantError: ErrFieldTooLong},
-		{name: "program empty", json: WorkflowStepProgramEmpty, wantError: ErrFieldEmpty},
-		{name: "program whitespace", json: WorkflowStepProgramWhitespace, wantError: ErrFieldWhitespaceOnly},
-		{name: "program whitespace leading", json: WorkflowStepProgramWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
-		{name: "program whitespace trailing", json: WorkflowStepProgramWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
-
-		{name: "trigger block missing", json: WorkflowMissingTriggerBlock, wantError: ErrTriggerRequired},
-		{name: "trigger 'every' field missing", json: WorkflowMissingTriggerEvery, wantError: ErrTriggerEveryRequired},
-		{name: "trigger 'beginAt' field missing", json: WorkflowMissingTriggerBeginAt, wantError: ErrTriggerBeginAtRequired},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeWorkflows(r)
-
-			if err != nil {
-				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
-			}
-
-			if len(validationErrors) == 0 {
-				t.Fatalf("%v: expected validation error(s), got none", tt.name)
-			}
-
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, tt.wantError) {
-					found = true
-				} else {
-					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
-						tt.name, ve, tt.wantError, validationErrors)
-				}
-			}
-			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
-			}
-		})
-	}
-}
-
-const StepNamesNotUnique = `
-[
-  {
-    "name": "workflow 1",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",
-    "steps": [
-      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600},
-      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}      
-    ]
-  },
-  {
-    "name": "workflow 2",
-    "onFailure": "continue",    
-    "trigger": { "every": "1d", "beginAt": "11:35" },
-    "steps": [{"name": "step name 2", "program": "program 1", "args": ["args 1"], "timeout": 0, "pause": 0}]
-  }
-]
-`
-
-func TestStepNamesNotUnique(t *testing.T) {
-	tests := []struct {
-		name      string
-		json      string
-		wantError error
-	}{
-		{name: "duplicate step names", json: StepNamesNotUnique, wantError: ErrStepDuplicateName},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.json)
-			_, validationErrors, _ := DecodeWorkflows(r)
-
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, tt.wantError) {
-					found = true
-				} else {
-					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
-						tt.name, ve, tt.wantError, validationErrors)
-				}
-			}
-			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
-			}
-		})
-	}
-}
-
-const WorkflowValid = `
-[
-  {
-    "name": "workflow 1",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",
-    "steps": [{"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}]
-  },
-  {
-    "name": "workflow 2",
-    "onFailure": "continue",    
-    "trigger": { "every": "1d", "beginAt": "11:35" },
-    "steps": [{"name": "step name 2", "program": "program 1", "args": ["args 1"], "timeout": 0, "pause": 0}]
-  }
-]
-`
-
-func TestWorkflowSteps_Valid(t *testing.T) {
-	tests := []struct {
-		name string
-		json string
-	}{
-		{name: "valid full config", json: WorkflowValid},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeWorkflows(r)
-
-			if err != nil {
-				t.Fatalf("%s: unexpected decode/IO error: %v, expected no error", tt.name, err)
-			}
-
-			if len(validationErrors) != 0 {
-				t.Fatalf("%s: unexpected validation error(s): %v, expected no error", tt.name, validationErrors)
-			}
-		})
-	}
-}
-
-func TestWorkflowRetryConfiguredNumbers_Invalid(t *testing.T) {
-	tests := []struct {
-		name          string
-		wf            WorkflowRaw
-		expectedError error
-	}{
-		{
-			name: "retry number negative",
-			wf: WorkflowRaw{
-				Name:  "workflow",
-				Retry: &RetryPolicy{NumberRetries: -1},
-				Steps: []Step{{Name: "step", Program: "program"}},
-			},
-			expectedError: ErrRetryCountNegative,
+	return WorkflowRaw{
+		Name: "Workflow",
+		Trigger: &types.Trigger{
+			Every:   &every,
+			BeginAt: &beginAt,
 		},
-		{
-			name: "retry pause negative",
-			wf: WorkflowRaw{
-				Name:  "workflow",
-				Retry: &RetryPolicy{PauseSeconds: -1},
-				Steps: []Step{{Name: "step", Program: "program"}},
-			},
-			expectedError: ErrRetryPauseNegative,
+		Retry: &RetryPolicy{
+			NumberRetries: 0,
+			PauseSeconds:  0,
+		},
+		OnFailure: &onFailure,
+		Steps: []Step{
+			{Name: "Step", Program: "program", Args: []string{"arg"}},
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, validationErrors := tt.wf.Validate()
-
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, tt.expectedError) {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v",
-					tt.name, tt.expectedError, validationErrors)
-			}
-		})
-	}
 }
 
-func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
+func TestWorkflowValidate(t *testing.T) {
+	// only select whitespace tests are included as the validateStringValue function
+	// is tested heavily on its own. Leave a few here to prove higher level wiring works.
 	tests := []struct {
-		name          string
-		wf            WorkflowRaw
-		expectedError error
+		name      string
+		mutate    func(*WorkflowRaw)
+		wantError error
 	}{
+		{
+			name: "workflow name empty",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Name = ""
+			},
+			wantError: ErrFieldEmpty,
+		},
+		{
+			name: "workflow steps missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps = nil
+			},
+			wantError: ErrStepsRequired,
+		},
+		{
+			name: "workflow too many steps",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps = repeatedSteps(MaxStepsCount + 1)
+			},
+			wantError: ErrStepCountExceeded,
+		},
+		{
+			name: "onFailure missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.OnFailure = nil
+			},
+			wantError: ErrOnFailureRequired,
+		},
+		{
+			name: "retry policy requires retry config",
+			mutate: func(wf *WorkflowRaw) {
+				onFailure := types.Retry
+				wf.OnFailure = &onFailure
+				wf.Retry = nil
+			},
+			wantError: ErrRetryRequired,
+		},
+		{
+			name: "workflow retry number retries negative",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Retry.NumberRetries = -1
+			},
+			wantError: ErrRetryCountNegative,
+		},
+		{
+			name: "workflow retry pause seconds negative",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Retry.PauseSeconds = -1
+			},
+			wantError: ErrRetryPauseNegative,
+		},
+		{
+			name: "step name whitespace",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Name = "\t\n "
+			},
+			wantError: ErrFieldWhitespaceOnly,
+		},
 		{
 			name: "step timeout negative",
-			wf: WorkflowRaw{
-				Name:      "workflow",
-				OnFailure: &types.Continue,
-				Steps:     []Step{{Name: "step", Program: "program", Timeout: -1}},
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Timeout = -1
 			},
-			expectedError: ErrNumberNegative,
+			wantError: ErrNumberNegative,
 		},
 		{
 			name: "step pause negative",
-			wf: WorkflowRaw{
-				Name:      "workflow",
-				OnFailure: &types.Continue,
-				Steps:     []Step{{Name: "step", Program: "program", Pause: -1}},
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Pause = -1
 			},
-			expectedError: ErrNumberNegative,
+			wantError: ErrNumberNegative,
+		},
+		{
+			name: "program whitespace leading",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Program = " program"
+			},
+			wantError: ErrFieldWhitespacePadded,
+		},
+		{
+			name: "step arg invalid",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Args = []string{"arg "}
+			},
+			wantError: ErrFieldWhitespacePadded,
+		},
+		{
+			name: "step name duplicate",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps = append(wf.Steps, Step{Name: "Step", Program: "program"})
+			},
+			wantError: ErrStepDuplicateName,
+		},
+		{
+			name: "trigger block missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Trigger = nil
+			},
+			wantError: ErrTriggerRequired,
+		},
+		{
+			name: "trigger every missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Trigger.Every = nil
+			},
+			wantError: ErrTriggerEveryRequired,
+		},
+		{
+			name: "trigger beginAt missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Trigger.BeginAt = nil
+			},
+			wantError: ErrTriggerBeginAtRequired,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, validationErrors := tt.wf.Validate()
+			wf := validWorkflowRaw()
+			tt.mutate(&wf)
 
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, ErrNumberNegative) {
-					found = true
-					break
-				}
-			}
+			_, validationErrors := wf.Validate()
 
-			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, ErrNumberNegative, validationErrors)
-			}
+			assertOnlyValidationError(t, validationErrors, tt.wantError)
 		})
 	}
 }
 
-const WorkflowStepArgsWhitespace = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": ["         "]}]
-  }
-]
-`
-
-const WorkflowStepArgsWhitespaceLeading = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": [" leading"]}]
-  }
-]
-`
-
-const WorkflowStepArgsWhitespaceTrailing = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": ["trailing "]}]
-  }
-]
-`
-
-const WorkflowStepArgsTooLong = `
-[
-  {
-    "name": "name",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",    
-    "steps": [{"name": "step name", "program": "program", "args": ["Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.."]}]
-  }
-]
-`
-
-func TestDecodeArgs_Invalid(t *testing.T) {
+func TestValidateStringValue(t *testing.T) {
 	tests := []struct {
 		name      string
-		json      string
+		value     string
+		maxLength int
 		wantError error
 	}{
-		{name: "args whitespace", json: WorkflowStepArgsWhitespace, wantError: ErrFieldWhitespaceOnly},
-		{name: "args whitespace leading", json: WorkflowStepArgsWhitespaceLeading, wantError: ErrFieldWhitespacePadded},
-		{name: "args whitespace trailing", json: WorkflowStepArgsWhitespaceTrailing, wantError: ErrFieldWhitespacePadded},
-		{name: "args too long", json: WorkflowStepArgsTooLong, wantError: ErrFieldTooLong},
+		{"valid", "workflow", 20, nil},
+		{"empty", "", 20, ErrFieldEmpty},
+		{"whitespace only", "\t\n ", 20, ErrFieldWhitespaceOnly},
+		{"leading whitespace", " workflow", 20, ErrFieldWhitespacePadded},
+		{"trailing whitespace", "workflow ", 20, ErrFieldWhitespacePadded},
+		{"too long", "workflow", 3, ErrFieldTooLong},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := strings.NewReader(tt.json)
+			errs := validateStringValue("field", tt.value, tt.maxLength)
 
-			_, validationErrors, _ := DecodeWorkflows(r)
-
-			found := false
-			for _, ve := range validationErrors {
-				if errors.Is(ve, tt.wantError) {
-					found = true
-				} else {
-					t.Fatalf("%s: unexpected validation error: %v (expected only %v). Full list: %v",
-						tt.name, ve, tt.wantError, validationErrors)
+			if tt.wantError == nil {
+				if len(errs) != 0 {
+					t.Fatalf("validateStringValue() errors = %v, want none", errs)
 				}
-			}
-			if !found {
-				t.Fatalf("%s: missing expected error %v. Full list: %v", tt.name, tt.wantError, validationErrors)
+				return
 			}
 
+			assertOnlyValidationError(t, errs, tt.wantError)
 		})
 	}
 }
 
-const MissingRetryConfigOnPolicyRetry = `
-[
-  {
-    "name": "workflow 1",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "retry",
-    "steps": [
-      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}     
-    ]
-  }
-]
-`
-
-const ValidateRetryConfigOnPolicyRetry = `
-[
-  {
-    "name": "workflow 1",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "retry",
-	"retry": {
-		"numberRetries": 0,
-		"pauseSeconds": 60
-	},
-    "steps": [
-      {"name": "step name", "program": "program", "args": ["args"], "timeout": 43200, "pause": 3600}     
-    ]
-  }
-]
-`
-
-func TestMissingRetryConfigOnPolicyRetry(t *testing.T) {
-	r := strings.NewReader(MissingRetryConfigOnPolicyRetry)
-
-	_, validationErrors, err := DecodeWorkflows(r)
-	if err != nil {
-		t.Fatalf("unexpected decode error: %v", err)
+func TestValidateStepArgs(t *testing.T) {
+	tests := []struct {
+		name      string
+		args      []string
+		wantError error
+	}{
+		{"nil args allowed", nil, nil},
+		{"empty args allowed", []string{}, nil},
+		{"valid args", []string{"one", "two"}, nil},
+		{"arg empty", []string{""}, ErrFieldEmpty},
+		{"arg whitespace only", []string{"\t\n "}, ErrFieldWhitespaceOnly},
+		{"arg leading whitespace", []string{" arg"}, ErrFieldWhitespacePadded},
+		{"arg trailing whitespace", []string{"arg "}, ErrFieldWhitespacePadded},
+		{"arg too long", []string{strings.Repeat("a", MaxStepArgLength+1)}, ErrFieldTooLong},
+		{"too many args", repeatedArgs(MaxStepArgsCount+1, "arg"), ErrStepArgsCountExceeded},
+		{
+			name:      "total args too long",
+			args:      repeatedArgs(17, strings.Repeat("a", 241)),
+			wantError: ErrStepArgsTotalLengthExceeded,
+		},
 	}
 
-	if !hasError(validationErrors, ErrRetryRequired) {
-		t.Fatalf("expected %v, got %v", ErrRetryRequired, validationErrors)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validateStepArgs("field", tt.args)
+
+			if tt.wantError == nil {
+				if len(errs) != 0 {
+					t.Fatalf("validateStepArgs() errors = %v, want none", errs)
+				}
+				return
+			}
+
+			assertOnlyValidationError(t, errs, tt.wantError)
+		})
 	}
 }
 
-func TestValidateRetryConfigOnPolicyRetry(t *testing.T) {
-	r := strings.NewReader(ValidateRetryConfigOnPolicyRetry)
-
-	_, validationErrors, err := DecodeWorkflows(r)
-	if err != nil {
-		t.Fatalf("unexpected decode error: %v", err)
+func repeatedArgs(count int, value string) []string {
+	args := make([]string, count)
+	for i := range args {
+		args[i] = value
 	}
 
-	if len(validationErrors) != 0 {
-		t.Fatalf("unexpected validation errors: %v", validationErrors)
+	return args
+}
+
+func repeatedSteps(count int) []Step {
+	steps := make([]Step, count)
+	for i := range steps {
+		steps[i] = Step{Name: fmt.Sprintf("Step %d", i+1), Program: "program"}
 	}
 
-	if hasError(validationErrors, ErrRetryRequired) {
-		t.Fatalf("unexpected %v, got %v", ErrRetryRequired, validationErrors)
-	}
+	return steps
 }

@@ -119,22 +119,8 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 		errorList = append(errorList, validateStringValue(field, steps.Program,
 			MaxWorkflowStepProgramLength)...)
 
-		if len(steps.Args) > MaxStepArgsCount {
-			errorList = append(errorList, ErrStepArgsCountExceeded)
-		}
-
-		totalArgsLength := 0
-		for j, arg := range steps.Args {
-			totalArgsLength += len(arg)
-
-			field = fmt.Sprintf("workflow.steps[%d].args[%d]", i+1, j+1)
-			errorList = append(errorList, validateStringValue(field, arg,
-				MaxStepArgLength)...)
-		}
-
-		if totalArgsLength > MaxStepArgsTotalLength {
-			errorList = append(errorList, ErrStepArgsTotalLengthExceeded)
-		}
+		field = fmt.Sprintf("workflow.steps[%d].args", i+1)
+		errorList = append(errorList, validateStepArgs(field, steps.Args)...)
 	}
 	// Steps (and the entire schedule) are treated as immutable config after
 	// validation so args won't need a deep copy
@@ -143,6 +129,28 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	errorList = append(errorList, validateUniqueStepNames(raw.Steps)...)
 
 	return workflow, errorList
+}
+
+func validateStepArgs(field string, args []string) []error {
+	var errorList []error
+
+	if len(args) > MaxStepArgsCount {
+		errorList = append(errorList, ErrStepArgsCountExceeded)
+	}
+
+	totalArgsLength := 0
+	for j, arg := range args {
+		totalArgsLength += len(arg)
+
+		argField := fmt.Sprintf("%s[%d]", field, j+1)
+		errorList = append(errorList, validateStringValue(argField, arg, MaxStepArgLength)...)
+	}
+
+	if totalArgsLength > MaxStepArgsTotalLength {
+		errorList = append(errorList, ErrStepArgsTotalLengthExceeded)
+	}
+
+	return errorList
 }
 
 func validateStringValue(field string, s string, maxLength int) []error {
