@@ -5,16 +5,15 @@ import (
 	"strings"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
-	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 type WorkflowRaw struct {
-	Name      string              `json:"name"`
-	Trigger   *types.Trigger      `json:"trigger"`
-	OnFailure *policy.FailureMode `json:"onFailure"`
-	Retry     *RetryPolicy        `json:"retry"`
-	Steps     []Step              `json:"steps"`
+	Name      string             `json:"name"`
+	Trigger   *types.Trigger     `json:"trigger"`
+	OnFailure *types.FailureMode `json:"onFailure"`
+	Retry     *RetryPolicy       `json:"retry"`
+	Steps     []Step             `json:"steps"`
 }
 
 func (raw WorkflowRaw) Validate() (Workflow, []error) {
@@ -44,7 +43,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	// Validation checks that the field was provided.
 	if raw.OnFailure == nil {
 		errorList = append(errorList, errs.ErrOnFailureRequired)
-	} else if *raw.OnFailure == policy.Retry && raw.Retry == nil {
+	} else if *raw.OnFailure == types.Retry && raw.Retry == nil {
 		errorList = append(errorList, errs.ErrRetryRequired)
 	} else {
 		workflow.OnFailure = *raw.OnFailure

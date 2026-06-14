@@ -8,7 +8,6 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
@@ -16,7 +15,7 @@ import (
 func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
 	wf := schedule.Workflow{
 		Name:      "missing program aborts",
-		OnFailure: policy.Abort,
+		OnFailure: types.Abort,
 		Steps: []schedule.Step{
 			{
 				Name:    "missing",
@@ -38,7 +37,7 @@ func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := schedule.Workflow{
 		Name:      "command failure aborts",
-		OnFailure: policy.Abort,
+		OnFailure: types.Abort,
 		Steps: []schedule.Step{
 			{
 				Name:    "exit 5",
@@ -61,7 +60,7 @@ func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := schedule.Workflow{
 		Name:      "continue failure is partial",
-		OnFailure: policy.Continue,
+		OnFailure: types.Continue,
 		Steps: []schedule.Step{
 			{
 				Name:    "missing",
@@ -92,7 +91,7 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := schedule.Workflow{
 		Name:      "retry exhaustion is partial",
-		OnFailure: policy.Retry,
+		OnFailure: types.Retry,
 		Retry: &schedule.RetryPolicy{
 			NumberRetries: 1,
 		},
@@ -123,7 +122,7 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 	markerFile := filepath.Join(dir, "retried")
 	wf := schedule.Workflow{
 		Name:      "retry success is completed",
-		OnFailure: policy.Retry,
+		OnFailure: types.Retry,
 		Retry: &schedule.RetryPolicy{
 			NumberRetries: 1,
 		},

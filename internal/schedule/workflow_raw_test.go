@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
-	"git.sr.ht/~mytec/gosched/internal/policy"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 const WorkflowNameEmpty = `
@@ -447,7 +447,7 @@ func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
 			name: "step timeout negative",
 			wf: WorkflowRaw{
 				Name:      "workflow",
-				OnFailure: &policy.Continue,
+				OnFailure: &types.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Timeout: -1}},
 			},
 			expectedError: errs.ErrNumberNegative,
@@ -456,7 +456,7 @@ func TestWorkflowStepsConfiguredNumbers_Invalid(t *testing.T) {
 			name: "step pause negative",
 			wf: WorkflowRaw{
 				Name:      "workflow",
-				OnFailure: &policy.Continue,
+				OnFailure: &types.Continue,
 				Steps:     []Step{{Name: "step", Program: "program", Pause: -1}},
 			},
 			expectedError: errs.ErrNumberNegative,

@@ -2,16 +2,15 @@
 package schedule
 
 import (
-	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 type Workflow struct {
-	Name      string             `json:"name"`
-	Trigger   types.Trigger      `json:"trigger"`
-	OnFailure policy.FailureMode `json:"onFailure"`
-	Retry     *RetryPolicy       `json:"retry"`
-	Steps     []Step             `json:"steps"`
+	Name      string            `json:"name"`
+	Trigger   types.Trigger     `json:"trigger"`
+	OnFailure types.FailureMode `json:"onFailure"`
+	Retry     *RetryPolicy      `json:"retry"`
+	Steps     []Step            `json:"steps"`
 }
 
 type RetryPolicy struct {
@@ -28,13 +27,13 @@ type Step struct {
 }
 
 func WorkflowAbortsOnFailure(wf Workflow) bool {
-	return wf.OnFailure == policy.Abort
+	return wf.OnFailure == types.Abort
 }
 
 func WorkflowContinuesOnFailure(wf Workflow) bool {
-	return wf.OnFailure == policy.Continue
+	return wf.OnFailure == types.Continue
 }
 
 func WorkflowRetriesOnFailure(wf Workflow) bool {
-	return wf.OnFailure == policy.Retry
+	return wf.OnFailure == types.Retry
 }

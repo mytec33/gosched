@@ -3,30 +3,30 @@ package schedule
 import (
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/policy"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func TestWorkflowFailureModeChecks(t *testing.T) {
 	tests := []struct {
 		name         string
-		onFailure    policy.FailureMode
+		onFailure    types.FailureMode
 		wantAbort    bool
 		wantContinue bool
 		wantRetry    bool
 	}{
 		{
 			name:      "abort",
-			onFailure: policy.Abort,
+			onFailure: types.Abort,
 			wantAbort: true,
 		},
 		{
 			name:         "continue",
-			onFailure:    policy.Continue,
+			onFailure:    types.Continue,
 			wantContinue: true,
 		},
 		{
 			name:      "retry",
-			onFailure: policy.Retry,
+			onFailure: types.Retry,
 			wantRetry: true,
 		},
 	}

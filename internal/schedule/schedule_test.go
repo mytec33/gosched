@@ -13,7 +13,6 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/errs"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
-	"git.sr.ht/~mytec/gosched/internal/policy"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
@@ -240,7 +239,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 					Every:   &c15m,
 					BeginAt: &m1146,
 				},
-				OnFailure: policy.Abort,
+				OnFailure: types.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
@@ -251,7 +250,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: policy.Abort,
+				OnFailure: types.Abort,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30, Pause: 5},
 					{Name: "step 2", Timeout: 30},
@@ -263,7 +262,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: policy.Continue,
+				OnFailure: types.Continue,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 30},
 				},
@@ -274,7 +273,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 					Every:   &c15m,
 					BeginAt: &m1247,
 				},
-				OnFailure: policy.Retry,
+				OnFailure: types.Retry,
 				Steps: []Step{
 					{Name: "step 1", Timeout: 1800},
 				},
@@ -332,7 +331,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 						Every:   &c15m,
 						BeginAt: &m1146,
 					},
-					OnFailure: policy.Abort,
+					OnFailure: types.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
 					},
@@ -345,7 +344,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: policy.Abort,
+					OnFailure: types.Abort,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30, Pause: 5},
 						{Name: "step 2", Timeout: 30},
@@ -357,7 +356,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: policy.Continue,
+					OnFailure: types.Continue,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 30},
 					},
@@ -370,7 +369,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 						Every:   &c15m,
 						BeginAt: &m1247,
 					},
-					OnFailure: policy.Retry,
+					OnFailure: types.Retry,
 					Steps: []Step{
 						{Name: "step 1", Timeout: 1800},
 					},
@@ -595,7 +594,7 @@ func TestExpandSchedule_Idempotent(t *testing.T) {
 					Every:   &cadence,
 					BeginAt: &beginAt,
 				},
-				OnFailure: policy.Retry,
+				OnFailure: types.Retry,
 				Steps: []Step{
 					{Name: "step 1", Program: "program"},
 				},

@@ -1,5 +1,4 @@
-// Package policy defines closed-domain policy types that control workflow execution behavior.
-package policy
+package types
 
 import (
 	"encoding/json"
