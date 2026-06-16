@@ -65,17 +65,16 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		currentMinute := types.MinuteOfDayFromTime(now)
 		minuteDiff := currentMinute.MinutesSince(lastProcessed)
 
-		switch {
-		case minuteDiff == 0:
+		switch minuteDiff {
+		case 0:
 			logging.StdOut.Warn("scheduler", "reason", "duplicate suppression", "currentMinute",
 				currentMinute.String(), "lastProcessed", lastProcessed.String())
-		case minuteDiff > 1:
-			logging.StdOut.Warn("scheduler", "reason", "skipped minute(s)", "missed", minuteDiff-1,
-				"currentMinute", currentMinute.String(), "lastProcessed", lastProcessed.String())
-
-			// We have skipped one or more minutes but we can still run the current minute
-			fallthrough
 		default:
+			if minuteDiff > 1 {
+				logging.StdOut.Warn("scheduler", "reason", "skipped minute(s)", "missed", minuteDiff-1,
+					"currentMinute", currentMinute.String(), "lastProcessed", lastProcessed.String())
+			}
+
 			n := runSchedulerTick(currentMinute, s, &running)
 			if n > 0 {
 				logging.StdOut.Info("scheduler", "scheduled workflows",
