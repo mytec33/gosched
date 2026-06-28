@@ -15,7 +15,7 @@ var (
 	ErrCadenceTooLong        = errors.New("cadence string is too long")
 	ErrCadenceNumNonASCII    = errors.New("cadence numeric value must use ASCII digits 0-9")
 	ErrCadenceNumInvalid     = errors.New("cadence numeric value is invalid")
-	ErrCadenceBoundsInvalid  = errors.New("cadence value must be between 1 and 60")
+	ErrCadenceBoundsInvalid  = errors.New("cadence value of zero found must be between 1 and 60")
 	ErrCadenceUnitInvalid    = errors.New("cadence unit must be d, h, or m")
 	ErrCadenceDayExceeded    = errors.New("daily cadence cannot be greater than 1d")
 	ErrCadenceHourExceeded   = errors.New("hourly cadence cannot be greater than 23h")
@@ -40,7 +40,7 @@ func (c Cadence) Measure() CadenceMeasure {
 }
 
 func (c Cadence) validateCadence() error {
-	if c.repetition > 60 || c.repetition < 1 {
+	if c.repetition < 1 {
 		return ErrCadenceBoundsInvalid
 	}
 
@@ -64,16 +64,6 @@ func (c Cadence) validateCadence() error {
 	return nil
 }
 
-func validateASCIIPayload(num string) error {
-	for _, r := range num {
-		if r > unicode.MaxASCII {
-			return ErrCadenceNumNonASCII
-		}
-	}
-
-	return nil
-}
-
 func parseMeasure(unit string) (CadenceMeasure, error) {
 	switch unit {
 	case "d":
@@ -87,6 +77,24 @@ func parseMeasure(unit string) (CadenceMeasure, error) {
 	}
 }
 
+func parseRepetition(num string) (int, error) {
+	for _, r := range num {
+		switch {
+		case r > unicode.MaxASCII:
+			return 0, ErrCadenceNumNonASCII
+		case r < '0' || r > '9':
+			return 0, ErrCadenceNumInvalid
+		}
+	}
+
+	repetition, err := strconv.Atoi(num)
+	if err != nil {
+		return 0, ErrCadenceNumInvalid
+	}
+
+	return repetition, nil
+}
+
 func ParseCadence(s string) (Cadence, error) {
 	if s == "" {
 		return Cadence{}, ErrCadenceEmpty
@@ -96,24 +104,20 @@ func ParseCadence(s string) (Cadence, error) {
 		return Cadence{}, ErrCadenceTooShort
 	}
 
-	num := s[:len(s)-1]
-	err := validateASCIIPayload(num)
+	rawNum := s[:len(s)-1]
+	repetition, err := parseRepetition(rawNum)
 	if err != nil {
 		return Cadence{}, err
 	}
 
-	v, err := strconv.Atoi(num)
-	if err != nil {
-		return Cadence{}, ErrCadenceNumInvalid
-	}
-
-	measure, err := parseMeasure(strings.ToLower(string(s[len(s)-1:])))
+	rawMeasure := strings.ToLower(s[len(s)-1:])
+	measure, err := parseMeasure(rawMeasure)
 	if err != nil {
 		return Cadence{}, err
 	}
 
 	cadence := Cadence{
-		repetition: v,
+		repetition: repetition,
 		measure:    measure,
 	}
 	err = cadence.validateCadence()

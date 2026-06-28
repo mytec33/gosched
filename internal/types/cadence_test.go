@@ -47,7 +47,7 @@ func TestParseCadence_Invalid(t *testing.T) {
 		{"invalid integer payload", "abcde", ErrCadenceNumInvalid},
 		{"non-numeric prefix", "1a2h", ErrCadenceNumInvalid},
 		{"invalid measure unit", "12s", ErrCadenceUnitInvalid},
-		{"repetition max breach", "99m", ErrCadenceBoundsInvalid},
+		{"repetition max breach", "99m", ErrCadenceMinuteExceeded},
 		{"repetition min breach", "0m", ErrCadenceBoundsInvalid},
 		{"day boundary breach", "2d", ErrCadenceDayExceeded},
 		{"hour boundary breach", "24h", ErrCadenceHourExceeded},
