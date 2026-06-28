@@ -40,6 +40,10 @@ func (c Cadence) Measure() CadenceMeasure {
 }
 
 func (c Cadence) validateCadence() error {
+	if c.repetition > 60 || c.repetition < 1 {
+		return ErrCadenceBoundsInvalid
+	}
+
 	switch c.measure {
 	case CadenceDay:
 		if c.repetition > 1 {
@@ -110,10 +114,6 @@ func ParseCadence(s string) (Cadence, error) {
 		return Cadence{}, ErrCadenceNumInvalid
 	}
 
-	if v > 60 || v < 1 {
-		return Cadence{}, ErrCadenceBoundsInvalid
-	}
-
 	measure, err := parseMeasure(strings.ToLower(string(s[len(s)-1:])))
 	if err != nil {
 		return Cadence{}, err
@@ -123,7 +123,8 @@ func ParseCadence(s string) (Cadence, error) {
 		repetition: v,
 		measure:    measure,
 	}
-	if err := cadence.validateCadence(); err != nil {
+	err = cadence.validateCadence()
+	if err != nil {
 		return Cadence{}, err
 	}
 
