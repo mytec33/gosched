@@ -64,13 +64,10 @@ func (c Cadence) validateCadence() error {
 	return nil
 }
 
-func validateCadenceNumberPayload(num string) error {
+func validateASCIIPayload(num string) error {
 	for _, r := range num {
-		switch {
-		case r > unicode.MaxASCII:
+		if r > unicode.MaxASCII {
 			return ErrCadenceNumNonASCII
-		case r < '0' || r > '9':
-			return ErrCadenceNumInvalid
 		}
 	}
 
@@ -100,13 +97,9 @@ func ParseCadence(s string) (Cadence, error) {
 	}
 
 	num := s[:len(s)-1]
-	if err := validateCadenceNumberPayload(num); err != nil {
+	err := validateASCIIPayload(num)
+	if err != nil {
 		return Cadence{}, err
-	}
-
-	// Done after we look for unicode values to report them as unicode rather than "too long"
-	if len(s) > 3 {
-		return Cadence{}, ErrCadenceTooLong
 	}
 
 	v, err := strconv.Atoi(num)
