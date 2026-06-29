@@ -19,11 +19,11 @@ type RetryPolicy struct {
 }
 
 type Step struct {
-	Name    string   `json:"name"`
-	Program string   `json:"program"`
-	Args    []string `json:"args"`
-	Timeout int      `json:"timeout"`
-	Pause   int      `json:"pause"`
+	Name    string               `json:"name"`
+	Program string               `json:"program"`
+	Args    []string             `json:"args"`
+	Timeout types.ConfigDuration `json:"timeout"`
+	Pause   int                  `json:"pause"`
 }
 
 func WorkflowAbortsOnFailure(wf Workflow) bool {

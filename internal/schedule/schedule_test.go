@@ -29,6 +29,17 @@ func TestPrintScheduleConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse cadence 1h: %v", err)
 	}
+
+	timeout30s, err := types.ParseConfigDuration("30s")
+	if err != nil {
+		t.Fatalf("parse config duration 30s: %v", err)
+	}
+
+	timeout1800s, err := types.ParseConfigDuration("1800s")
+	if err != nil {
+		t.Fatalf("parse config duration 1800s: %v", err)
+	}
+
 	s := Schedule{
 		workflows: []Workflow{
 			{
@@ -39,7 +50,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 				OnFailure: types.Abort,
 				Steps: []Step{
-					{Name: "step 1", Timeout: 30},
+					{Name: "step 1", Timeout: timeout30s},
 				},
 			},
 			{
@@ -50,8 +61,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 				OnFailure: types.Abort,
 				Steps: []Step{
-					{Name: "step 1", Timeout: 30, Pause: 5},
-					{Name: "step 2", Timeout: 30},
+					{Name: "step 1", Timeout: timeout30s, Pause: 5},
+					{Name: "step 2", Timeout: timeout30s},
 				},
 			},
 			{
@@ -62,7 +73,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 				OnFailure: types.Continue,
 				Steps: []Step{
-					{Name: "step 1", Timeout: 30},
+					{Name: "step 1", Timeout: timeout30s},
 				},
 			},
 			{
@@ -73,7 +84,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 				OnFailure: types.Retry,
 				Steps: []Step{
-					{Name: "step 1", Timeout: 1800},
+					{Name: "step 1", Timeout: timeout1800s},
 				},
 			},
 		},
@@ -120,6 +131,16 @@ func TestPrintScheduleOperational(t *testing.T) {
 		t.Fatalf("parse 12:47: %v", err)
 	}
 
+	timeOut30s, err := types.ParseConfigDuration("30s")
+	if err != nil {
+		t.Fatalf("parse config duration 30s: %v", err)
+	}
+
+	timeOut1800s, err := types.ParseConfigDuration("1800s")
+	if err != nil {
+		t.Fatalf("parse config duration 1800s: %v", err)
+	}
+
 	s := Schedule{
 		byMinute: map[types.MinuteOfDay][]Workflow{
 			m1146: {
@@ -131,7 +152,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 					OnFailure: types.Abort,
 					Steps: []Step{
-						{Name: "step 1", Timeout: 30},
+						{Name: "step 1", Timeout: timeOut30s},
 					},
 				},
 			},
@@ -144,8 +165,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 					OnFailure: types.Abort,
 					Steps: []Step{
-						{Name: "step 1", Timeout: 30, Pause: 5},
-						{Name: "step 2", Timeout: 30},
+						{Name: "step 1", Timeout: timeOut30s, Pause: 5},
+						{Name: "step 2", Timeout: timeOut30s},
 					},
 				},
 				{
@@ -156,7 +177,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 					OnFailure: types.Continue,
 					Steps: []Step{
-						{Name: "step 1", Timeout: 30},
+						{Name: "step 1", Timeout: timeOut30s},
 					},
 				},
 			},
@@ -169,7 +190,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 					OnFailure: types.Retry,
 					Steps: []Step{
-						{Name: "step 1", Timeout: 1800},
+						{Name: "step 1", Timeout: timeOut1800s},
 					},
 				},
 			},

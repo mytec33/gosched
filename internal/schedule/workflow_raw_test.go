@@ -120,13 +120,6 @@ func TestWorkflowValidate(t *testing.T) {
 			wantError: ErrFieldWhitespaceOnly,
 		},
 		{
-			name: "step timeout negative",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps[0].Timeout = -1
-			},
-			wantError: ErrNumberNegative,
-		},
-		{
 			name: "step pause negative",
 			mutate: func(wf *WorkflowRaw) {
 				wf.Steps[0].Pause = -1

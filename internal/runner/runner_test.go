@@ -7,10 +7,16 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
+	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func TestExitCode(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
+
+	timeout1s, err := types.ParseConfigDuration("1s")
+	if err != nil {
+		t.Fatalf("parse config duration 1s: %v", err)
+	}
 
 	tests := []struct {
 		step         schedule.Step
@@ -57,7 +63,7 @@ func TestExitCode(t *testing.T) {
 				Args: []string{
 					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exit-code", "10",
 				},
-				Timeout: 1,
+				Timeout: timeout1s,
 			},
 			wantExitCode: -1,
 			wantFailed:   true,
@@ -84,6 +90,11 @@ func TestExitCode(t *testing.T) {
 func TestTimeout(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
+	timeout1s, err := types.ParseConfigDuration("1s")
+	if err != nil {
+		t.Fatalf("parse config duration 1s: %v", err)
+	}
+
 	tests := []struct {
 		step       schedule.Step
 		wantFailed bool
@@ -95,7 +106,7 @@ func TestTimeout(t *testing.T) {
 				Args: []string{
 					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exit-code", "10",
 				},
-				Timeout: 1,
+				Timeout: timeout1s,
 			},
 			wantFailed: true,
 		},

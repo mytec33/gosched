@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
@@ -26,8 +25,8 @@ func runStepCommand(step schedule.Step) StepExecutionResult {
 	var cancel context.CancelFunc
 	var ctx context.Context
 
-	if step.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(context.Background(), helpers.SecondsDuration(step.Timeout))
+	if step.Timeout.Duration() > 0 {
+		ctx, cancel = context.WithTimeout(context.Background(), step.Timeout.Duration())
 		cmd = exec.CommandContext(ctx, step.Program, step.Args...)
 	} else {
 		cmd = exec.Command(step.Program, step.Args...)

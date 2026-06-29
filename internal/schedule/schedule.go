@@ -161,7 +161,7 @@ func (s Schedule) printScheduleOperational(w io.Writer) {
 func printStep(numSteps int, stepIndex int, step Step, w io.Writer) {
 	var details []string
 
-	details = append(details, fmt.Sprintf("timeout %s", helpers.SecondsDuration(step.Timeout)))
+	details = append(details, fmt.Sprintf("timeout %s", step.Timeout))
 
 	if step.Pause > 0 {
 		details = append(details, fmt.Sprintf("pause %s", helpers.SecondsDuration(step.Pause)))
