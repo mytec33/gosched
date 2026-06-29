@@ -96,6 +96,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		case <-ctx.Done():
 			timer.Stop()
 			logging.StdOut.Error("scheduler", "reason", "signal interrupt received; waiting for running workflows to finish")
+			logging.StdOut.Error("scheduler", "reason", "shutdown in progress; not starting new work")
 			running.Wait()
 			return ErrSignalInterrupt
 		case <-timer.C:

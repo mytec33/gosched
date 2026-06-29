@@ -3,22 +3,22 @@
 		"name": "Graceful Stop 1",
 		"trigger": {
             "every": "1d",
-            "beginAt": "21:47"
+            "beginAt": "22:21"
         },
 		"onFailure": "abort",
 		"steps": [
 			{
-				"name": "30 second job",
+				"name": "120 second job",
 				"program": "./testprog",
 				"args": [
 					"-sleep",
-					"30",
+					"120",
 					"-role",
 					"run and abort after step 1",
 					"-exit-code",
 					"1"
 				],
-				"timeout": "11s",
+				"timeout": "65s",
 				"pause": "3s"
 			}
 		]
@@ -27,9 +27,33 @@
 		"name": "Graceful Stop 2",
 		"trigger": {
             "every": "1d",
-            "beginAt": "21:47"
+            "beginAt": "22:21"
         },
 		"onFailure": "abort",
+		"steps": [
+			{
+				"name": "90 second job",
+				"program": "./testprog",
+				"args": [
+					"-sleep",
+					"90",
+					"-role",
+					"run and abort after step 1",
+					"-exit-code",
+					"1"
+				],
+				"timeout": "65s",
+				"pause": "3s"
+			}
+		]
+	},
+	{
+		"name": "Shouldn't Start",
+		"trigger": {
+            "every": "1d",
+            "beginAt": "22:22"
+        },
+		"onFailure": "continue",
 		"steps": [
 			{
 				"name": "45 second job",
