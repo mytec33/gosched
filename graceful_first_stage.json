@@ -3,7 +3,7 @@
 		"name": "Graceful Stop 1",
 		"trigger": {
             "every": "1d",
-            "beginAt": "9:18"
+            "beginAt": "21:47"
         },
 		"onFailure": "abort",
 		"steps": [
@@ -18,8 +18,8 @@
 					"-exit-code",
 					"1"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			}
 		]
 	},
@@ -27,7 +27,7 @@
 		"name": "Graceful Stop 2",
 		"trigger": {
             "every": "1d",
-            "beginAt": "09:18"
+            "beginAt": "21:47"
         },
 		"onFailure": "abort",
 		"steps": [
@@ -42,8 +42,8 @@
 					"-exit-code",
 					"1"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			}
 		]
 	}	
