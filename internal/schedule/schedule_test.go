@@ -30,6 +30,11 @@ func TestPrintScheduleConfig(t *testing.T) {
 		t.Fatalf("parse cadence 1h: %v", err)
 	}
 
+	pause5s, err := types.ParseConfigDuration("5s")
+	if err != nil {
+		t.Fatalf("parse config duration 5s: %v", err)
+	}
+
 	timeout30s, err := types.ParseConfigDuration("30s")
 	if err != nil {
 		t.Fatalf("parse config duration 30s: %v", err)
@@ -61,7 +66,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 				},
 				OnFailure: types.Abort,
 				Steps: []Step{
-					{Name: "step 1", Timeout: timeout30s, Pause: 5},
+					{Name: "step 1", Timeout: timeout30s, Pause: pause5s},
 					{Name: "step 2", Timeout: timeout30s},
 				},
 			},
@@ -131,6 +136,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 		t.Fatalf("parse 12:47: %v", err)
 	}
 
+	pause5s, err := types.ParseConfigDuration("5s")
+	if err != nil {
+		t.Fatalf("parse config duration 5s: %v", err)
+	}
+
 	timeOut30s, err := types.ParseConfigDuration("30s")
 	if err != nil {
 		t.Fatalf("parse config duration 30s: %v", err)
@@ -165,7 +175,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 					},
 					OnFailure: types.Abort,
 					Steps: []Step{
-						{Name: "step 1", Timeout: timeOut30s, Pause: 5},
+						{Name: "step 1", Timeout: timeOut30s, Pause: pause5s},
 						{Name: "step 2", Timeout: timeOut30s},
 					},
 				},

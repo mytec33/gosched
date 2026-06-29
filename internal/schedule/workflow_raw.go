@@ -107,7 +107,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 		errorList = append(errorList, validateStringValue(field, steps.Name,
 			MaxWorkflowStepNameLength)...)
 
-		if steps.Pause < 0 {
+		if steps.Pause.Duration() < 0 {
 			errorList = append(errorList, ErrNumberNegative)
 		}
 

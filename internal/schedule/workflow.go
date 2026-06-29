@@ -23,7 +23,7 @@ type Step struct {
 	Program string               `json:"program"`
 	Args    []string             `json:"args"`
 	Timeout types.ConfigDuration `json:"timeout"`
-	Pause   int                  `json:"pause"`
+	Pause   types.ConfigDuration `json:"pause"`
 }
 
 func WorkflowAbortsOnFailure(wf Workflow) bool {

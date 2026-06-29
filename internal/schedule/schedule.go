@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
@@ -163,8 +162,8 @@ func printStep(numSteps int, stepIndex int, step Step, w io.Writer) {
 
 	details = append(details, fmt.Sprintf("timeout %s", step.Timeout))
 
-	if step.Pause > 0 {
-		details = append(details, fmt.Sprintf("pause %s", helpers.SecondsDuration(step.Pause)))
+	if step.Pause.Duration() > 0 {
+		details = append(details, fmt.Sprintf("pause %s", step.Pause))
 	}
 
 	if len(details) > 0 {
