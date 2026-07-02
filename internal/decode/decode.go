@@ -39,7 +39,7 @@ func ReadWorkflowFiles(filename schedule.ScheduleSliceFlag) (schedule.Schedule, 
 	var allWorkflows []workflow.Workflow
 
 	for _, file := range filename {
-		wfs, validationErrors, err := decodeWorkflows(file)
+		wfs, validationErrors, err := decodeWorkflowFile(file)
 		if err != nil {
 			return schedule.Schedule{}, validationErrors, err
 		}
@@ -65,14 +65,14 @@ func ReadWorkflowFiles(filename schedule.ScheduleSliceFlag) (schedule.Schedule, 
 	return sched, nil, nil
 }
 
-func decodeWorkflows(file string) ([]workflow.Workflow, []error, error) {
+func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return []workflow.Workflow{}, nil, fmt.Errorf("%w: %q: %w", ErrFileIOError, file, err)
 	}
 	defer f.Close()
 
-	wfs, validationErrors, err := DecodeWorkflowFile(f)
+	wfs, validationErrors, err := DecodeWorkflows(f)
 	if err != nil {
 		return []workflow.Workflow{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
 	}
@@ -80,10 +80,10 @@ func decodeWorkflows(file string) ([]workflow.Workflow, []error, error) {
 	return wfs, validationErrors, nil
 }
 
-// DecodeWorkflowFile reads JSON and performs validation.
+// DecodeWorkflows reads JSON and performs validation.
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
-func DecodeWorkflowFile(r io.Reader) ([]workflow.Workflow, []error, error) {
+func DecodeWorkflows(r io.Reader) ([]workflow.Workflow, []error, error) {
 	var workflows []workflow.Workflow
 	var workflowsRaw []workflow.WorkflowRaw
 
