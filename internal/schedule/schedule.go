@@ -25,8 +25,6 @@ var (
 	ErrWorkflowNameNotFound   = errors.New("workflow not found by name")
 )
 
-type ScheduleSliceFlag []string
-
 type Schedule struct {
 	workflows []workflow.Workflow
 	byMinute  map[workflow.MinuteOfDay][]workflow.Workflow
@@ -41,15 +39,6 @@ func FromWorkflows(w []workflow.Workflow) Schedule {
 	s.workflows = append(s.workflows, w...)
 
 	return s
-}
-
-func (s *ScheduleSliceFlag) Set(value string) error {
-	*s = append(*s, value)
-	return nil
-}
-
-func (s *ScheduleSliceFlag) String() string {
-	return fmt.Sprintf("%v", *s)
 }
 
 func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
@@ -111,45 +100,6 @@ func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {
 
 	// Return workflow name as it appears in the config vs lower case version
 	return workflow.Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
-}
-
-func (s Schedule) Validate() []error {
-	var errorList []error
-
-	errorList = append(errorList, s.validateWorkflowCount()...)
-	errorList = append(errorList, s.validateWorkflowNameDuplicates()...)
-
-	return errorList
-}
-
-func (s Schedule) validateWorkflowCount() []error {
-	var errorList []error
-
-	count := s.WorkflowCount()
-	if count > MaxWorkflowCount {
-		errorList = append(errorList, fmt.Errorf("%w: got %d", ErrWorkflowCountExceeded, count))
-	}
-
-	return errorList
-}
-
-func (s Schedule) validateWorkflowNameDuplicates() []error {
-	var errorList []error
-	seen := make(map[string]string)
-
-	for _, wf := range s.Workflows() {
-		wfKey := strings.TrimSpace(strings.ToLower(wf.Name))
-
-		key, ok := seen[wfKey]
-		if ok {
-			errorList = append(errorList, fmt.Errorf("%w: duplicate workflow name: '%v' duplicates '%v'",
-				ErrDuplicateWorkflowName, wf.Name, key))
-		} else {
-			seen[wfKey] = wf.Name
-		}
-	}
-
-	return errorList
 }
 
 func (s Schedule) WorkflowCount() int {

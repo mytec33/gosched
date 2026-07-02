@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"git.sr.ht/~mytec/gosched/internal/schedule"
 )
 
 var (
@@ -16,8 +14,19 @@ var (
 	ErrScanManifest = errors.New("unable to scan manifest")
 )
 
-func ParseManifest(path string) (schedule.ScheduleSliceFlag, error) {
-	var schedules schedule.ScheduleSliceFlag
+type WorkflowFiles []string
+
+func (s *WorkflowFiles) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
+
+func (s *WorkflowFiles) String() string {
+	return fmt.Sprintf("%v", *s)
+}
+
+func ParseManifest(path string) (WorkflowFiles, error) {
+	var schedules WorkflowFiles
 
 	file, err := os.Open(path)
 	if err != nil {

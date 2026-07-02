@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 
+	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
@@ -34,7 +35,7 @@ var (
 // ReadWorkflowFiles opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func ReadWorkflowFiles(filename schedule.ScheduleSliceFlag) (schedule.Schedule, []error, error) {
+func ReadWorkflowFiles(filename manifest.WorkflowFiles) (schedule.Schedule, []error, error) {
 	var allValidationErrors []error
 	var allWorkflows []workflow.Workflow
 
