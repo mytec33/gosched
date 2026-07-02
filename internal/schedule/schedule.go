@@ -1,14 +1,13 @@
+// Package schedule arranges trusted workflows into an operational schedule
+// that can be validated, expanded, queried, and printed.
 package schedule
 
 import (
 	"errors"
 	"fmt"
-	"io"
-	"slices"
-	"strconv"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 const (
@@ -29,8 +28,19 @@ var (
 type ScheduleSliceFlag []string
 
 type Schedule struct {
-	workflows []Workflow
-	byMinute  map[types.MinuteOfDay][]Workflow
+	workflows []workflow.Workflow
+	byMinute  map[workflow.MinuteOfDay][]workflow.Workflow
+}
+
+func NewSchedule() Schedule {
+	return Schedule{byMinute: make(map[workflow.MinuteOfDay][]workflow.Workflow)}
+}
+
+func FromWorkflows(w []workflow.Workflow) Schedule {
+	s := NewSchedule()
+	s.workflows = append(s.workflows, w...)
+
+	return s
 }
 
 func (s *ScheduleSliceFlag) Set(value string) error {
@@ -42,18 +52,18 @@ func (s *ScheduleSliceFlag) String() string {
 	return fmt.Sprintf("%v", *s)
 }
 
-func expandCadence(trigger types.Trigger) ([]types.MinuteOfDay, error) {
+func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
 	var interval int
-	var minutes []types.MinuteOfDay
+	var minutes []workflow.MinuteOfDay
 
 	// Minutes are the key focus of this scheduler. Minute is also the smallest
 	// unit of time so we can calc against minutes in day as our upper boundary
 	switch trigger.Every.Measure() {
-	case types.CadenceDay:
+	case workflow.CadenceDay:
 		interval = trigger.Every.Repetition() * MinutesPerDay
-	case types.CadenceHour:
+	case workflow.CadenceHour:
 		interval = trigger.Every.Repetition() * 60
-	case types.CadenceMinute:
+	case workflow.CadenceMinute:
 		interval = trigger.Every.Repetition()
 	}
 
@@ -62,14 +72,14 @@ func expandCadence(trigger types.Trigger) ([]types.MinuteOfDay, error) {
 	}
 
 	for minute := int(*trigger.BeginAt); minute < MinutesPerDay; minute += interval {
-		minutes = append(minutes, types.MinuteOfDay(minute))
+		minutes = append(minutes, workflow.MinuteOfDay(minute))
 	}
 
 	return minutes, nil
 }
 
 func (s *Schedule) ExpandSchedule() error {
-	var newByMinute = make(map[types.MinuteOfDay][]Workflow)
+	var newByMinute = make(map[workflow.MinuteOfDay][]workflow.Workflow)
 
 	for _, wf := range s.workflows {
 		minutes, err := expandCadence(wf.Trigger)
@@ -90,7 +100,7 @@ func (s *Schedule) ExpandSchedule() error {
 	return nil
 }
 
-func (s Schedule) GetWorkflowByName(n string) (Workflow, error) {
+func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {
 	name := strings.ToLower(n)
 
 	for _, v := range s.Workflows() {
@@ -100,77 +110,7 @@ func (s Schedule) GetWorkflowByName(n string) (Workflow, error) {
 	}
 
 	// Return workflow name as it appears in the config vs lower case version
-	return Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
-}
-
-func (s Schedule) Print(method string, w io.Writer) error {
-	switch method {
-	case "config":
-		s.printScheduleConfig(w)
-	case "operational":
-		s.printScheduleOperational(w)
-	default:
-		return fmt.Errorf("unknown print config method: %s", method)
-	}
-
-	return nil
-}
-
-func (s Schedule) printScheduleConfig(w io.Writer) {
-	workflows := s.Workflows()
-	wfWidth := len(strconv.Itoa(len(workflows)))
-
-	for i, v := range workflows {
-		fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure)
-
-		numSteps := len(strconv.Itoa(len(v.Steps)))
-		for j, step := range v.Steps {
-			printStep(numSteps, j, step, w)
-		}
-	}
-}
-
-func (s Schedule) printScheduleOperational(w io.Writer) {
-	minutes := make([]types.MinuteOfDay, 0, len(s.byMinute))
-	for m := range s.byMinute {
-		minutes = append(minutes, m)
-	}
-
-	slices.Sort(minutes)
-
-	for mi, m := range minutes {
-		if mi > 0 {
-			fmt.Fprintln(w)
-		}
-
-		workflows := s.byMinute[m]
-		wfWidth := len(strconv.Itoa(len(workflows)))
-
-		for i, v := range workflows {
-			fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, m.String(), v.Name, v.OnFailure)
-
-			numSteps := len(strconv.Itoa(len(v.Steps)))
-			for j, step := range v.Steps {
-				printStep(numSteps, j, step, w)
-			}
-		}
-	}
-}
-
-func printStep(numSteps int, stepIndex int, step Step, w io.Writer) {
-	var details []string
-
-	details = append(details, fmt.Sprintf("timeout %s", step.Timeout))
-
-	if step.Pause.Duration() > 0 {
-		details = append(details, fmt.Sprintf("pause %s", step.Pause))
-	}
-
-	if len(details) > 0 {
-		fmt.Fprintf(w, "\t\t%*d: %s (%s)\n", numSteps, stepIndex+1, step.Name, strings.Join(details, ", "))
-	} else {
-		fmt.Fprintf(w, "\t\t%*d: %s\n", numSteps, stepIndex+1, step.Name)
-	}
+	return workflow.Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
 }
 
 func (s Schedule) Validate() []error {
@@ -217,13 +157,13 @@ func (s Schedule) WorkflowCount() int {
 	return len(s.workflows)
 }
 
-func (s Schedule) Workflows() []Workflow {
-	out := make([]Workflow, len(s.workflows))
+func (s Schedule) Workflows() []workflow.Workflow {
+	out := make([]workflow.Workflow, len(s.workflows))
 	copy(out, s.workflows)
 
 	return out
 }
 
-func (s Schedule) WorkflowsAtMinute(k types.MinuteOfDay) []Workflow {
+func (s Schedule) WorkflowsAtMinute(k workflow.MinuteOfDay) []workflow.Workflow {
 	return s.byMinute[k]
 }

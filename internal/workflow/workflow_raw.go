@@ -1,11 +1,9 @@
-package schedule
+package workflow
 
 import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 const (
@@ -42,11 +40,11 @@ var (
 )
 
 type WorkflowRaw struct {
-	Name      string             `json:"name"`
-	Trigger   *types.Trigger     `json:"trigger"`
-	OnFailure *types.FailureMode `json:"onFailure"`
-	Retry     *RetryPolicy       `json:"retry"`
-	Steps     []Step             `json:"steps"`
+	Name      string       `json:"name"`
+	Trigger   *Trigger     `json:"trigger"`
+	OnFailure *FailureMode `json:"onFailure"`
+	Retry     *RetryPolicy `json:"retry"`
+	Steps     []Step       `json:"steps"`
 }
 
 func (raw WorkflowRaw) Validate() (Workflow, []error) {
@@ -76,7 +74,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	// Validation checks that the field was provided.
 	if raw.OnFailure == nil {
 		errorList = append(errorList, ErrOnFailureRequired)
-	} else if *raw.OnFailure == types.Retry && raw.Retry == nil {
+	} else if *raw.OnFailure == Retry && raw.Retry == nil {
 		errorList = append(errorList, ErrRetryRequired)
 	} else {
 		workflow.OnFailure = *raw.OnFailure

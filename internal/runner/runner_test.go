@@ -6,25 +6,24 @@ import (
 	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 func TestExitCode(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
-	timeout1s, err := types.ParseConfigDuration("1s")
+	timeout1s, err := workflow.ParseConfigDuration("1s")
 	if err != nil {
 		t.Fatalf("parse config duration 1s: %v", err)
 	}
 
 	tests := []struct {
-		step         schedule.Step
+		step         workflow.Step
 		wantExitCode int
 		wantFailed   bool
 	}{
 		{
-			step: schedule.Step{
+			step: workflow.Step{
 				Name:    "exit 0 succeeds",
 				Program: testprog,
 				Args: []string{
@@ -35,7 +34,7 @@ func TestExitCode(t *testing.T) {
 			wantFailed:   false,
 		},
 		{
-			step: schedule.Step{
+			step: workflow.Step{
 				Name:    "exit 5 fails",
 				Program: testprog,
 				Args: []string{
@@ -46,7 +45,7 @@ func TestExitCode(t *testing.T) {
 			wantFailed:   true,
 		},
 		{
-			step: schedule.Step{
+			step: workflow.Step{
 				Name:    "program not found",
 				Program: "invalid_program_name",
 				Args: []string{
@@ -57,7 +56,7 @@ func TestExitCode(t *testing.T) {
 			wantFailed:   true,
 		},
 		{
-			step: schedule.Step{
+			step: workflow.Step{
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
 				Args: []string{
@@ -90,17 +89,17 @@ func TestExitCode(t *testing.T) {
 func TestTimeout(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
-	timeout1s, err := types.ParseConfigDuration("1s")
+	timeout1s, err := workflow.ParseConfigDuration("1s")
 	if err != nil {
 		t.Fatalf("parse config duration 1s: %v", err)
 	}
 
 	tests := []struct {
-		step       schedule.Step
+		step       workflow.Step
 		wantFailed bool
 	}{
 		{
-			step: schedule.Step{
+			step: workflow.Step{
 				Name:    "timeout earlier than sleep time",
 				Program: testprog,
 				Args: []string{
@@ -127,7 +126,7 @@ func TestTimeout(t *testing.T) {
 func TestDuration(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
-	step := schedule.Step{
+	step := workflow.Step{
 		Name:    "duration within reasonable time",
 		Program: testprog,
 		Args: []string{

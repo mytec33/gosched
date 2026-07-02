@@ -8,15 +8,14 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
-	wf := schedule.Workflow{
+	wf := workflow.Workflow{
 		Name:      "missing program aborts",
-		OnFailure: types.Abort,
-		Steps: []schedule.Step{
+		OnFailure: workflow.Abort,
+		Steps: []workflow.Step{
 			{
 				Name:    "missing",
 				Program: filepath.Join(t.TempDir(), "does-not-exist"),
@@ -35,10 +34,10 @@ func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
 
 func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := schedule.Workflow{
+	wf := workflow.Workflow{
 		Name:      "command failure aborts",
-		OnFailure: types.Abort,
-		Steps: []schedule.Step{
+		OnFailure: workflow.Abort,
+		Steps: []workflow.Step{
 			{
 				Name:    "exit 5",
 				Program: testprog,
@@ -58,10 +57,10 @@ func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 
 func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := schedule.Workflow{
+	wf := workflow.Workflow{
 		Name:      "continue failure is partial",
-		OnFailure: types.Continue,
-		Steps: []schedule.Step{
+		OnFailure: workflow.Continue,
+		Steps: []workflow.Step{
 			{
 				Name:    "missing",
 				Program: filepath.Join(t.TempDir(), "does-not-exist"),
@@ -83,19 +82,19 @@ func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
 		t.Fatalf("expected continue workflow to finish: %v\n%s", err, out)
 	}
 
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial))
+	assertOutputContains(t, out, workflowStatusLog(workflow.StatusPartial))
 	assertOutputContains(t, out, []byte(`role=continues`))
 }
 
 func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := schedule.Workflow{
+	wf := workflow.Workflow{
 		Name:      "retry exhaustion is partial",
-		OnFailure: types.Retry,
-		Retry: &schedule.RetryPolicy{
+		OnFailure: workflow.Retry,
+		Retry: &workflow.RetryPolicy{
 			NumberRetries: 1,
 		},
-		Steps: []schedule.Step{
+		Steps: []workflow.Step{
 			{
 				Name:    "exhausts retries",
 				Program: testprog,
@@ -114,19 +113,19 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 	}
 
 	assertOutputContains(t, out, []byte(`status=exhausted`))
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusPartial))
+	assertOutputContains(t, out, workflowStatusLog(workflow.StatusPartial))
 }
 
 func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 	dir := t.TempDir()
 	markerFile := filepath.Join(dir, "retried")
-	wf := schedule.Workflow{
+	wf := workflow.Workflow{
 		Name:      "retry success is completed",
-		OnFailure: types.Retry,
-		Retry: &schedule.RetryPolicy{
+		OnFailure: workflow.Retry,
+		Retry: &workflow.RetryPolicy{
 			NumberRetries: 1,
 		},
-		Steps: []schedule.Step{
+		Steps: []workflow.Step{
 			{
 				Name:    "succeeds on retry",
 				Program: "/bin/sh",
@@ -145,8 +144,8 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 		t.Fatalf("expected retry workflow to finish: %v\n%s", err, out)
 	}
 
-	assertOutputContains(t, out, workflowStatusLog(types.WorkflowStatusCompleted))
-	if bytes.Contains(out, workflowStatusLog(types.WorkflowStatusPartial)) {
+	assertOutputContains(t, out, workflowStatusLog(workflow.StatusCompleted))
+	if bytes.Contains(out, workflowStatusLog(workflow.StatusPartial)) {
 		t.Fatalf("expected output not to contain partial status\n%s", out)
 	}
 }
@@ -159,11 +158,11 @@ func assertOutputContains(t *testing.T, out []byte, want []byte) {
 	}
 }
 
-func workflowStatusLog(status types.WorkflowStatus) []byte {
+func workflowStatusLog(status workflow.WorkflowStatus) []byte {
 	return []byte(`status=` + status.String())
 }
 
-func executeWorkflowWithCapturedOutput(t *testing.T, wf schedule.Workflow) ([]byte, error) {
+func executeWorkflowWithCapturedOutput(t *testing.T, wf workflow.Workflow) ([]byte, error) {
 	t.Helper()
 
 	var buf bytes.Buffer

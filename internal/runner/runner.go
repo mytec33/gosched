@@ -8,8 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 type StepExecutionResult struct {
@@ -18,7 +17,7 @@ type StepExecutionResult struct {
 	ExitCode int
 }
 
-func runStepCommand(step schedule.Step) StepExecutionResult {
+func runStepCommand(step workflow.Step) StepExecutionResult {
 	var stepResult StepExecutionResult
 
 	var cmd *exec.Cmd
@@ -54,7 +53,7 @@ func runStepCommand(step schedule.Step) StepExecutionResult {
 	return stepResult
 }
 
-func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, index int) StepExecutionResult {
+func RunStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, index int) StepExecutionResult {
 	stdOut.Info("step", "status", "started", "workflow", wfName, "stepIndex", index, "stepName", step.Name,
 		"args", step.Args)
 	stepStart := time.Now()
@@ -77,8 +76,8 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step schedule.Step, inde
 	return stepResult
 }
 
-func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step,
-	stepIndex int, retry *schedule.RetryPolicy) types.WorkflowStatus {
+func RunStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
+	stepIndex int, retry *workflow.RetryPolicy) workflow.WorkflowStatus {
 	var retryResult StepExecutionResult
 
 	for attempt := 1; attempt <= retry.NumberRetries; attempt++ {
@@ -93,14 +92,14 @@ func RunStepRetries(stdOut *slog.Logger, wfName string, step schedule.Step,
 
 		retryResult = RunStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
-			return types.WorkflowStatusCompleted
+			return workflow.StatusCompleted
 		}
 	}
 
 	stdOut.Error("step retry", "stepName", step.Name, "stepIndex", stepIndex,
 		"status", "exhausted", "retries", retry.NumberRetries)
 
-	return types.WorkflowStatusPartial
+	return workflow.StatusPartial
 }
 
 func (s StepExecutionResult) Failed() bool {

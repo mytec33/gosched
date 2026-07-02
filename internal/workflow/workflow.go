@@ -1,0 +1,36 @@
+// Package workflow defines trusted workflow values and the validation rules
+// used to build them from raw configuration.
+package workflow
+
+type Workflow struct {
+	Name      string       `json:"name"`
+	Trigger   Trigger      `json:"trigger"`
+	OnFailure FailureMode  `json:"onFailure"`
+	Retry     *RetryPolicy `json:"retry"`
+	Steps     []Step       `json:"steps"`
+}
+
+type RetryPolicy struct {
+	NumberRetries int `json:"numberRetries"`
+	PauseSeconds  int `json:"pauseSeconds"`
+}
+
+type Step struct {
+	Name    string         `json:"name"`
+	Program string         `json:"program"`
+	Args    []string       `json:"args"`
+	Timeout ConfigDuration `json:"timeout"`
+	Pause   ConfigDuration `json:"pause"`
+}
+
+func WorkflowAbortsOnFailure(wf Workflow) bool {
+	return wf.OnFailure == Abort
+}
+
+func WorkflowContinuesOnFailure(wf Workflow) bool {
+	return wf.OnFailure == Continue
+}
+
+func WorkflowRetriesOnFailure(wf Workflow) bool {
+	return wf.OnFailure == Retry
+}

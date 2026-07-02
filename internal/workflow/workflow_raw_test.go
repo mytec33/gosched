@@ -1,12 +1,10 @@
-package schedule
+package workflow
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
-
-	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func assertOnlyValidationError(t *testing.T, validationErrors []error, want error) {
@@ -32,13 +30,13 @@ func assertOnlyValidationError(t *testing.T, validationErrors []error, want erro
 }
 
 func validWorkflowRaw() WorkflowRaw {
-	onFailure := types.Continue
-	every, _ := types.ParseCadence("1d")
-	beginAt, _ := types.ParseMinuteOfDay("10:35")
+	onFailure := Continue
+	every, _ := ParseCadence("1d")
+	beginAt, _ := ParseMinuteOfDay("10:35")
 
 	return WorkflowRaw{
 		Name: "Workflow",
-		Trigger: &types.Trigger{
+		Trigger: &Trigger{
 			Every:   &every,
 			BeginAt: &beginAt,
 		},
@@ -92,7 +90,7 @@ func TestWorkflowValidate(t *testing.T) {
 		{
 			name: "retry policy requires retry config",
 			mutate: func(wf *WorkflowRaw) {
-				onFailure := types.Retry
+				onFailure := Retry
 				wf.OnFailure = &onFailure
 				wf.Retry = nil
 			},

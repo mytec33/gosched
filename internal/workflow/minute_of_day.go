@@ -1,5 +1,4 @@
-// Package types provides types specific to this program
-package types
+package workflow
 
 import (
 	"encoding/json"

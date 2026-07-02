@@ -1,4 +1,4 @@
-package types
+package workflow
 
 type CadenceMeasure struct {
 	v string

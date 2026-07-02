@@ -1,11 +1,11 @@
-package schedule
+package decode
 
 import (
 	"errors"
 	"strings"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 func TestDecode_InvalidJSON(t *testing.T) {
@@ -24,10 +24,10 @@ func TestDecode_InvalidJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, errorList, err := DecodeWorkflows(r)
+			_, errorList, err := DecodeWorkflowFile(r)
 			if err == nil {
 				t.Fatal("expected error, got no error")
-			} else if !errors.Is(err, ErrDecodeSchedule) {
+			} else if !errors.Is(err, ErrDecodeWorkflow) {
 				t.Fatalf("%v: expected ErrDecodeSchedule, got %v", tt.name, err)
 			}
 
@@ -126,7 +126,7 @@ func TestDecode_ValidInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, errorList, err := DecodeWorkflows(r)
+			_, errorList, err := DecodeWorkflowFile(r)
 			if err != nil {
 				t.Fatalf("%v: expected no error, got %v", tt.name, err)
 			}
@@ -171,13 +171,13 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "time empty", json: InvalidWorkflowTimeEmpty, wantError: types.ErrTimeFormatInvalid},
+		{name: "time empty", json: InvalidWorkflowTimeEmpty, wantError: workflow.ErrTimeFormatInvalid},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, errorList, err := DecodeWorkflows(r)
+			_, errorList, err := DecodeWorkflowFile(r)
 
 			if err == nil {
 				t.Fatalf("%s: expected decode/system error: got %v, want %v", tt.name, err, tt.wantError)
@@ -201,13 +201,13 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		json      string
 		wantError error
 	}{
-		{name: "invalid retry config", json: InvalidRetryConfiguration, wantError: ErrRetryRequired},
+		{name: "invalid retry config", json: InvalidRetryConfiguration, wantError: workflow.ErrRetryRequired},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeWorkflows(r)
+			_, validationErrors, err := DecodeWorkflowFile(r)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -218,4 +218,14 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 			}
 		})
 	}
+}
+
+func hasError(errorList []error, target error) bool {
+	for _, e := range errorList {
+		if errors.Is(e, target) {
+			return true
+		}
+	}
+
+	return false
 }

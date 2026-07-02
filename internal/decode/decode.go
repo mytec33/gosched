@@ -1,4 +1,6 @@
-package schedule
+// Package decode reads workflow configuration input and converts it into
+// trusted workflow values or validation errors.
+package decode
 
 import (
 	"encoding/json"
@@ -7,7 +9,8 @@ import (
 	"io"
 	"os"
 
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/schedule"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 type FileValidationError struct {
@@ -24,22 +27,21 @@ func (e FileValidationError) Unwrap() error {
 }
 
 var (
-	ErrDecodeSchedule = errors.New("decode schedule")
+	ErrDecodeWorkflow = errors.New("decode workflow")
 	ErrFileIOError    = errors.New("error opening file")
 )
 
-// ReadScheduleFiles opens the schedule file and delegates decoding and validation.
+// ReadWorkflowFiles opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
+func ReadWorkflowFiles(filename schedule.ScheduleSliceFlag) (schedule.Schedule, []error, error) {
 	var allValidationErrors []error
-	var schedule Schedule
-	schedule.byMinute = make(map[types.MinuteOfDay][]Workflow)
+	var allWorkflows []workflow.Workflow
 
 	for _, file := range filename {
-		s, validationErrors, err := decodeScheduleFile(file)
+		wfs, validationErrors, err := decodeWorkflows(file)
 		if err != nil {
-			return Schedule{}, validationErrors, err
+			return schedule.Schedule{}, validationErrors, err
 		}
 
 		if len(validationErrors) > 0 {
@@ -53,51 +55,51 @@ func ReadScheduleFiles(filename ScheduleSliceFlag) (Schedule, []error, error) {
 			continue
 		}
 
-		schedule.workflows = append(schedule.workflows, s.workflows...)
+		allWorkflows = append(allWorkflows, wfs...)
 	}
 	if len(allValidationErrors) > 0 {
-		return Schedule{}, allValidationErrors, nil
+		return schedule.Schedule{}, allValidationErrors, nil
 	}
 
-	return schedule, nil, nil
+	sched := schedule.FromWorkflows(allWorkflows)
+	return sched, nil, nil
 }
 
-func decodeScheduleFile(file string) (Schedule, []error, error) {
+func decodeWorkflows(file string) ([]workflow.Workflow, []error, error) {
 	f, err := os.Open(file)
 	if err != nil {
-		return Schedule{}, nil, fmt.Errorf("%w: %q: %w", ErrFileIOError, file, err)
+		return []workflow.Workflow{}, nil, fmt.Errorf("%w: %q: %w", ErrFileIOError, file, err)
 	}
 	defer f.Close()
 
-	s, validationErrors, err := DecodeWorkflows(f)
+	wfs, validationErrors, err := DecodeWorkflowFile(f)
 	if err != nil {
-		return Schedule{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
+		return []workflow.Workflow{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
 	}
 
-	return s, validationErrors, nil
+	return wfs, validationErrors, nil
 }
 
-// DecodeWorkflows reads JSON and performs validation.
+// DecodeWorkflowFile reads JSON and performs validation.
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
-func DecodeWorkflows(r io.Reader) (Schedule, []error, error) {
-	s := Schedule{byMinute: make(map[types.MinuteOfDay][]Workflow)}
-	var workflows []Workflow
-	var workflowsRaw []WorkflowRaw
+func DecodeWorkflowFile(r io.Reader) ([]workflow.Workflow, []error, error) {
+	var workflows []workflow.Workflow
+	var workflowsRaw []workflow.WorkflowRaw
 
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 	err := dec.Decode(&workflowsRaw)
 	if err != nil {
-		return s, nil, fmt.Errorf("%w: %w", ErrDecodeSchedule, err)
+		return []workflow.Workflow{}, nil, fmt.Errorf("%w: %w", ErrDecodeWorkflow, err)
 	}
 
 	// Enforce exactly one top-level JSON value; allow only trailing whitespace.
 	err = dec.Decode(&struct{}{})
 	if err == nil {
-		return s, nil, fmt.Errorf("%w: trailing data", ErrDecodeSchedule)
+		return []workflow.Workflow{}, nil, fmt.Errorf("%w: trailing data", ErrDecodeWorkflow)
 	} else if !errors.Is(err, io.EOF) {
-		return s, nil, fmt.Errorf("%w: trailing data: %w", ErrDecodeSchedule, err)
+		return []workflow.Workflow{}, nil, fmt.Errorf("%w: trailing data: %w", ErrDecodeWorkflow, err)
 	}
 
 	// Loop through workflows to validate and bail if anything found
@@ -115,10 +117,8 @@ func DecodeWorkflows(r io.Reader) (Schedule, []error, error) {
 	}
 
 	if len(valErrs) > 0 {
-		return Schedule{}, valErrs, nil
+		return []workflow.Workflow{}, valErrs, nil
 	}
 
-	s.workflows = workflows
-
-	return s, nil, nil
+	return workflows, nil, nil
 }

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"git.sr.ht/~mytec/gosched/internal/decode"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
 	"git.sr.ht/~mytec/gosched/internal/manifest"
@@ -72,7 +73,7 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	sched, decodeErrors, err := schedule.ReadScheduleFiles(scheduleFiles)
+	sched, decodeErrors, err := decode.ReadWorkflowFiles(scheduleFiles)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
@@ -162,7 +163,7 @@ func displayCfgErrors(fileErrors []error) {
 	logging.StdOut.Error("startup", "reason", "configuration invalid")
 
 	for _, err := range fileErrors {
-		var fileErr schedule.FileValidationError
+		var fileErr decode.FileValidationError
 
 		if errors.As(err, &fileErr) {
 			logging.StdOut.Error("startup", "file", fileErr.File,

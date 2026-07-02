@@ -1,32 +1,30 @@
-package schedule
+package workflow
 
 import (
 	"testing"
-
-	"git.sr.ht/~mytec/gosched/internal/types"
 )
 
 func TestWorkflowFailureModeChecks(t *testing.T) {
 	tests := []struct {
 		name         string
-		onFailure    types.FailureMode
+		onFailure    FailureMode
 		wantAbort    bool
 		wantContinue bool
 		wantRetry    bool
 	}{
 		{
 			name:      "abort",
-			onFailure: types.Abort,
+			onFailure: Abort,
 			wantAbort: true,
 		},
 		{
 			name:         "continue",
-			onFailure:    types.Continue,
+			onFailure:    Continue,
 			wantContinue: true,
 		},
 		{
 			name:      "retry",
-			onFailure: types.Retry,
+			onFailure: Retry,
 			wantRetry: true,
 		},
 	}

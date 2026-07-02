@@ -6,89 +6,89 @@ import (
 	"fmt"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 func TestPrintScheduleConfig(t *testing.T) {
-	m1145, err := types.ParseMinuteOfDay("11:45")
+	m1145, err := workflow.ParseMinuteOfDay("11:45")
 	if err != nil {
 		t.Fatalf("parse 11:45: %v", err)
 	}
 
-	m1146, err := types.ParseMinuteOfDay("11:46")
+	m1146, err := workflow.ParseMinuteOfDay("11:46")
 	if err != nil {
 		t.Fatalf("parse 11:46: %v", err)
 	}
 
-	m1247, err := types.ParseMinuteOfDay("12:47")
+	m1247, err := workflow.ParseMinuteOfDay("12:47")
 	if err != nil {
 		t.Fatalf("parse 12:47: %v", err)
 	}
 
-	c15m, err := types.ParseCadence("1h")
+	c15m, err := workflow.ParseCadence("1h")
 	if err != nil {
 		t.Fatalf("parse cadence 1h: %v", err)
 	}
 
-	pause5s, err := types.ParseConfigDuration("5s")
+	pause5s, err := workflow.ParseConfigDuration("5s")
 	if err != nil {
 		t.Fatalf("parse config duration 5s: %v", err)
 	}
 
-	timeout30s, err := types.ParseConfigDuration("30s")
+	timeout30s, err := workflow.ParseConfigDuration("30s")
 	if err != nil {
 		t.Fatalf("parse config duration 30s: %v", err)
 	}
 
-	timeout1800s, err := types.ParseConfigDuration("1800s")
+	timeout1800s, err := workflow.ParseConfigDuration("1800s")
 	if err != nil {
 		t.Fatalf("parse config duration 1800s: %v", err)
 	}
 
 	s := Schedule{
-		workflows: []Workflow{
+		workflows: []workflow.Workflow{
 			{
 				Name: "Workflow 1",
-				Trigger: types.Trigger{
+				Trigger: workflow.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1146,
 				},
-				OnFailure: types.Abort,
-				Steps: []Step{
+				OnFailure: workflow.Abort,
+				Steps: []workflow.Step{
 					{Name: "step 1", Timeout: timeout30s},
 				},
 			},
 			{
 				Name: "Workflow 1",
-				Trigger: types.Trigger{
+				Trigger: workflow.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: types.Abort,
-				Steps: []Step{
+				OnFailure: workflow.Abort,
+				Steps: []workflow.Step{
 					{Name: "step 1", Timeout: timeout30s, Pause: pause5s},
 					{Name: "step 2", Timeout: timeout30s},
 				},
 			},
 			{
 				Name: "Workflow 2",
-				Trigger: types.Trigger{
+				Trigger: workflow.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1145,
 				},
-				OnFailure: types.Continue,
-				Steps: []Step{
+				OnFailure: workflow.Continue,
+				Steps: []workflow.Step{
 					{Name: "step 1", Timeout: timeout30s},
 				},
 			},
 			{
 				Name: "Workflow 1",
-				Trigger: types.Trigger{
+				Trigger: workflow.Trigger{
 					Every:   &c15m,
 					BeginAt: &m1247,
 				},
-				OnFailure: types.Retry,
-				Steps: []Step{
+				OnFailure: workflow.Retry,
+				Steps: []workflow.Step{
 					{Name: "step 1", Timeout: timeout1800s},
 				},
 			},
@@ -116,52 +116,52 @@ func TestPrintScheduleConfig(t *testing.T) {
 }
 
 func TestPrintScheduleOperational(t *testing.T) {
-	c15m, err := types.ParseCadence("1h")
+	c15m, err := workflow.ParseCadence("1h")
 	if err != nil {
 		t.Fatalf("parse cadence 1h: %v", err)
 	}
 
-	m1145, err := types.ParseMinuteOfDay("11:45")
+	m1145, err := workflow.ParseMinuteOfDay("11:45")
 	if err != nil {
 		t.Fatalf("parse 11:45: %v", err)
 	}
 
-	m1146, err := types.ParseMinuteOfDay("11:46")
+	m1146, err := workflow.ParseMinuteOfDay("11:46")
 	if err != nil {
 		t.Fatalf("parse 11:46: %v", err)
 	}
 
-	m1247, err := types.ParseMinuteOfDay("12:47")
+	m1247, err := workflow.ParseMinuteOfDay("12:47")
 	if err != nil {
 		t.Fatalf("parse 12:47: %v", err)
 	}
 
-	pause5s, err := types.ParseConfigDuration("5s")
+	pause5s, err := workflow.ParseConfigDuration("5s")
 	if err != nil {
 		t.Fatalf("parse config duration 5s: %v", err)
 	}
 
-	timeOut30s, err := types.ParseConfigDuration("30s")
+	timeOut30s, err := workflow.ParseConfigDuration("30s")
 	if err != nil {
 		t.Fatalf("parse config duration 30s: %v", err)
 	}
 
-	timeOut1800s, err := types.ParseConfigDuration("1800s")
+	timeOut1800s, err := workflow.ParseConfigDuration("1800s")
 	if err != nil {
 		t.Fatalf("parse config duration 1800s: %v", err)
 	}
 
 	s := Schedule{
-		byMinute: map[types.MinuteOfDay][]Workflow{
+		byMinute: map[workflow.MinuteOfDay][]workflow.Workflow{
 			m1146: {
 				{
 					Name: "Workflow 3",
-					Trigger: types.Trigger{
+					Trigger: workflow.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1146,
 					},
-					OnFailure: types.Abort,
-					Steps: []Step{
+					OnFailure: workflow.Abort,
+					Steps: []workflow.Step{
 						{Name: "step 1", Timeout: timeOut30s},
 					},
 				},
@@ -169,24 +169,24 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1145: {
 				{
 					Name: "Workflow 1",
-					Trigger: types.Trigger{
+					Trigger: workflow.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: types.Abort,
-					Steps: []Step{
+					OnFailure: workflow.Abort,
+					Steps: []workflow.Step{
 						{Name: "step 1", Timeout: timeOut30s, Pause: pause5s},
 						{Name: "step 2", Timeout: timeOut30s},
 					},
 				},
 				{
 					Name: "Workflow 2",
-					Trigger: types.Trigger{
+					Trigger: workflow.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1145,
 					},
-					OnFailure: types.Continue,
-					Steps: []Step{
+					OnFailure: workflow.Continue,
+					Steps: []workflow.Step{
 						{Name: "step 1", Timeout: timeOut30s},
 					},
 				},
@@ -194,12 +194,12 @@ func TestPrintScheduleOperational(t *testing.T) {
 			m1247: {
 				{
 					Name: "Workflow 1",
-					Trigger: types.Trigger{
+					Trigger: workflow.Trigger{
 						Every:   &c15m,
 						BeginAt: &m1247,
 					},
-					OnFailure: types.Retry,
-					Steps: []Step{
+					OnFailure: workflow.Retry,
+					Steps: []workflow.Step{
 						{Name: "step 1", Timeout: timeOut1800s},
 					},
 				},
@@ -237,7 +237,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 		{
 			name: "Identical",
 			schedule: Schedule{
-				workflows: []Workflow{
+				workflows: []workflow.Workflow{
 					{Name: "Workflow 1"},
 					{Name: "Workflow 2"},
 					{Name: "Workflow 1"},
@@ -247,7 +247,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 		{
 			name: "Leading/trailing whitespace",
 			schedule: Schedule{
-				workflows: []Workflow{
+				workflows: []workflow.Workflow{
 					{Name: "Workflow 1\t"},
 					{Name: " Workflow 1"},
 				},
@@ -256,7 +256,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 		{
 			name: "Mixed case",
 			schedule: Schedule{
-				workflows: []Workflow{
+				workflows: []workflow.Workflow{
 					{Name: "Workflow 1"},
 					{Name: "worKfLow 1"},
 				},
@@ -286,7 +286,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 
 func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
 	s := Schedule{
-		workflows: []Workflow{
+		workflows: []workflow.Workflow{
 			{Name: "Workflow 1"},
 			{Name: "Workflow 2"},
 			{Name: "workflow 3"},
@@ -338,10 +338,10 @@ func hasError(errorList []error, target error) bool {
 	return false
 }
 
-func makeWorkflows(n int) []Workflow {
-	workflows := make([]Workflow, 0, n)
+func makeWorkflows(n int) []workflow.Workflow {
+	workflows := make([]workflow.Workflow, 0, n)
 	for i := range n {
-		workflows = append(workflows, Workflow{
+		workflows = append(workflows, workflow.Workflow{
 			Name: fmt.Sprintf("Workflow %d", i),
 		})
 	}
@@ -368,17 +368,17 @@ func TestExpandCadence(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cadence, err := types.ParseCadence(tt.every)
+			cadence, err := workflow.ParseCadence(tt.every)
 			if err != nil {
 				t.Fatalf("parse cadence %q: %v", tt.every, err)
 			}
 
-			beginAt, err := types.ParseMinuteOfDay(tt.beginAt)
+			beginAt, err := workflow.ParseMinuteOfDay(tt.beginAt)
 			if err != nil {
 				t.Fatalf("parse beginAt %q: %v", tt.beginAt, err)
 			}
 
-			trigger := types.Trigger{
+			trigger := workflow.Trigger{
 				Every:   &cadence,
 				BeginAt: &beginAt,
 			}
@@ -405,26 +405,26 @@ func TestExpandCadence(t *testing.T) {
 }
 
 func TestExpandSchedule_Idempotent(t *testing.T) {
-	cadence, err := types.ParseCadence("15m")
+	cadence, err := workflow.ParseCadence("15m")
 	if err != nil {
 		t.Fatalf("parse cadence: %v", err)
 	}
 
-	beginAt, err := types.ParseMinuteOfDay("00:00")
+	beginAt, err := workflow.ParseMinuteOfDay("00:00")
 	if err != nil {
 		t.Fatalf("parse beginAt: %v", err)
 	}
 
 	s := Schedule{
-		workflows: []Workflow{
+		workflows: []workflow.Workflow{
 			{
 				Name: "Jackpots",
-				Trigger: types.Trigger{
+				Trigger: workflow.Trigger{
 					Every:   &cadence,
 					BeginAt: &beginAt,
 				},
-				OnFailure: types.Retry,
-				Steps: []Step{
+				OnFailure: workflow.Retry,
+				Steps: []workflow.Step{
 					{Name: "step 1", Program: "program"},
 				},
 			},

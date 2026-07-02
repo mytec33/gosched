@@ -9,7 +9,7 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/logging"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/types"
+	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
 const (
@@ -53,7 +53,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 
 	// Capture lastProcessed before aligning so the first post-alignment minute
 	// is treated as new work rather than a duplicate time.
-	lastProcessed := types.MinuteOfDayFromTime(time.Now())
+	lastProcessed := workflow.MinuteOfDayFromTime(time.Now())
 
 	err := alignToNextMinuteBoundary(ctx)
 	if err != nil {
@@ -62,7 +62,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 
 	for {
 		now := time.Now()
-		currentMinute := types.MinuteOfDayFromTime(now)
+		currentMinute := workflow.MinuteOfDayFromTime(now)
 		minuteDiff := currentMinute.MinutesSince(lastProcessed)
 
 		switch minuteDiff {
@@ -131,7 +131,7 @@ func RunScheduleOnce(sched schedule.Schedule, wfName string) error {
 	return nil
 }
 
-func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule, running *sync.WaitGroup) int {
+func runSchedulerTick(currentMinute workflow.MinuteOfDay, s schedule.Schedule, running *sync.WaitGroup) int {
 	logging.StdOut.Info("run scheduler tick", "current_minute", currentMinute.String())
 
 	tasks := s.WorkflowsAtMinute(currentMinute)
@@ -141,12 +141,12 @@ func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule, runn
 
 	for _, task := range tasks {
 		running.Add(1)
-		go func(w schedule.Workflow) {
+		go func(w workflow.Workflow) {
 			defer running.Done()
 
 			err := executeWorkflow(w)
 			if err != nil {
-				logging.StdOut.Error("workflow", "status", types.WorkflowStatusFailed.String(),
+				logging.StdOut.Error("workflow", "status", workflow.StatusFailed.String(),
 					"error", err)
 			}
 		}(task)
@@ -154,7 +154,7 @@ func runSchedulerTick(currentMinute types.MinuteOfDay, s schedule.Schedule, runn
 	return len(tasks)
 }
 
-func executeWorkflow(wf schedule.Workflow) error {
+func executeWorkflow(wf workflow.Workflow) error {
 	workflowStart := time.Now()
 
 	wfLog := logging.NewWorkflowLogger(wf.Name)
@@ -163,7 +163,7 @@ func executeWorkflow(wf schedule.Workflow) error {
 	lockKey := wf.Name
 	existingID, acquired := schedule.RunningWorkflows.TryAcquire(lockKey, wfLog.WfRunID)
 	if !acquired {
-		stdOut.Error("workflow", "status", types.WorkflowStatusSkipped.String(), "reason",
+		stdOut.Error("workflow", "status", workflow.StatusSkipped.String(), "reason",
 			"workflow already running", "existingRunID", existingID)
 		return nil
 	}
@@ -172,25 +172,25 @@ func executeWorkflow(wf schedule.Workflow) error {
 	numSteps := len(wf.Steps)
 	stdOut.Info("workflow", "name", wf.Name, "status", "started", "stepCount", numSteps)
 
-	workflowStatus := types.WorkflowStatusCompleted
+	workflowStatus := workflow.StatusCompleted
 	for i, step := range wf.Steps {
 		result := RunStepAttempt(stdOut, wf.Name, step, i)
 
 		if result.Err != nil {
-			if schedule.WorkflowAbortsOnFailure(wf) {
+			if workflow.WorkflowAbortsOnFailure(wf) {
 				stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", wf.OnFailure)
 				return fmt.Errorf("%w: %s", ErrRunCommandAbortsOnError, result.Err)
 			}
 
-			if schedule.WorkflowContinuesOnFailure(wf) {
-				workflowStatus = types.WorkflowStatusPartial
+			if workflow.WorkflowContinuesOnFailure(wf) {
+				workflowStatus = workflow.StatusPartial
 				continue
 			}
 
-			if schedule.WorkflowRetriesOnFailure(wf) {
+			if workflow.WorkflowRetriesOnFailure(wf) {
 				retryStatus := RunStepRetries(stdOut, wf.Name, step, i, wf.Retry)
-				if retryStatus == types.WorkflowStatusPartial {
-					workflowStatus = types.WorkflowStatusPartial
+				if retryStatus == workflow.StatusPartial {
+					workflowStatus = workflow.StatusPartial
 				}
 			}
 		}
