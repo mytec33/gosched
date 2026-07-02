@@ -1,4 +1,4 @@
-package schedule
+package runner
 
 import (
 	"fmt"

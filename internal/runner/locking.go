@@ -1,8 +1,8 @@
-package schedule
+package runner
 
 import "sync"
 
-var RunningWorkflows = NewSafeMap()
+var workflowLocks = NewSafeMap()
 
 type SafeMap struct {
 	mu   sync.Mutex
