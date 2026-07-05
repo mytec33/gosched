@@ -19,14 +19,14 @@ func GenerateExampleConfig() {
 					"--file",
 					"some_file_name"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			},
 			{
 				"name": "step 2",
 				"program": "/usr/bin/some_program",
 				"args": [],
-				"pause": 0
+				"pause": "0s"
 			}
 		]
 	},
