@@ -12,7 +12,6 @@ import (
 var (
 	ErrCadenceEmpty          = errors.New("cadence string cannot be empty")
 	ErrCadenceTooShort       = errors.New("cadence string must include both a number and a unit")
-	ErrCadenceTooLong        = errors.New("cadence string is too long")
 	ErrCadenceNumNonASCII    = errors.New("cadence numeric value must use ASCII digits 0-9")
 	ErrCadenceNumInvalid     = errors.New("cadence numeric value is invalid")
 	ErrCadenceBoundsInvalid  = errors.New("cadence value of zero found must be between 1 and 60")

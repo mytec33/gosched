@@ -22,8 +22,6 @@ const (
 	ExitNoConfig               int = 1
 	ExitValidation             int = 3
 	ExitInvalidArgs            int = 4
-	ExitRunOnce                int = 5
-	ExitDeprecatedScheduleFlag int = 7
 	ExitManifestError          int = 8
 	ExitWorkflowNotFoundByName int = 9
 	ExitExecuteWorkflow        int = 10

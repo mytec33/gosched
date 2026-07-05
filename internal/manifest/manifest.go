@@ -16,15 +16,6 @@ var (
 
 type WorkflowFiles []string
 
-func (s *WorkflowFiles) Set(value string) error {
-	*s = append(*s, value)
-	return nil
-}
-
-func (s *WorkflowFiles) String() string {
-	return fmt.Sprintf("%v", *s)
-}
-
 func ParseManifest(path string) (WorkflowFiles, error) {
 	var schedules WorkflowFiles
 

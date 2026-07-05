@@ -102,6 +102,7 @@ func RunStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
 	return workflow.StatusPartial
 }
 
+// Failed receiver function only used in tests
 func (s StepExecutionResult) Failed() bool {
 	return s.Err != nil || s.ExitCode != 0
 }

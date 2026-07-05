@@ -17,7 +17,6 @@ var StdOut = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 type WorkflowLogger struct {
 	WfRunID string
 	Out     *slog.Logger
-	Err     *slog.Logger
 }
 
 func NewWorkflowLogger(workflowName string) WorkflowLogger {
