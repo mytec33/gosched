@@ -40,11 +40,13 @@ var (
 )
 
 type WorkflowRaw struct {
-	Name      string       `json:"name"`
-	Trigger   *Trigger     `json:"trigger"`
-	OnFailure *FailureMode `json:"onFailure"`
-	Retry     *RetryPolicy `json:"retry"`
-	Steps     []Step       `json:"steps"`
+	Name           string       `json:"name"`
+	Enabled        bool         `json:"enabled"`
+	DisabledReason *string      `json:"disabledReason"`
+	Trigger        *Trigger     `json:"trigger"`
+	OnFailure      *FailureMode `json:"onFailure"`
+	Retry          *RetryPolicy `json:"retry"`
+	Steps          []Step       `json:"steps"`
 }
 
 func (raw WorkflowRaw) Validate() (Workflow, []error) {
