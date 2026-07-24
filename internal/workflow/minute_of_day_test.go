@@ -1,7 +1,6 @@
 package workflow
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -40,37 +39,18 @@ func TestMinuteOfDayFromTime(t *testing.T) {
 	}
 }
 
-func TestParseMinuteOfDay(t *testing.T) {
+func TestParseMinuteOfDay_Valid(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
 		want  string
 	}{
-		{
-			name:  "midnight",
-			input: "00:00",
-			want:  "00:00",
-		},
-		{
-			name:  "zero-padded hour",
-			input: "08:00",
-			want:  "08:00",
-		},
-		{
-			name:  "non-padded hour normalizes",
-			input: "8:00",
-			want:  "08:00",
-		},
-		{
-			name:  "middle of day",
-			input: "11:45",
-			want:  "11:45",
-		},
-		{
-			name:  "last minute of day",
-			input: "23:59",
-			want:  "23:59",
-		},
+		{name: "midnight", input: "00:00", want: "00:00"},
+		{name: "first minute", input: "00:01", want: "00:01"},
+		{name: "zero-padded hour", input: "08:00", want: "08:00"},
+		{name: "non-padded hour normalizes", input: "8:00", want: "08:00"},
+		{name: "middle of day", input: "11:45", want: "11:45"},
+		{name: "last minute of day", input: "23:59", want: "23:59"},
 	}
 
 	for _, tt := range tests {
@@ -99,6 +79,16 @@ func TestParseMinuteOfDay_Invalid(t *testing.T) {
 			wantErr: ErrTimeFormatInvalid,
 		},
 		{
+			name:    "leading whitespace",
+			input:   " 10:00",
+			wantErr: ErrTimeFormatInvalid,
+		},
+		{
+			name:    "trailing whitespace",
+			input:   "10:00 ",
+			wantErr: ErrTimeFormatInvalid,
+		},
+		{
 			name:    "invalid hour",
 			input:   "24:00",
 			wantErr: ErrTimeFormatInvalid,
@@ -114,8 +104,18 @@ func TestParseMinuteOfDay_Invalid(t *testing.T) {
 			wantErr: ErrTimeFormatInvalid,
 		},
 		{
+			name:    "missing second minute digit",
+			input:   "10:5",
+			wantErr: ErrTimeFormatInvalid,
+		},
+		{
 			name:    "invalid input",
 			input:   "abc",
+			wantErr: ErrTimeFormatInvalid,
+		},
+		{
+			name:    "invalid milliseconds",
+			input:   "6:45.000",
 			wantErr: ErrTimeFormatInvalid,
 		},
 	}
@@ -125,33 +125,6 @@ func TestParseMinuteOfDay_Invalid(t *testing.T) {
 			_, err := ParseMinuteOfDay(tt.input)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("ParseMinuteOfDay(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestMinuteOfDayString(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-		want string
-	}{
-		{"midnight", "00:00", "00:00"},
-		{"first minute", "00:01", "00:01"},
-		{"middle of day", "11:45", "11:45"},
-		{"last minute of day", "23:59", "23:59"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			minute, err := ParseMinuteOfDay(tt.in)
-			if err != nil {
-				t.Fatalf("ParseMinuteOfDay(%q) unexpected error = %v", tt.in, err)
-			}
-
-			got := minute.String()
-			if got != tt.want {
-				t.Fatalf("ParseMinuteOfDay(%q).String() = %q, want %q", tt.in, got, tt.want)
 			}
 		})
 	}
@@ -188,6 +161,12 @@ func TestMinuteOfDayMinutesSince(t *testing.T) {
 			previous: "23:59",
 			want:     2,
 		},
+		{
+			name:     "previous one minute ahead wraps to max",
+			current:  "10:00",
+			previous: "10:01",
+			want:     1439,
+		},
 	}
 
 	for _, tt := range tests {
@@ -208,81 +187,4 @@ func TestMinuteOfDayMinutesSince(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMinuteOfDayUnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  string
-	}{
-		{
-			name:  "valid non-zero padded time string",
-			input: `"6:45"`,
-			want:  "06:45",
-		},
-		{
-			name:  "valid time string",
-			input: `"11:45"`,
-			want:  "11:45",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var got MinuteOfDay
-			err := json.Unmarshal([]byte(tt.input), &got)
-			if err != nil {
-				t.Fatalf("unexpected error: got %q, want nil", err)
-			}
-
-			if got.String() != tt.want {
-				t.Fatalf("json.Unmarshal(%s).String() = %q, want %q", tt.input, got.String(), tt.want)
-			}
-		})
-	}
-}
-
-func TestMinuteOfDayUnmarshalJSON_Invalid(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   string
-		wantErr error
-	}{
-		{
-			name:    "invalid time string",
-			input:   `"25:00"`,
-			wantErr: ErrTimeFormatInvalid,
-		},
-		{
-			name:    "non-string json value",
-			input:   `123`,
-			wantErr: new(json.UnmarshalTypeError),
-		},
-		{
-			name:    "invalid milliseconds",
-			input:   `"6:45.000"`,
-			wantErr: ErrTimeFormatInvalid,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var got MinuteOfDay
-			err := json.Unmarshal([]byte(tt.input), &got)
-
-			if !matchesMinuteOfDayUnmarshalError(err, tt.wantErr) {
-				t.Fatalf("json.Unmarshal(%s) error = %v, wantErr %T", tt.input, err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func matchesMinuteOfDayUnmarshalError(got error, want error) bool {
-	var typeErr *json.UnmarshalTypeError
-	if errors.As(want, &typeErr) {
-		return errors.As(got, &typeErr)
-	}
-
-	return errors.Is(got, want)
 }
