@@ -10,7 +10,7 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 )
 
-func assertTestProgramOutoupt(t *testing.T, out []byte, role string) {
+func assertTestProgramOutput(t *testing.T, out []byte, role string) {
 	roleName := "role=" + role
 	expected := [][]byte{
 		[]byte(`| START |`),
@@ -86,7 +86,7 @@ func TestSleepDuration(t *testing.T) {
 					"elapsed time too long: want <= %v got %v", tt.maxDuration, elapsed)
 			}
 
-			assertTestProgramOutoupt(t, out, tt.name)
+			assertTestProgramOutput(t, out, tt.name)
 
 			if cmd.ProcessState.ExitCode() != tt.wantExitCode {
 				t.Fatalf("exit code: want %v, got %v", tt.wantExitCode, cmd.ProcessState.ExitCode())
@@ -100,18 +100,14 @@ func TestRole(t *testing.T) {
 
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 
+	// Single-word roles are exercised by every other test in this file; the
+	// only input this test uniquely owns is a role containing spaces.
 	tests := []struct {
 		name         string
 		sleepSecs    string
 		role         string
 		wantExitCode int
 	}{
-		{
-			name:         "single word role",
-			sleepSecs:    "0",
-			role:         "role",
-			wantExitCode: 0,
-		},
 		{
 			name:         "multi word role",
 			sleepSecs:    "0",
@@ -136,7 +132,7 @@ func TestRole(t *testing.T) {
 				t.Fatalf("command failed: %v\n%s", err, out)
 			}
 
-			assertTestProgramOutoupt(t, out, tt.role)
+			assertTestProgramOutput(t, out, tt.role)
 
 			if cmd.ProcessState.ExitCode() != tt.wantExitCode {
 				t.Fatalf("exit code: want %v, got %v", tt.wantExitCode, cmd.ProcessState.ExitCode())
@@ -165,23 +161,16 @@ func TestExit(t *testing.T) {
 			wantExitCode: 0,
 		},
 		{
-			name:         "exit code double digit",
+			name:         "exit code non-zero",
 			sleepSecs:    "0",
-			role:         "test double digit exit code",
+			role:         "test non-zero exit code",
 			exitCode:     "10",
 			wantExitCode: 10,
 		},
 		{
-			name:         "exit code triple digit",
+			name:         "exit code max",
 			sleepSecs:    "0",
-			role:         "test triple digit exit code",
-			exitCode:     "100",
-			wantExitCode: 100,
-		},
-		{
-			name:         "exit code negative",
-			sleepSecs:    "0",
-			role:         "test 'max' exit code",
+			role:         "test max exit code",
 			exitCode:     "255",
 			wantExitCode: 255,
 		},
@@ -207,7 +196,7 @@ func TestExit(t *testing.T) {
 				}
 			}
 
-			assertTestProgramOutoupt(t, out, tt.role)
+			assertTestProgramOutput(t, out, tt.role)
 
 			if cmd.ProcessState.ExitCode() != tt.wantExitCode {
 				t.Fatalf("exit code: want %v, got %v", tt.wantExitCode, cmd.ProcessState.ExitCode())
