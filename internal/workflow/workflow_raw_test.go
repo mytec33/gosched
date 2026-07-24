@@ -83,6 +83,29 @@ func TestWorkflowValidate(t *testing.T) {
 			wantError: ErrStepCountExceeded,
 		},
 		{
+			name: "enabled missing",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Enabled = nil
+			},
+			wantError: ErrEnabledRequired,
+		},
+		{
+			name: "disabled without reason",
+			mutate: func(wf *WorkflowRaw) {
+				enabled := false
+				wf.Enabled = &enabled
+			},
+			wantError: ErrDisabledReasonRequired,
+		},
+		{
+			name: "disabled reason on enabled workflow",
+			mutate: func(wf *WorkflowRaw) {
+				reason := "should not be allowed"
+				wf.DisabledReason = &reason
+			},
+			wantError: ErrDisabledReasonNotAllowed,
+		},
+		{
 			name: "disabled reason whitespace only",
 			mutate: func(wf *WorkflowRaw) {
 				enabled := false
@@ -182,6 +205,27 @@ func TestWorkflowValidate(t *testing.T) {
 
 			assertOnlyValidationError(t, validationErrors, tt.wantError)
 		})
+	}
+}
+
+func TestWorkflowValidate_DisabledValid(t *testing.T) {
+	wf := validWorkflowRaw()
+	enabled := false
+	reason := "maintenance window"
+	wf.Enabled = &enabled
+	wf.DisabledReason = &reason
+
+	trusted, validationErrors := wf.Validate()
+	if len(validationErrors) != 0 {
+		t.Fatalf("expected no validation errors, got %v", validationErrors)
+	}
+
+	if trusted.Enabled {
+		t.Fatal("expected trusted workflow to be disabled")
+	}
+
+	if trusted.DisabledReason != reason {
+		t.Fatalf("DisabledReason = %q, want %q", trusted.DisabledReason, reason)
 	}
 }
 

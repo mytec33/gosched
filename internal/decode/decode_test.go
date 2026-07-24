@@ -1,6 +1,7 @@
 package decode
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -16,7 +17,7 @@ func TestDecode_InvalidJSON(t *testing.T) {
 		{name: "empty", json: ``},
 		{name: "missing closing brace", json: `{`},
 		{name: "wrong top-level type object", json: `{}`},
-		{name: "double empty opjects", json: `{}{}`},
+		{name: "double empty objects", json: `{}{}`},
 		{name: "unknown field", json: `[{"foo": "bar"}]"`},
 	}
 
@@ -28,12 +29,11 @@ func TestDecode_InvalidJSON(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected error, got no error")
 			} else if !errors.Is(err, ErrDecodeWorkflow) {
-				t.Fatalf("%v: expected ErrDecodeSchedule, got %v", tt.name, err)
+				t.Fatalf("%v: expected ErrDecodeWorkflow, got %v", tt.name, err)
 			}
 
 			if len(errorList) > 0 {
 				t.Fatalf("%v: expected no validation errors, got %v", tt.name, errorList)
-				t.Fatalf("%v", errorList)
 			}
 		})
 	}
@@ -137,7 +137,6 @@ func TestDecode_ValidInput(t *testing.T) {
 
 			if len(errorList) > 0 {
 				t.Fatalf("%v: expected no validation errors, got %v", tt.name, errorList)
-				t.Fatalf("%v", errorList)
 			}
 		})
 	}
@@ -171,6 +170,34 @@ const InvalidRetryConfiguration = `
 ]
 `
 
+// Cadence parsing is tested in types; this fixture proves DecodeWorkflows
+// routes trigger.every through that boundary and surfaces its error.
+const InvalidWorkflowCadenceUnit = `
+[
+  {
+    "name": "foo",
+	"enabled": true,
+    "trigger": {"every": "12s", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+// FailureMode validation is tested in types; this fixture proves
+// DecodeWorkflows routes onFailure through that boundary and surfaces its error.
+const InvalidWorkflowOnFailureUnknown = `
+[
+  {
+    "name": "foo",
+	"enabled": true,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "stop",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
 func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -178,6 +205,8 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 		wantError error
 	}{
 		{name: "time empty", json: InvalidWorkflowTimeEmpty, wantError: workflow.ErrTimeFormatInvalid},
+		{name: "cadence unit invalid", json: InvalidWorkflowCadenceUnit, wantError: workflow.ErrCadenceUnitInvalid},
+		{name: "onFailure unknown", json: InvalidWorkflowOnFailureUnknown, wantError: workflow.ErrOnFailureInvalid},
 	}
 
 	for _, tt := range tests {
@@ -201,42 +230,6 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 	}
 }
 
-const InvalidEnabledConfiguration = `
-[
-  {
-    "name": "foo",
-	"trigger": {"every": "1d", "beginAt": "22:22"},
-    "onFailure": "abort", 
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const InvalidEnabledConfigurationMissingDisabledReason = `
-[
-  {
-    "name": "foo",
-	"enabled": false,
-	"trigger": {"every": "1d", "beginAt": "22:22"},
-    "onFailure": "abort", 
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
-const InvalidEnabledConfigurationDisabledReasonNotAllowed = `
-[
-  {
-    "name": "foo",
-	"enabled": true,
-	"disabledReason": "this should not be allowed",
-	"trigger": {"every": "1d", "beginAt": "22:22"},
-    "onFailure": "abort", 
-    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
-  }
-]
-`
-
 func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -244,11 +237,6 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		wantError error
 	}{
 		{name: "invalid retry config", json: InvalidRetryConfiguration, wantError: workflow.ErrRetryRequired},
-		{name: "enabled not present", json: InvalidEnabledConfiguration, wantError: workflow.ErrEnabledRequired},
-		{name: "disabled reason not present", json: InvalidEnabledConfigurationMissingDisabledReason,
-			wantError: workflow.ErrDisabledReasonRequired},
-		{name: "disabled reason not allowed", json: InvalidEnabledConfigurationDisabledReasonNotAllowed,
-			wantError: workflow.ErrDisabledReasonNotAllowed},
 	}
 
 	for _, tt := range tests {
@@ -264,6 +252,40 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 				t.Fatalf("%s: expected validation error %v, got %v", tt.name, tt.wantError, validationErrors)
 			}
 		})
+	}
+}
+
+// A JSON value of the wrong type for a typed field (number where a string is
+// required) must fail decoding cleanly rather than panic. This is the only
+// test proving that property; the per-type unmarshal tests were consolidated
+// here per the layer-ownership rule.
+const InvalidWorkflowTimeNotString = `
+[
+  {
+    "name": "foo",
+	"enabled": true,
+    "trigger": {"every": "1d", "beginAt": 123},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+func TestDecode_NonStringTypedField(t *testing.T) {
+	r := strings.NewReader(InvalidWorkflowTimeNotString)
+
+	_, errorList, err := DecodeWorkflows(r)
+	if err == nil {
+		t.Fatal("expected decode error, got none")
+	}
+
+	var typeErr *json.UnmarshalTypeError
+	if !errors.As(err, &typeErr) {
+		t.Fatalf("expected json.UnmarshalTypeError, got %v", err)
+	}
+
+	if len(errorList) > 0 {
+		t.Fatalf("expected no validation errors, got %v", errorList)
 	}
 }
 
