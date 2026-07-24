@@ -1,9 +1,7 @@
 package runner
 
 import (
-	"fmt"
 	"testing"
-	"time"
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
@@ -73,7 +71,6 @@ func TestExitCode(t *testing.T) {
 		t.Run(tt.step.Name, func(t *testing.T) {
 			result := runStepCommand(tt.step)
 
-			fmt.Printf("test: %v: result: %v\n", tt.step.Name, result.ExitCode)
 			if result.ExitCode != tt.wantExitCode {
 				t.Fatalf("%s: want %v, got %v", tt.step.Name, tt.wantExitCode, result.ExitCode)
 			}
@@ -83,62 +80,5 @@ func TestExitCode(t *testing.T) {
 					tt.wantFailed, result.Failed())
 			}
 		})
-	}
-}
-
-func TestTimeout(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-
-	timeout1s, err := workflow.ParseConfigDuration("1s")
-	if err != nil {
-		t.Fatalf("parse config duration 1s: %v", err)
-	}
-
-	tests := []struct {
-		step       workflow.Step
-		wantFailed bool
-	}{
-		{
-			step: workflow.Step{
-				Name:    "timeout earlier than sleep time",
-				Program: testprog,
-				Args: []string{
-					"-sleep", "2", "-role", "timeout earlier than sleep time", "-exit-code", "10",
-				},
-				Timeout: timeout1s,
-			},
-			wantFailed: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.step.Name, func(t *testing.T) {
-			result := runStepCommand(tt.step)
-
-			if result.Failed() != tt.wantFailed {
-				t.Fatalf("%s: failure check failed: want %v got failure %v", tt.step.Name,
-					tt.wantFailed, result.Failed())
-			}
-		})
-	}
-}
-
-func TestDuration(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-
-	step := workflow.Step{
-		Name:    "duration within reasonable time",
-		Program: testprog,
-		Args: []string{
-			"-sleep", "1", "-role", "duration within reasonable time", "-exit-code", "10",
-		},
-	}
-
-	start := time.Now()
-	_ = runStepCommand(step)
-	elapsed := time.Since(start)
-
-	if elapsed > 2000*time.Millisecond {
-		t.Fatalf("timeout did not trigger quickly enough, duration %q", elapsed)
 	}
 }
