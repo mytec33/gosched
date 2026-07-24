@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/workflow"
@@ -43,72 +44,70 @@ func TestPrintScheduleConfig(t *testing.T) {
 		t.Fatalf("parse config duration 1800s: %v", err)
 	}
 
-	s := Schedule{
-		workflows: []workflow.Workflow{
-			{
-				Name:    "Workflow 1",
-				Enabled: true,
-				Trigger: workflow.Trigger{
-					Every:   &c15m,
-					BeginAt: &m1146,
-				},
-				OnFailure: workflow.Abort,
-				Steps: []workflow.Step{
-					{Name: "step 1", Timeout: timeout30s},
-				},
+	s := FromWorkflows([]workflow.Workflow{
+		{
+			Name:    "Workflow 1",
+			Enabled: true,
+			Trigger: workflow.Trigger{
+				Every:   &c15m,
+				BeginAt: &m1146,
 			},
-			{
-				Name:    "Workflow 1",
-				Enabled: true,
-				Trigger: workflow.Trigger{
-					Every:   &c15m,
-					BeginAt: &m1145,
-				},
-				OnFailure: workflow.Abort,
-				Steps: []workflow.Step{
-					{Name: "step 1", Timeout: timeout30s, Pause: pause5s},
-					{Name: "step 2", Timeout: timeout30s},
-				},
-			},
-			{
-				Name:    "Workflow 2",
-				Enabled: true,
-				Trigger: workflow.Trigger{
-					Every:   &c15m,
-					BeginAt: &m1145,
-				},
-				OnFailure: workflow.Continue,
-				Steps: []workflow.Step{
-					{Name: "step 1", Timeout: timeout30s},
-				},
-			},
-			{
-				Name:    "Workflow 1",
-				Enabled: true,
-				Trigger: workflow.Trigger{
-					Every:   &c15m,
-					BeginAt: &m1247,
-				},
-				OnFailure: workflow.Retry,
-				Steps: []workflow.Step{
-					{Name: "step 1", Timeout: timeout1800s},
-				},
-			},
-			{
-				Name:           "Workflow 4",
-				Enabled:        false,
-				DisabledReason: "demonstrating disabled display",
-				Trigger: workflow.Trigger{
-					Every:   &c15m,
-					BeginAt: &m1247,
-				},
-				OnFailure: workflow.Retry,
-				Steps: []workflow.Step{
-					{Name: "step 1", Timeout: timeout1800s},
-				},
+			OnFailure: workflow.Abort,
+			Steps: []workflow.Step{
+				{Name: "step 1", Timeout: timeout30s},
 			},
 		},
-	}
+		{
+			Name:    "Workflow 1",
+			Enabled: true,
+			Trigger: workflow.Trigger{
+				Every:   &c15m,
+				BeginAt: &m1145,
+			},
+			OnFailure: workflow.Abort,
+			Steps: []workflow.Step{
+				{Name: "step 1", Timeout: timeout30s, Pause: pause5s},
+				{Name: "step 2", Timeout: timeout30s},
+			},
+		},
+		{
+			Name:    "Workflow 2",
+			Enabled: true,
+			Trigger: workflow.Trigger{
+				Every:   &c15m,
+				BeginAt: &m1145,
+			},
+			OnFailure: workflow.Continue,
+			Steps: []workflow.Step{
+				{Name: "step 1", Timeout: timeout30s},
+			},
+		},
+		{
+			Name:    "Workflow 1",
+			Enabled: true,
+			Trigger: workflow.Trigger{
+				Every:   &c15m,
+				BeginAt: &m1247,
+			},
+			OnFailure: workflow.Retry,
+			Steps: []workflow.Step{
+				{Name: "step 1", Timeout: timeout1800s},
+			},
+		},
+		{
+			Name:           "Workflow 4",
+			Enabled:        false,
+			DisabledReason: "demonstrating disabled display",
+			Trigger: workflow.Trigger{
+				Every:   &c15m,
+				BeginAt: &m1247,
+			},
+			OnFailure: workflow.Retry,
+			Steps: []workflow.Step{
+				{Name: "step 1", Timeout: timeout1800s},
+			},
+		},
+	})
 
 	var buf bytes.Buffer
 	s.printScheduleConfig(&buf)
@@ -129,6 +128,27 @@ func TestPrintScheduleConfig(t *testing.T) {
 
 	if got != want {
 		t.Fatalf("unexpected output\ngot:\n%s\nwant:\n%s", got, want)
+	}
+}
+
+func TestDisplayReason(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "short reason unchanged", input: "maintenance", want: "maintenance"},
+		{name: "exactly max unchanged", input: strings.Repeat("a", 40), want: strings.Repeat("a", 40)},
+		{name: "over max truncated with ellipsis", input: strings.Repeat("a", 41), want: strings.Repeat("a", 40) + "..."},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := displayReason(tt.input)
+			if got != tt.want {
+				t.Fatalf("displayReason(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
 	}
 }
 
