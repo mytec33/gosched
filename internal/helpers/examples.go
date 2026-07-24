@@ -8,6 +8,7 @@ func GenerateExampleConfig() {
 [
 	{
 		"name": "Workflow 1",
+		"enabled": true,
 		"trigger": { "every": "1d", "beginAt": "10:00" },
 		"onFailure": "continue",
 		"steps": [
@@ -32,6 +33,7 @@ func GenerateExampleConfig() {
 	},
 	{
 		"name": "Workflow 2",
+		"enabled": true,
 		"trigger": { "every": "1d", "beginAt": "10:35" },
 		"onFailure": "abort",
 		"steps": [
@@ -47,11 +49,13 @@ func GenerateExampleConfig() {
 	},
 	{
 		"name": "Workflow 3",
+		"enabled": false,
+		"disabledReason": "demonstrating enabled features",
 		"trigger": { "every": "1d", "beginAt": "10:35" },
 		"onFailure": "retry",
 		"retry": {
 			"numberRetries": 3,
-			"pauseSeconds": 60
+			"pauseSeconds": 1
 		},
 		"steps": [
 			{

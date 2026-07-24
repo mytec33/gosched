@@ -28,13 +28,29 @@ func (s Schedule) printScheduleConfig(w io.Writer) {
 	wfWidth := len(strconv.Itoa(len(workflows)))
 
 	for i, v := range workflows {
-		fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure)
+		fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
+			wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure, disabledSuffix(v))
 
 		numSteps := len(strconv.Itoa(len(v.Steps)))
 		for j, step := range v.Steps {
 			printStep(numSteps, j, step, w)
 		}
 	}
+}
+
+func displayReason(s string) string {
+	const max = 40
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "..."
+}
+
+func disabledSuffix(wf workflow.Workflow) string {
+	if wf.Enabled {
+		return ""
+	}
+	return fmt.Sprintf(" <--- disabled: %s", displayReason(wf.DisabledReason))
 }
 
 func (s Schedule) printScheduleOperational(w io.Writer) {
@@ -54,7 +70,8 @@ func (s Schedule) printScheduleOperational(w io.Writer) {
 		wfWidth := len(strconv.Itoa(len(workflows)))
 
 		for i, v := range workflows {
-			fmt.Fprintf(w, "%*d: %s  %s (%s)\n", wfWidth, i+1, m.String(), v.Name, v.OnFailure)
+			fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
+				wfWidth, i+1, m.String(), v.Name, v.OnFailure, disabledSuffix(v))
 
 			numSteps := len(strconv.Itoa(len(v.Steps)))
 			for j, step := range v.Steps {
@@ -67,7 +84,11 @@ func (s Schedule) printScheduleOperational(w io.Writer) {
 func printStep(numSteps int, stepIndex int, step workflow.Step, w io.Writer) {
 	var details []string
 
-	details = append(details, fmt.Sprintf("timeout %s", step.Timeout))
+	if step.Timeout.Duration() > 0 {
+		details = append(details, fmt.Sprintf("timeout %s", step.Timeout))
+	} else {
+		details = append(details, "no timeout")
+	}
 
 	if step.Pause.Duration() > 0 {
 		details = append(details, fmt.Sprintf("pause %s", step.Pause))

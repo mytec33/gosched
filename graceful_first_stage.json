@@ -1,6 +1,7 @@
 [
 	{
 		"name": "Graceful Stop 1",
+		"enabled": true,
 		"trigger": {
             "every": "1d",
             "beginAt": "22:21"
@@ -25,6 +26,7 @@
 	},
 	{
 		"name": "Graceful Stop 2",
+		"enabled": true,
 		"trigger": {
             "every": "1d",
             "beginAt": "22:21"
@@ -49,6 +51,8 @@
 	},
 	{
 		"name": "Shouldn't Start",
+		"enabled": false,
+		"disabledReason": "disabled to test enable functionality",
 		"trigger": {
             "every": "1d",
             "beginAt": "22:22"

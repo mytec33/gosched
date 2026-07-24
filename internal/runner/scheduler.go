@@ -160,6 +160,16 @@ func executeWorkflow(wf workflow.Workflow) error {
 	wfLog := logging.NewWorkflowLogger(wf.Name)
 	stdOut := wfLog.Out
 
+	if !wf.Enabled {
+		stdOut.Info("workflow",
+			"name", wf.Name,
+			"status", workflow.StatusSkipped.String(),
+			"reason", "disabled",
+			"disabledReason", wf.DisabledReason,
+		)
+		return nil
+	}
+
 	lockKey := wf.Name
 	existingID, acquired := workflowLocks.TryAcquire(lockKey, wfLog.WfRunID)
 	if !acquired {

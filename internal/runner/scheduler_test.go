@@ -2,7 +2,9 @@ package runner
 
 import (
 	"bytes"
+	"errors"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -11,9 +13,39 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
+func TestExecuteWorkflowDisabledSkipsSteps(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "ran")
+	wf := workflow.Workflow{
+		Name:           "disabled workflow is skipped",
+		Enabled:        false,
+		DisabledReason: "disabled for skip test",
+		OnFailure:      workflow.Abort,
+		Steps: []workflow.Step{
+			{
+				Name:    "must not run",
+				Program: "/bin/sh",
+				Args:    []string{"-c", "touch \"$1\"", "skip-script", marker},
+			},
+		},
+	}
+
+	out, err := executeWorkflowWithCapturedOutput(t, wf)
+	if err != nil {
+		t.Fatalf("expected disabled workflow to be skipped without error: %v\n%s", err, out)
+	}
+
+	assertOutputContains(t, out, workflowStatusLog(workflow.StatusSkipped))
+	assertOutputContains(t, out, []byte(`disabledReason="disabled for skip test"`))
+
+	if _, statErr := os.Stat(marker); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("expected step not to run, but marker file check got: %v", statErr)
+	}
+}
+
 func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
 	wf := workflow.Workflow{
 		Name:      "missing program aborts",
+		Enabled:   true,
 		OnFailure: workflow.Abort,
 		Steps: []workflow.Step{
 			{
@@ -36,6 +68,7 @@ func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := workflow.Workflow{
 		Name:      "command failure aborts",
+		Enabled:   true,
 		OnFailure: workflow.Abort,
 		Steps: []workflow.Step{
 			{
@@ -59,6 +92,7 @@ func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := workflow.Workflow{
 		Name:      "continue failure is partial",
+		Enabled:   true,
 		OnFailure: workflow.Continue,
 		Steps: []workflow.Step{
 			{
@@ -90,6 +124,7 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	wf := workflow.Workflow{
 		Name:      "retry exhaustion is partial",
+		Enabled:   true,
 		OnFailure: workflow.Retry,
 		Retry: &workflow.RetryPolicy{
 			NumberRetries: 1,
@@ -121,6 +156,7 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 	markerFile := filepath.Join(dir, "retried")
 	wf := workflow.Workflow{
 		Name:      "retry success is completed",
+		Enabled:   true,
 		OnFailure: workflow.Retry,
 		Retry: &workflow.RetryPolicy{
 			NumberRetries: 1,

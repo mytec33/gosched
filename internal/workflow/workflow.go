@@ -3,11 +3,13 @@
 package workflow
 
 type Workflow struct {
-	Name      string       `json:"name"`
-	Trigger   Trigger      `json:"trigger"`
-	OnFailure FailureMode  `json:"onFailure"`
-	Retry     *RetryPolicy `json:"retry"`
-	Steps     []Step       `json:"steps"`
+	Name           string
+	Enabled        bool
+	DisabledReason string
+	Trigger        Trigger
+	OnFailure      FailureMode
+	Retry          *RetryPolicy
+	Steps          []Step
 }
 
 type RetryPolicy struct {

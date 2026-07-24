@@ -45,6 +45,7 @@ const validOneWorkflowOneStep = `
 [
   {
     "name": "Workflow 1",
+	"enabled": true,	
     "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
@@ -62,6 +63,7 @@ const validFullExample = `
 [
   {
     "name": "Workflow 1",
+	"enabled": true,	
     "trigger": { "every": "1d", "beginAt": "10:35" },
     "onFailure": "abort",      
     "steps": [
@@ -74,6 +76,7 @@ const validFullExample = `
   },
   {
     "name": "Workflow 2",
+	"enabled": true,	
     "trigger": { "every": "1m", "beginAt": "08:35" },
     "onFailure": "continue",      
     "steps": [
@@ -91,6 +94,7 @@ const validFullExample = `
   },
   {
     "name": "Workflow 3",
+	"enabled": true,
     "trigger": { "every": "10h", "beginAt": "7:35" },
     "retry": {
       "numberRetries": 1,
@@ -145,6 +149,7 @@ const InvalidWorkflowTimeEmpty = `
 [
   {
     "name": "foo",
+	"enabled": true,	
     "trigger": {"every": "1d", "beginAt": ""},
     "onFailure": "continue",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
@@ -158,6 +163,7 @@ const InvalidRetryConfiguration = `
 [
   {
     "name": "foo",
+	"enabled": true,
     "trigger": {"every": "1d", "beginAt": "06:30"},
     "onFailure": "retry",    
     "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
@@ -195,6 +201,42 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 	}
 }
 
+const InvalidEnabledConfiguration = `
+[
+  {
+    "name": "foo",
+	"trigger": {"every": "1d", "beginAt": "22:22"},
+    "onFailure": "abort", 
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const InvalidEnabledConfigurationMissingDisabledReason = `
+[
+  {
+    "name": "foo",
+	"enabled": false,
+	"trigger": {"every": "1d", "beginAt": "22:22"},
+    "onFailure": "abort", 
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const InvalidEnabledConfigurationDisabledReasonNotAllowed = `
+[
+  {
+    "name": "foo",
+	"enabled": true,
+	"disabledReason": "this should not be allowed",
+	"trigger": {"every": "1d", "beginAt": "22:22"},
+    "onFailure": "abort", 
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
 func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -202,6 +244,11 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		wantError error
 	}{
 		{name: "invalid retry config", json: InvalidRetryConfiguration, wantError: workflow.ErrRetryRequired},
+		{name: "enabled not present", json: InvalidEnabledConfiguration, wantError: workflow.ErrEnabledRequired},
+		{name: "disabled reason not present", json: InvalidEnabledConfigurationMissingDisabledReason,
+			wantError: workflow.ErrDisabledReasonRequired},
+		{name: "disabled reason not allowed", json: InvalidEnabledConfigurationDisabledReasonNotAllowed,
+			wantError: workflow.ErrDisabledReasonNotAllowed},
 	}
 
 	for _, tt := range tests {

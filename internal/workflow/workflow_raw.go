@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	MaxDisabledReasonLength      int = 256
 	MaxStepArgLength             int = 256
 	MaxStepArgsCount             int = 64
 	MaxStepArgsTotalLength       int = 4096
@@ -17,6 +18,10 @@ const (
 )
 
 var (
+	ErrEnabledRequired          = errors.New("enabled is a required field having a value of true or false")
+	ErrDisabledReasonRequired   = errors.New("disabled reason required when enabled equals false")
+	ErrDisabledReasonNotAllowed = errors.New("disabled reason not allowed if enabled equals true")
+
 	ErrFieldEmpty            = errors.New("cannot be empty")
 	ErrFieldTooLong          = errors.New("too long")
 	ErrFieldWhitespaceOnly   = errors.New("cannot be all whitespace")
@@ -41,7 +46,7 @@ var (
 
 type WorkflowRaw struct {
 	Name           string       `json:"name"`
-	Enabled        bool         `json:"enabled"`
+	Enabled        *bool        `json:"enabled"`
 	DisabledReason *string      `json:"disabledReason"`
 	Trigger        *Trigger     `json:"trigger"`
 	OnFailure      *FailureMode `json:"onFailure"`
@@ -57,6 +62,28 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	errorList = append(errorList, validateStringValue(field, raw.Name,
 		MaxWorkflowNameLength)...)
 	workflow.Name = raw.Name
+
+	if raw.Enabled == nil {
+		errorList = append(errorList, ErrEnabledRequired)
+	} else {
+		workflow.Enabled = *raw.Enabled
+
+		if !*raw.Enabled {
+			if raw.DisabledReason == nil {
+				errorList = append(errorList, ErrDisabledReasonRequired)
+			} else {
+				field := "workflow.disabledReason"
+				errs := validateStringValue(field, *raw.DisabledReason, MaxDisabledReasonLength)
+				if len(errs) > 0 {
+					errorList = append(errorList, errs...)
+				} else {
+					workflow.DisabledReason = *raw.DisabledReason
+				}
+			}
+		} else if raw.DisabledReason != nil {
+			errorList = append(errorList, ErrDisabledReasonNotAllowed)
+		}
+	}
 
 	if raw.Trigger == nil {
 		errorList = append(errorList, ErrTriggerRequired)

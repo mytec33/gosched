@@ -31,11 +31,13 @@ func assertOnlyValidationError(t *testing.T, validationErrors []error, want erro
 
 func validWorkflowRaw() WorkflowRaw {
 	onFailure := Continue
+	enabled := true
 	every, _ := ParseCadence("1d")
 	beginAt, _ := ParseMinuteOfDay("10:35")
 
 	return WorkflowRaw{
-		Name: "Workflow",
+		Name:    "Workflow",
+		Enabled: &enabled,
 		Trigger: &Trigger{
 			Every:   &every,
 			BeginAt: &beginAt,
@@ -79,6 +81,16 @@ func TestWorkflowValidate(t *testing.T) {
 				wf.Steps = repeatedSteps(MaxStepsCount + 1)
 			},
 			wantError: ErrStepCountExceeded,
+		},
+		{
+			name: "disabled reason whitespace only",
+			mutate: func(wf *WorkflowRaw) {
+				enabled := false
+				reason := "\t\n "
+				wf.Enabled = &enabled
+				wf.DisabledReason = &reason
+			},
+			wantError: ErrFieldWhitespaceOnly,
 		},
 		{
 			name: "onFailure missing",

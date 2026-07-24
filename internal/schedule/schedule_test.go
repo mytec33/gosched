@@ -197,7 +197,8 @@ func TestExpandSchedule_Idempotent(t *testing.T) {
 	s := Schedule{
 		workflows: []workflow.Workflow{
 			{
-				Name: "Jackpots",
+				Name:    "Jackpots",
+				Enabled: true,
 				Trigger: workflow.Trigger{
 					Every:   &cadence,
 					BeginAt: &beginAt,

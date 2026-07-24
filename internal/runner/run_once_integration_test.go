@@ -17,6 +17,7 @@ const runOnceOneWorkflowOneStep = `
 [
   {
     "name": "Workflow 1",
+	"enabled": true,
     "trigger": { "every": "1d", "beginAt": "%s" },
 	"onFailure": "continue",
     "steps": [
@@ -34,6 +35,7 @@ const runOnceTwoWorkflowsOneStep = `
 [
   {
     "name": "Workflow 1",
+	"enabled": true,
     "trigger": { "every": "1d", "beginAt": "%s" },
 	"onFailure": "continue",	
     "steps": [
@@ -46,6 +48,7 @@ const runOnceTwoWorkflowsOneStep = `
   },
   {
     "name": "Workflow 2",
+	"enabled": true,
     "trigger": { "every": "1d", "beginAt": "%s" },
     "onFailure": "continue",	
     "steps": [
