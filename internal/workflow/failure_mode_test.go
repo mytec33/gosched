@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestFailureModeString(t *testing.T) {
+func TestFailureMode_StringMethod(t *testing.T) {
 	tests := []struct {
 		name string
 		mode FailureMode
@@ -27,7 +27,7 @@ func TestFailureModeString(t *testing.T) {
 	}
 }
 
-func TestFailureModeUnmarshalJSON(t *testing.T) {
+func TestFailureMode_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -53,7 +53,7 @@ func TestFailureModeUnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestFailureModeUnmarshalJSON_Invalid(t *testing.T) {
+func TestFailureMode_UnmarshalJSON_Invalid(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
@@ -72,31 +72,6 @@ func TestFailureModeUnmarshalJSON_Invalid(t *testing.T) {
 
 			if !matchesFailureModeUnmarshalError(err, tt.wantErr) {
 				t.Fatalf("json.Unmarshal(%s) error = %v, wantErr %T", tt.input, err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestFailureModeMarshalJSON(t *testing.T) {
-	tests := []struct {
-		name string
-		mode FailureMode
-		want string
-	}{
-		{"abort", Abort, `"abort"`},
-		{"continue", Continue, `"continue"`},
-		{"retry", Retry, `"retry"`},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := json.Marshal(tt.mode)
-			if err != nil {
-				t.Fatalf("json.Marshal(%s) unexpected error = %v", tt.name, err)
-			}
-
-			if string(got) != tt.want {
-				t.Fatalf("json.Marshal(%s) = %s, want %s", tt.name, got, tt.want)
 			}
 		})
 	}

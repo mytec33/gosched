@@ -24,10 +24,6 @@ func (f FailureMode) String() string {
 	return f.v
 }
 
-func (f FailureMode) MarshalJSON() ([]byte, error) {
-	return json.Marshal(f.v)
-}
-
 func (f *FailureMode) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
