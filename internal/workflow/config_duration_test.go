@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -25,6 +26,7 @@ func TestParseConfigDuration(t *testing.T) {
 		{"valid minutes 0", "0m", 0 * time.Minute},
 		{"valid minutes 99", "99m", 99 * time.Minute},
 		{"valid seconds", "7200s", 2 * time.Hour},
+		{"valid decimal", "1.5h", 90 * time.Minute},
 	}
 
 	for _, tt := range tests {
@@ -50,12 +52,14 @@ func TestParseConfigDuration_Invalid(t *testing.T) {
 		{"empty string", "", ErrConfigDurationInvalid},
 		{"invalid minus symbol", "-1h", ErrConfigDurationSignInvalid},
 		{"invalid plus symbol", "+2s", ErrConfigDurationSignInvalid},
+		{"out of order", "3m2h", ErrCadenceNumInvalid},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseConfigDuration(tt.input)
+			duration, err := ParseConfigDuration(tt.input)
 			if !errors.Is(err, tt.wantErr) {
+				fmt.Printf("t: %v\n", duration)
 				t.Fatalf("ParseConfigDuration(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
