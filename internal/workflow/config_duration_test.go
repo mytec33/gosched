@@ -2,7 +2,6 @@ package workflow
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -59,9 +58,8 @@ func TestParseConfigDuration_Invalid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			duration, err := ParseConfigDuration(tt.input)
+			_, err := ParseConfigDuration(tt.input)
 			if !errors.Is(err, tt.wantErr) {
-				fmt.Printf("t: %v\n", duration)
 				t.Fatalf("ParseConfigDuration(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
