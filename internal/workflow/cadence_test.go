@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -67,5 +68,69 @@ func TestParseCadence_Invalid(t *testing.T) {
 				t.Fatalf("ParseCadence(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestParseCadence_AllValidValuesRoundTrip(t *testing.T) {
+	tests := []struct {
+		measure CadenceMeasure
+		max     int
+	}{
+		{measure: CadenceDay, max: 1},
+		{measure: CadenceHour, max: 23},
+		{measure: CadenceMinute, max: 59},
+	}
+
+	for _, tt := range tests {
+		for repetition := 1; repetition <= tt.max; repetition++ {
+			input := fmt.Sprintf("%d%s", repetition, tt.measure)
+
+			t.Run(input, func(t *testing.T) {
+				cadence, err := ParseCadence(input)
+				if err != nil {
+					t.Fatalf(
+						"ParseCadence(%q) unexpected error = %v",
+						input,
+						err,
+					)
+				}
+
+				if cadence.Repetition() != repetition {
+					t.Fatalf(
+						"ParseCadence(%q).Repetition() = %d, want %d",
+						input,
+						cadence.Repetition(),
+						repetition,
+					)
+				}
+
+				if cadence.Measure() != tt.measure {
+					t.Fatalf(
+						"ParseCadence(%q).Measure() = %v, want %v",
+						input,
+						cadence.Measure(),
+						tt.measure,
+					)
+				}
+
+				reparsed, err := ParseCadence(cadence.String())
+				if err != nil {
+					t.Fatalf(
+						"ParseCadence(%q) round-trip error = %v",
+						cadence.String(),
+						err,
+					)
+				}
+
+				if reparsed != cadence {
+					t.Fatalf(
+						"ParseCadence(%q) round trip = %v, want %v",
+						input,
+						reparsed,
+						cadence,
+					)
+				}
+			})
+		}
 	}
 }
