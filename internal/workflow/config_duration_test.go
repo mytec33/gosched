@@ -27,6 +27,9 @@ func TestParseConfigDuration(t *testing.T) {
 		{"valid minutes 99", "99m", 99 * time.Minute},
 		{"valid seconds", "7200s", 2 * time.Hour},
 		{"valid decimal", "1.5h", 90 * time.Minute},
+
+		// Preserve time.ParseDuration compatibility. Someone may rely on its order-independent components.
+		{"compound units out of order", "3m2h", 2*time.Hour + 3*time.Minute},
 	}
 
 	for _, tt := range tests {
@@ -52,7 +55,6 @@ func TestParseConfigDuration_Invalid(t *testing.T) {
 		{"empty string", "", ErrConfigDurationInvalid},
 		{"invalid minus symbol", "-1h", ErrConfigDurationSignInvalid},
 		{"invalid plus symbol", "+2s", ErrConfigDurationSignInvalid},
-		{"out of order", "3m2h", ErrCadenceNumInvalid},
 	}
 
 	for _, tt := range tests {
