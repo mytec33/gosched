@@ -14,3 +14,6 @@ manifest.txt
 
 # Go files
 coverage.*
+
+# JSON files
+/*.json

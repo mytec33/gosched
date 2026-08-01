@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
@@ -230,6 +231,92 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 	}
 }
 
+// Required-field fixtures. Each decodes cleanly (valid JSON, valid typed
+// fields) but fails WorkflowRaw.Validate on a single missing/empty required
+// field, so the error surfaces in the validation slice rather than as a decode
+// error. These pin the nil-pointer gate: a workflow missing a required field
+// must never cross into the trusted set.
+const triggerMissing = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const triggerEmpty = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const everyMissing = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const beginAtMissing = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const onFailureMissing = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const enabledMissing = `
+[
+  {
+    "name": "foo",
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const stepsEmpty = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": []
+  }
+]
+`
+
 func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -237,15 +324,26 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		wantError error
 	}{
 		{name: "invalid retry config", json: InvalidRetryConfiguration, wantError: workflow.ErrRetryRequired},
+		{name: "trigger missing", json: triggerMissing, wantError: workflow.ErrTriggerRequired},
+		{name: "trigger empty", json: triggerEmpty, wantError: workflow.ErrTriggerEveryRequired}, // also BeginAt
+		{name: "every missing", json: everyMissing, wantError: workflow.ErrTriggerEveryRequired},
+		{name: "beginAt missing", json: beginAtMissing, wantError: workflow.ErrTriggerBeginAtRequired},
+		{name: "onFailure missing", json: onFailureMissing, wantError: workflow.ErrOnFailureRequired},
+		{name: "enabled missing", json: enabledMissing, wantError: workflow.ErrEnabledRequired},
+		{name: "steps empty", json: stepsEmpty, wantError: workflow.ErrStepsRequired},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, validationErrors, err := DecodeWorkflows(r)
+			wfs, validationErrors, err := DecodeWorkflows(r)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
+			}
+
+			if len(wfs) != 0 {
+				t.Fatalf("%s: expected zero trusted workflows, got %d", tt.name, len(wfs))
 			}
 
 			if !hasError(validationErrors, tt.wantError) {
@@ -297,4 +395,194 @@ func hasError(errorList []error, target error) bool {
 	}
 
 	return false
+}
+
+// disabledReason: This logic pairs two fields whose
+// validity depends on each other, so it is tested as a matrix rather than
+// isolated cases. The disabled-with-reason row also asserts the reason is
+// carried through into the trusted workflow, not merely accepted.
+const disabledWithReason = `
+[
+  {
+    "name": "foo",
+    "enabled": false,
+    "disabledReason": "under maintenance",
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const disabledNoReason = `
+[
+  {
+    "name": "foo",
+    "enabled": false,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const enabledWithReason = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "disabledReason": "should not be here",
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+func TestDecodeEnabledDisabledMatrix(t *testing.T) {
+	tests := []struct {
+		name       string
+		json       string
+		wantErr    error  // nil means the workflow must be accepted
+		wantReason string // checked only when wantErr is nil
+	}{
+		{name: "disabled with reason is valid", json: disabledWithReason, wantErr: nil, wantReason: "under maintenance"},
+		{name: "disabled without reason", json: disabledNoReason, wantErr: workflow.ErrDisabledReasonRequired},
+		{name: "enabled with reason not allowed", json: enabledWithReason, wantErr: workflow.ErrDisabledReasonNotAllowed},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(tt.json)
+			wfs, validationErrors, err := DecodeWorkflows(r)
+
+			if err != nil {
+				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
+			}
+
+			if tt.wantErr != nil {
+				if len(wfs) != 0 {
+					t.Fatalf("%s: expected zero trusted workflows, got %d", tt.name, len(wfs))
+				}
+				if !hasError(validationErrors, tt.wantErr) {
+					t.Fatalf("%s: expected validation error %v, got %v", tt.name, tt.wantErr, validationErrors)
+				}
+				return
+			}
+
+			if len(validationErrors) > 0 {
+				t.Fatalf("%s: expected no validation errors, got %v", tt.name, validationErrors)
+			}
+			if len(wfs) != 1 {
+				t.Fatalf("%s: expected one trusted workflow, got %d", tt.name, len(wfs))
+			}
+			if wfs[0].Enabled {
+				t.Fatalf("%s: expected workflow to be disabled", tt.name)
+			}
+			if wfs[0].DisabledReason != tt.wantReason {
+				t.Fatalf("%s: expected disabled reason %q, got %q", tt.name, tt.wantReason, wfs[0].DisabledReason)
+			}
+		})
+	}
+}
+
+// a file mixing one valid and one invalid workflow must yield no
+// schedule at all. Validation errors are aggregated and no partial trusted set
+// is returned, so a single bad workflow can never let a half-built schedule
+// through.
+const oneValidOneInvalid = `
+[
+  {
+    "name": "good",
+    "enabled": true,
+    "trigger": {"every": "1h", "beginAt": "00:00"},
+    "onFailure": "abort",
+    "steps": [{"name": "s", "program": "p"}]
+  },
+  {
+    "name": "bad",
+    "enabled": true,
+    "trigger": {"beginAt": "01:00"},
+    "onFailure": "abort",
+    "steps": [{"name": "s", "program": "p"}]
+  }
+]
+`
+
+func TestDecodePartialFailureYieldsNoSchedule(t *testing.T) {
+	r := strings.NewReader(oneValidOneInvalid)
+	wfs, validationErrors, err := DecodeWorkflows(r)
+
+	if err != nil {
+		t.Fatalf("unexpected decode/system error: %v", err)
+	}
+
+	if len(wfs) != 0 {
+		t.Fatalf("expected zero trusted workflows (no partial schedule), got %d", len(wfs))
+	}
+
+	if !hasError(validationErrors, workflow.ErrTriggerEveryRequired) {
+		t.Fatalf("expected %v, got %v", workflow.ErrTriggerEveryRequired, validationErrors)
+	}
+}
+
+// a positive end-to-end case that asserts expansion behavior, not just the
+// absence of errors. An hourly trigger from midnight must expand to exactly
+// 24 minute slots, be findable by name, and populate the byMinute index at the
+// expected minutes only.
+const validHourlyFromMidnight = `
+[
+  {
+    "name": "test-hourly",
+    "enabled": true,
+    "trigger": {"every": "1h", "beginAt": "00:00"},
+    "onFailure": "abort",
+    "steps": [{"name": "s", "program": "p"}]
+  }
+]
+`
+
+func TestDecodeToExpandedScheduleContent(t *testing.T) {
+	r := strings.NewReader(validHourlyFromMidnight)
+	wfs, validationErrors, err := DecodeWorkflows(r)
+
+	if err != nil {
+		t.Fatalf("unexpected decode/system error: %v", err)
+	}
+	if len(validationErrors) > 0 {
+		t.Fatalf("expected no validation errors, got %v", validationErrors)
+	}
+
+	sched := schedule.FromWorkflows(wfs)
+	if scErrs := sched.Validate(); len(scErrs) > 0 {
+		t.Fatalf("unexpected schedule validation errors: %v", scErrs)
+	}
+	if err := sched.ExpandSchedule(); err != nil {
+		t.Fatalf("unexpected expansion error: %v", err)
+	}
+
+	if _, err := sched.GetWorkflowByName("test-hourly"); err != nil {
+		t.Fatalf("expected to find workflow by name: %v", err)
+	}
+
+	// Hourly from 00:00 lands on minute 0, 60, 120 ... 1380: 24 slots.
+	populated := 0
+	for m := workflow.MinuteOfDay(0); m < workflow.MinuteOfDay(1440); m++ {
+		if len(sched.WorkflowsAtMinute(m)) > 0 {
+			populated++
+		}
+	}
+	if populated != 24 {
+		t.Fatalf("expected 24 populated minute slots, got %d", populated)
+	}
+
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(0))); got != 1 {
+		t.Fatalf("expected 1 workflow at minute 0, got %d", got)
+	}
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(60))); got != 1 {
+		t.Fatalf("expected 1 workflow at minute 60, got %d", got)
+	}
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(30))); got != 0 {
+		t.Fatalf("expected 0 workflows at minute 30, got %d", got)
+	}
 }

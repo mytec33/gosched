@@ -25,14 +25,25 @@ func FuzzDecodeWorkflows(f *testing.F) {
 		}
 
 		sched := schedule.FromWorkflows(wfs)
+
+		// Gate on schedule validation exactly as main.go does before expanding.
+		if len(sched.Validate()) > 0 {
+			return
+		}
+		if err := sched.ExpandSchedule(); err != nil {
+			return
+		}
+
 		sched.Print("config", io.Discard)
 		sched.Print("operational", io.Discard)
 
 		for _, wf := range sched.Workflows() {
 			_ = wf.Trigger.String()
-			_ = workflow.WorkflowAbortsOnFailure(wf)
-			_ = workflow.WorkflowContinuesOnFailure(wf)
-			_ = workflow.WorkflowRetriesOnFailure(wf)
+			_, _ = sched.GetWorkflowByName(wf.Name)
+		}
+		// Exercise the byMinute index the runner reads from.
+		for m := workflow.MinuteOfDay(0); m < workflow.MinuteOfDay(1440); m++ {
+			_ = sched.WorkflowsAtMinute(m)
 		}
 	})
 }
