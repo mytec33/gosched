@@ -8,6 +8,8 @@ import (
 
 const (
 	MaxDisabledReasonLength      int = 256
+	MaxRetryCount                int = 8
+	MaxRetryPauseLimit           int = 7200
 	MaxStepArgLength             int = 256
 	MaxStepArgsCount             int = 64
 	MaxStepArgsTotalLength       int = 4096
@@ -29,8 +31,10 @@ var (
 	ErrNumberNegative        = errors.New("number cannot be negative, must be zero (indefinite) or greater")
 
 	ErrOnFailureRequired  = errors.New("onFailure field required")
-	ErrRetryCountNegative = errors.New("retry count must be 0 or greater")
-	ErrRetryPauseNegative = errors.New("retry pause seconds must be 0 or greater")
+	ErrRetryCountNegative = fmt.Errorf("retry count must be 0 to %d", MaxRetryCount)
+	ErrRetryCountTooLarge = fmt.Errorf("retry count must be 0 to %d", MaxRetryCount)
+	ErrRetryPauseNegative = fmt.Errorf("retry pause seconds must be 0 to %d", MaxRetryPauseLimit)
+	ErrRetryPauseTooLarge = fmt.Errorf("retry pause seconds must be 0 to %d", MaxRetryPauseLimit)
 	ErrRetryRequired      = errors.New("retry config required when onFailure is set to retry")
 
 	ErrStepDuplicateName           = errors.New("step name is a duplicate")
@@ -118,8 +122,16 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 			errorList = append(errorList, ErrRetryCountNegative)
 		}
 
+		if raw.Retry.NumberRetries > MaxRetryCount {
+			errorList = append(errorList, ErrRetryCountTooLarge)
+		}
+
 		if raw.Retry.PauseSeconds < 0 {
 			errorList = append(errorList, ErrRetryPauseNegative)
+		}
+
+		if raw.Retry.PauseSeconds > MaxRetryPauseLimit {
+			errorList = append(errorList, ErrRetryPauseTooLarge)
 		}
 	}
 

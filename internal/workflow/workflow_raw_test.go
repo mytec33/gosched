@@ -139,11 +139,25 @@ func TestWorkflowValidate(t *testing.T) {
 			wantError: ErrRetryCountNegative,
 		},
 		{
+			name: "workflow retry number retries too large",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Retry.NumberRetries = MaxRetryCount + 1
+			},
+			wantError: ErrRetryCountTooLarge,
+		},
+		{
 			name: "workflow retry pause seconds negative",
 			mutate: func(wf *WorkflowRaw) {
 				wf.Retry.PauseSeconds = -1
 			},
 			wantError: ErrRetryPauseNegative,
+		},
+		{
+			name: "workflow retry pause seconds too large",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Retry.PauseSeconds = MaxRetryPauseLimit + 1
+			},
+			wantError: ErrRetryPauseTooLarge,
 		},
 		{
 			name: "step name whitespace",
