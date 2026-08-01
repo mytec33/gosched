@@ -112,7 +112,7 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	}
 
 	if raw.Retry != nil {
-		workflow.Retry = raw.Retry
+		workflow.Retry = *raw.Retry
 
 		if raw.Retry.NumberRetries < 0 {
 			errorList = append(errorList, ErrRetryCountNegative)

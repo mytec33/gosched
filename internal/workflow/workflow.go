@@ -8,13 +8,8 @@ type Workflow struct {
 	DisabledReason string
 	Trigger        Trigger
 	OnFailure      FailureMode
-	Retry          *RetryPolicy
+	Retry          RetryPolicy
 	Steps          []Step
-}
-
-type RetryPolicy struct {
-	NumberRetries int `json:"numberRetries"`
-	PauseSeconds  int `json:"pauseSeconds"`
 }
 
 type Step struct {

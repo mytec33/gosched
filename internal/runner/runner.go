@@ -77,7 +77,7 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, inde
 }
 
 func RunStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
-	stepIndex int, retry *workflow.RetryPolicy) workflow.WorkflowStatus {
+	stepIndex int, retry workflow.RetryPolicy) workflow.WorkflowStatus {
 	var retryResult StepExecutionResult
 
 	for attempt := 1; attempt <= retry.NumberRetries; attempt++ {

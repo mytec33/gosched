@@ -126,7 +126,7 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 		Name:      "retry exhaustion is partial",
 		Enabled:   true,
 		OnFailure: workflow.Retry,
-		Retry: &workflow.RetryPolicy{
+		Retry: workflow.RetryPolicy{
 			NumberRetries: 1,
 		},
 		Steps: []workflow.Step{
@@ -158,7 +158,7 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 		Name:      "retry success is completed",
 		Enabled:   true,
 		OnFailure: workflow.Retry,
-		Retry: &workflow.RetryPolicy{
+		Retry: workflow.RetryPolicy{
 			NumberRetries: 1,
 		},
 		Steps: []workflow.Step{
