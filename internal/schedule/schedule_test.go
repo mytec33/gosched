@@ -158,8 +158,8 @@ func TestExpandCadence(t *testing.T) {
 			}
 
 			trigger := workflow.Trigger{
-				Every:   &cadence,
-				BeginAt: &beginAt,
+				Every:   cadence,
+				BeginAt: beginAt,
 			}
 
 			got, err := expandCadence(trigger)
@@ -200,8 +200,8 @@ func TestExpandSchedule_Idempotent(t *testing.T) {
 				Name:    "Jackpots",
 				Enabled: true,
 				Trigger: workflow.Trigger{
-					Every:   &cadence,
-					BeginAt: &beginAt,
+					Every:   cadence,
+					BeginAt: beginAt,
 				},
 				OnFailure: workflow.Retry,
 				Steps: []workflow.Step{

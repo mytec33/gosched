@@ -49,8 +49,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 			Name:    "Workflow 1",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c15m,
-				BeginAt: &m1146,
+				Every:   c15m,
+				BeginAt: m1146,
 			},
 			OnFailure: workflow.Abort,
 			Steps: []workflow.Step{
@@ -61,8 +61,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 			Name:    "Workflow 1",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c15m,
-				BeginAt: &m1145,
+				Every:   c15m,
+				BeginAt: m1145,
 			},
 			OnFailure: workflow.Abort,
 			Steps: []workflow.Step{
@@ -74,8 +74,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 			Name:    "Workflow 2",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c15m,
-				BeginAt: &m1145,
+				Every:   c15m,
+				BeginAt: m1145,
 			},
 			OnFailure: workflow.Continue,
 			Steps: []workflow.Step{
@@ -86,8 +86,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 			Name:    "Workflow 1",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c15m,
-				BeginAt: &m1247,
+				Every:   c15m,
+				BeginAt: m1247,
 			},
 			OnFailure: workflow.Retry,
 			Steps: []workflow.Step{
@@ -99,8 +99,8 @@ func TestPrintScheduleConfig(t *testing.T) {
 			Enabled:        false,
 			DisabledReason: "demonstrating disabled display",
 			Trigger: workflow.Trigger{
-				Every:   &c15m,
-				BeginAt: &m1247,
+				Every:   c15m,
+				BeginAt: m1247,
 			},
 			OnFailure: workflow.Retry,
 			Steps: []workflow.Step{
@@ -243,8 +243,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 			Name:    "Workflow 1",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c1d,
-				BeginAt: &m1145,
+				Every:   c1d,
+				BeginAt: m1145,
 			},
 			OnFailure: workflow.Abort,
 			Steps: []workflow.Step{
@@ -256,8 +256,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 			Name:    "Workflow 2",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c1d,
-				BeginAt: &m1145,
+				Every:   c1d,
+				BeginAt: m1145,
 			},
 			OnFailure: workflow.Continue,
 			Steps: []workflow.Step{
@@ -268,8 +268,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 			Name:    "Workflow 3",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c1d,
-				BeginAt: &m1146,
+				Every:   c1d,
+				BeginAt: m1146,
 			},
 			OnFailure: workflow.Abort,
 			Steps: []workflow.Step{
@@ -280,8 +280,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 			Name:    "Workflow 1 at 12:47",
 			Enabled: true,
 			Trigger: workflow.Trigger{
-				Every:   &c1d,
-				BeginAt: &m1247,
+				Every:   c1d,
+				BeginAt: m1247,
 			},
 			OnFailure: workflow.Retry,
 			Steps: []workflow.Step{
@@ -293,8 +293,8 @@ func TestPrintScheduleOperational(t *testing.T) {
 			Enabled:        false,
 			DisabledReason: "disabled to test enable functionality",
 			Trigger: workflow.Trigger{
-				Every:   &c1d,
-				BeginAt: &m1247,
+				Every:   c1d,
+				BeginAt: m1247,
 			},
 			OnFailure: workflow.Retry,
 			Steps: []workflow.Step{

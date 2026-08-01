@@ -60,7 +60,7 @@ func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
 		return minutes, ErrTriggerIntervalInvalid
 	}
 
-	for minute := int(*trigger.BeginAt); minute < MinutesPerDay; minute += interval {
+	for minute := int(trigger.BeginAt); minute < MinutesPerDay; minute += interval {
 		minutes = append(minutes, workflow.MinuteOfDay(minute))
 	}
 

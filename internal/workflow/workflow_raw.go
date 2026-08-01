@@ -48,7 +48,7 @@ type WorkflowRaw struct {
 	Name           string       `json:"name"`
 	Enabled        *bool        `json:"enabled"`
 	DisabledReason *string      `json:"disabledReason"`
-	Trigger        *Trigger     `json:"trigger"`
+	Trigger        *TriggerRaw  `json:"trigger"`
 	OnFailure      *FailureMode `json:"onFailure"`
 	Retry          *RetryPolicy `json:"retry"`
 	Steps          []Step       `json:"steps"`
@@ -88,15 +88,17 @@ func (raw WorkflowRaw) Validate() (Workflow, []error) {
 	if raw.Trigger == nil {
 		errorList = append(errorList, ErrTriggerRequired)
 	} else {
-		if raw.Trigger.Every == nil {
-			errorList = append(errorList, ErrTriggerEveryRequired)
-		}
-
 		if raw.Trigger.BeginAt == nil {
 			errorList = append(errorList, ErrTriggerBeginAtRequired)
+		} else {
+			workflow.Trigger.BeginAt = *raw.Trigger.BeginAt
 		}
 
-		workflow.Trigger = *raw.Trigger
+		if raw.Trigger.Every == nil {
+			errorList = append(errorList, ErrTriggerEveryRequired)
+		} else {
+			workflow.Trigger.Every = *raw.Trigger.Every
+		}
 	}
 
 	// Invalid onFailure values are rejected during JSON decoding.

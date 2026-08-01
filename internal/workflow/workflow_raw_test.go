@@ -38,7 +38,7 @@ func validWorkflowRaw() WorkflowRaw {
 	return WorkflowRaw{
 		Name:    "Workflow",
 		Enabled: &enabled,
-		Trigger: &Trigger{
+		Trigger: &TriggerRaw{
 			Every:   &every,
 			BeginAt: &beginAt,
 		},

@@ -5,16 +5,16 @@ import (
 	"fmt"
 )
 
-type Trigger struct {
+type TriggerRaw struct {
 	Every   *Cadence     `json:"every"`
 	BeginAt *MinuteOfDay `json:"beginAt"`
 }
 
-func (t *Trigger) String() string {
+func (t *TriggerRaw) String() string {
 	return fmt.Sprintf("%s %s", t.Every.String(), t.BeginAt.String())
 }
 
-func (t *Trigger) UnmarshalJSON(b []byte) error {
+func (t *TriggerRaw) UnmarshalJSON(b []byte) error {
 	var raw struct {
 		Every   *Cadence     `json:"every"`
 		BeginAt *MinuteOfDay `json:"beginAt"`
