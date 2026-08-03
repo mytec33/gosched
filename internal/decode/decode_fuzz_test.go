@@ -19,7 +19,8 @@ func FuzzDecodeWorkflows(f *testing.F) {
 	f.Add([]byte(``))
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		wfs, validationErrors, err := DecodeWorkflows(bytes.NewReader(data))
+		sourceFileName := "not used"
+		wfs, validationErrors, err := DecodeWorkflows(bytes.NewReader(data), sourceFileName)
 		if err != nil || len(validationErrors) > 0 {
 			return
 		}

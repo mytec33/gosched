@@ -26,7 +26,8 @@ func TestDecode_InvalidJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, errorList, err := DecodeWorkflows(r)
+			sourceFileName := "not used"
+			_, errorList, err := DecodeWorkflows(r, sourceFileName)
 			if err == nil {
 				t.Fatal("expected error, got no error")
 			} else if !errors.Is(err, ErrDecodeWorkflow) {
@@ -131,7 +132,8 @@ func TestDecode_ValidInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
-			_, errorList, err := DecodeWorkflows(r)
+			sourceFileName := "not used"
+			_, errorList, err := DecodeWorkflows(r, sourceFileName)
 			if err != nil {
 				t.Fatalf("%v: expected no error, got %v", tt.name, err)
 			}
@@ -213,7 +215,8 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			_, errorList, err := DecodeWorkflows(r)
+			sourceFileName := "not used"
+			_, errorList, err := DecodeWorkflows(r, sourceFileName)
 
 			if err == nil {
 				t.Fatalf("%s: expected decode/system error: got %v, want %v", tt.name, err, tt.wantError)
@@ -336,7 +339,8 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			wfs, validationErrors, err := DecodeWorkflows(r)
+			sourceFileName := "not used"
+			wfs, validationErrors, err := DecodeWorkflows(r, sourceFileName)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -372,7 +376,8 @@ const InvalidWorkflowTimeNotString = `
 func TestDecode_NonStringTypedField(t *testing.T) {
 	r := strings.NewReader(InvalidWorkflowTimeNotString)
 
-	_, errorList, err := DecodeWorkflows(r)
+	sourceFile := "not used"
+	_, errorList, err := DecodeWorkflows(r, sourceFile)
 	if err == nil {
 		t.Fatal("expected decode error, got none")
 	}
@@ -454,7 +459,8 @@ func TestDecodeEnabledDisabledMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
-			wfs, validationErrors, err := DecodeWorkflows(r)
+			sourceFile := "not used"
+			wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -511,7 +517,8 @@ const oneValidOneInvalid = `
 
 func TestDecodePartialFailureYieldsNoSchedule(t *testing.T) {
 	r := strings.NewReader(oneValidOneInvalid)
-	wfs, validationErrors, err := DecodeWorkflows(r)
+	sourceFile := "not used"
+	wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
 
 	if err != nil {
 		t.Fatalf("unexpected decode/system error: %v", err)
@@ -544,7 +551,8 @@ const validHourlyFromMidnight = `
 
 func TestDecodeToExpandedScheduleContent(t *testing.T) {
 	r := strings.NewReader(validHourlyFromMidnight)
-	wfs, validationErrors, err := DecodeWorkflows(r)
+	sourceFile := "not used"
+	wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
 
 	if err != nil {
 		t.Fatalf("unexpected decode/system error: %v", err)

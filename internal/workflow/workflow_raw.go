@@ -58,9 +58,11 @@ type WorkflowRaw struct {
 	Steps          []Step       `json:"steps"`
 }
 
-func (raw WorkflowRaw) Validate() (Workflow, []error) {
+func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 	var workflow Workflow
 	var errorList []error
+
+	workflow.SourceFile = sourceFile
 
 	field := "workflow.name"
 	errorList = append(errorList, validateStringValue(field, raw.Name,

@@ -215,7 +215,8 @@ func TestWorkflowValidate(t *testing.T) {
 			wf := validWorkflowRaw()
 			tt.mutate(&wf)
 
-			_, validationErrors := wf.Validate()
+			sourceFileName := "not used"
+			_, validationErrors := wf.Validate(sourceFileName)
 
 			assertOnlyValidationError(t, validationErrors, tt.wantError)
 		})
@@ -229,7 +230,8 @@ func TestWorkflowValidate_DisabledValid(t *testing.T) {
 	wf.Enabled = &enabled
 	wf.DisabledReason = &reason
 
-	trusted, validationErrors := wf.Validate()
+	sourceFile := "not used"
+	trusted, validationErrors := wf.Validate(sourceFile)
 	if len(validationErrors) != 0 {
 		t.Fatalf("expected no validation errors, got %v", validationErrors)
 	}

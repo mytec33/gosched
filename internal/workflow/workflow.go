@@ -3,6 +3,7 @@
 package workflow
 
 type Workflow struct {
+	SourceFile     string
 	Name           string
 	Enabled        bool
 	DisabledReason string

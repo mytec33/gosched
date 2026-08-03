@@ -46,8 +46,9 @@ func TestPrintScheduleConfig(t *testing.T) {
 
 	s := FromWorkflows([]workflow.Workflow{
 		{
-			Name:    "Workflow 1",
-			Enabled: true,
+			SourceFile: "/home/foo/etl.json",
+			Name:       "Workflow 1",
+			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
 				BeginAt: m1146,
@@ -58,8 +59,9 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 		},
 		{
-			Name:    "Workflow 1",
-			Enabled: true,
+			SourceFile: "/home/foo/etl.json",
+			Name:       "Workflow 1",
+			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
 				BeginAt: m1145,
@@ -71,8 +73,9 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 		},
 		{
-			Name:    "Workflow 2",
-			Enabled: true,
+			SourceFile: "/home/foo/csv_exports.json",
+			Name:       "Workflow 2",
+			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
 				BeginAt: m1145,
@@ -83,8 +86,9 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 		},
 		{
-			Name:    "Workflow 1",
-			Enabled: true,
+			SourceFile: "/home/foo/csv_exports.json",
+			Name:       "Workflow 1",
+			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
 				BeginAt: m1247,
@@ -95,6 +99,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 			},
 		},
 		{
+			SourceFile:     "/home/foo/csv_exports.json",
 			Name:           "Workflow 4",
 			Enabled:        false,
 			DisabledReason: "demonstrating disabled display",
@@ -113,17 +118,22 @@ func TestPrintScheduleConfig(t *testing.T) {
 	s.printScheduleConfig(&buf)
 
 	got := buf.String()
-	want := `1: 1h 11:46  Workflow 1 (abort)
+	want := `
+/home/foo/etl.json:
+1: 1h 11:46  Workflow 1 (abort)
 		1: step 1 (timeout 30s)
 2: 1h 11:45  Workflow 1 (abort)
 		1: step 1 (timeout 30s, pause 5s)
 		2: step 2 (timeout 30s)
+
+/home/foo/csv_exports.json:
 3: 1h 11:45  Workflow 2 (continue)
 		1: step 1 (timeout 30s)
 4: 1h 12:47  Workflow 1 (retry)
 		1: step 1 (timeout 30m0s)
 5: 1h 12:47  Workflow 4 (retry) <--- disabled: demonstrating disabled display
 		1: step 1 (timeout 30m0s)
+
 `
 
 	if got != want {

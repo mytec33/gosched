@@ -27,7 +27,12 @@ func (s Schedule) printScheduleConfig(w io.Writer) {
 	workflows := s.Workflows()
 	wfWidth := len(strconv.Itoa(len(workflows)))
 
+	currentSourceFile := ""
 	for i, v := range workflows {
+		if currentSourceFile != v.SourceFile {
+			currentSourceFile = v.SourceFile
+			fmt.Fprintf(w, "\n%s:\n", currentSourceFile)
+		}
 		fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
 			wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure, disabledSuffix(v))
 
@@ -36,6 +41,8 @@ func (s Schedule) printScheduleConfig(w io.Writer) {
 			printStep(numSteps, j, step, w)
 		}
 	}
+
+	fmt.Fprintf(w, "\n")
 }
 
 func displayReason(s string) string {

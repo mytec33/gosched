@@ -73,7 +73,7 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	}
 	defer f.Close()
 
-	wfs, validationErrors, err := DecodeWorkflows(f)
+	wfs, validationErrors, err := DecodeWorkflows(f, file)
 	if err != nil {
 		return []workflow.Workflow{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
 	}
@@ -84,7 +84,7 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 // DecodeWorkflows reads JSON and performs validation.
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
-func DecodeWorkflows(r io.Reader) ([]workflow.Workflow, []error, error) {
+func DecodeWorkflows(r io.Reader, sourceFile string) ([]workflow.Workflow, []error, error) {
 	var workflows []workflow.Workflow
 	var workflowsRaw []workflow.WorkflowRaw
 
@@ -106,7 +106,7 @@ func DecodeWorkflows(r io.Reader) ([]workflow.Workflow, []error, error) {
 	// Loop through workflows to validate and bail if anything found
 	var valErrs []error
 	for _, wfRaw := range workflowsRaw {
-		wf, valErrors := wfRaw.Validate()
+		wf, valErrors := wfRaw.Validate(sourceFile)
 		if len(valErrors) > 0 {
 			valErrs = append(valErrs, valErrors...)
 			continue
