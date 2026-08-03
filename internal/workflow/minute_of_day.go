@@ -15,12 +15,8 @@ var (
 
 type MinuteOfDay int
 
-func minuteOfDayFromTime(t time.Time) int {
-	return t.Hour()*60 + t.Minute()
-}
-
 func MinuteOfDayFromTime(t time.Time) MinuteOfDay {
-	return MinuteOfDay(minuteOfDayFromTime(t))
+	return MinuteOfDay(t.Hour()*60 + t.Minute())
 }
 
 func (m *MinuteOfDay) MinutesSince(previous MinuteOfDay) int {
