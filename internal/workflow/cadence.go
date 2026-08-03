@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 var (
@@ -99,18 +100,20 @@ func ParseCadence(s string) (Cadence, error) {
 		return Cadence{}, ErrCadenceEmpty
 	}
 
-	if len(s) < 2 {
+	if utf8.RuneCountInString(s) < 2 {
 		return Cadence{}, ErrCadenceTooShort
 	}
 
-	rawNum := s[:len(s)-1]
+	_, lastCharSize := utf8.DecodeLastRuneInString(s)
+
+	rawNum := s[:len(s)-lastCharSize]
 	repetition, err := parseRepetition(rawNum)
 	if err != nil {
 		return Cadence{}, err
 	}
 
-	rawMeasure := strings.ToLower(s[len(s)-1:])
-	measure, err := parseMeasure(rawMeasure)
+	last := strings.ToLower(s[len(s)-lastCharSize:])
+	measure, err := parseMeasure(last)
 	if err != nil {
 		return Cadence{}, err
 	}

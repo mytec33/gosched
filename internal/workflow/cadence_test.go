@@ -45,9 +45,9 @@ func TestParseCadence_Invalid(t *testing.T) {
 	}{
 		{"empty string", "", ErrCadenceEmpty},
 		{"too short missing unit", "5", ErrCadenceTooShort},
+		{"too short missing unit unicode", "５", ErrCadenceTooShort},
 		{"invalid integer payload", "abcde", ErrCadenceNumInvalid},
 		{"non-numeric prefix", "1a2h", ErrCadenceNumInvalid},
-		{"invalid measure unit", "12s", ErrCadenceUnitInvalid},
 		{"repetition max breach", "99m", ErrCadenceMinuteExceeded},
 		{"repetition min breach", "0m", ErrCadenceBoundsInvalid},
 		{"day boundary breach", "2d", ErrCadenceDayExceeded},
@@ -59,6 +59,8 @@ func TestParseCadence_Invalid(t *testing.T) {
 		{"leading spaces", " 3m", ErrCadenceNumInvalid},
 		{"leading tab", "\t3m", ErrCadenceNumInvalid},
 		{"unicode digit", "１m", ErrCadenceNumNonASCII},
+		{"invalid measure unit", "12s", ErrCadenceUnitInvalid},
+		{"invalid measure unit unicode 3 bytes", "1°", ErrCadenceUnitInvalid},
 	}
 
 	for _, tt := range tests {
