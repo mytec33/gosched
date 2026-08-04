@@ -4,19 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 const (
-	MaxDisabledReasonLength      int = 256
-	MaxRetryCount                int = 8
-	MaxRetryPauseLimit           int = 7200
-	MaxStepArgLength             int = 256
-	MaxStepArgsCount             int = 64
-	MaxStepArgsTotalLength       int = 4096
-	MaxStepsCount                int = 32
-	MaxWorkflowNameLength        int = 256
-	MaxWorkflowStepProgramLength int = 256
-	MaxWorkflowStepNameLength    int = 256
+	MaxDisabledReasonLength      int           = 256
+	MaxRetryCount                int           = 8
+	MaxRetryPauseLimit           int           = 7200
+	MaxStepArgLength             int           = 256
+	MaxStepArgsCount             int           = 64
+	MaxStepArgsTotalLength       int           = 4096
+	MaxStepsCount                int           = 32
+	MaxStepPauseDuration         time.Duration = time.Hour * 1
+	MaxWorkflowNameLength        int           = 256
+	MaxWorkflowStepProgramLength int           = 256
+	MaxWorkflowStepNameLength    int           = 256
 )
 
 var (
@@ -41,6 +43,7 @@ var (
 	ErrStepArgsCountExceeded       = fmt.Errorf("too many args provided: max is %d", MaxStepArgsCount)
 	ErrStepArgsTotalLengthExceeded = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
 	ErrStepCountExceeded           = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
+	ErrPauseDurationTooLarge       = fmt.Errorf("pause duration must be 1 hour or less")
 	ErrStepsRequired               = fmt.Errorf("steps are required")
 
 	ErrTriggerRequired        = fmt.Errorf("trigger field is required")
@@ -152,6 +155,11 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 
 		if steps.Pause.Duration() < 0 {
 			errorList = append(errorList, ErrNumberNegative)
+		}
+
+		field = fmt.Sprintf("workflow.steps[%d].pause", i+1)
+		if steps.Pause.Duration() > MaxStepPauseDuration {
+			errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrPauseDurationTooLarge))
 		}
 
 		field = fmt.Sprintf("workflow.steps[%d].program", i+1)
