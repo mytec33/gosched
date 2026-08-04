@@ -30,6 +30,19 @@ was confirmed against source; measured output is included where it exists.
   far earlier, and the zero value never escapes the raw/trusted boundary that split exists
   to enforce.
 
+  Starting state of that step loop (`workflow_raw.go:151`): **`Timeout` has no validation at
+  all.** So this is net-new code, not an edit.
+
+  Trap: `for i, steps := range raw.Steps` binds `steps` as a **copy**, so
+  `steps.Timeout = default` is silently discarded. Write through `raw.Steps[i].Timeout`, or
+  build the trusted slice explicitly instead of the wholesale `workflow.Steps = raw.Steps` on
+  line 174 — that line currently shares the backing array with the raw struct, which the
+  comment above it acknowledges by assuming immutability after validation.
+
+  Leftover to sweep while in here: the `steps.Pause.Duration() < 0` check on line 156 can
+  never fire — `ParseConfigDuration` rejects a leading `-` (`config_duration.go:27`) — and it
+  now sits directly above live code.
+
   **It simplifies three places:**
   - `runStepCommand` — loses the `if/else`, the `var cmd` / `var ctx` / `var cancel`
     declarations, the `if cancel != nil` block, and the `ctx != nil` guard on line 41.
@@ -50,8 +63,27 @@ was confirmed against source; measured output is included where it exists.
     the `"no timeout"` branch in the same change to turn a silent lie into two loud failures.
 
   **`POLICY`** — is the default generous-but-finite, or does `timeout` become required?
-  Required converts the whole class into a startup config error. Also unresolved: no maximum
-  on step timeout, and no maximum on step pause (retry pause is capped at 7200s).
+  Required converts the whole class into a startup config error. Still unresolved: no maximum
+  on step timeout.
+
+- [x] **`DEFECT` Step pause was unbounded.** *Fixed 2026-08-03.*
+
+  `time.Sleep(pause)` at `internal/runner/scheduler.go:213` is non-cancellable and had no
+  upper limit, while retry pause was already capped at 7200s. Now bounded in validation:
+  `MaxStepPauseDuration time.Duration = time.Hour` (`workflow_raw.go:18`), checked at
+  `workflow_raw.go:161`, reported through the same `workflow.steps[%d].pause` field wrapper
+  the sibling checks use. Worst-case blocking on that sleep drops from unbounded to one hour
+  per step. `internal/workflow` tests pass.
+
+  The differing ceilings were raised as a possible inconsistency and **ruled by Bill,
+  2026-08-03: intended, closed.** They measure unrelated things and only share a unit:
+
+  - **Retry pause (7200s)** is sized to roughly how long the network team takes to look at
+    and address an issue, including vendor round-trips.
+  - **Step pause (1h ceiling)** is backoff against the databases being queried.
+
+  Do not re-raise. Worth a comment on both constants — nothing in the code carries this, which
+  is why it read as drift.
 
   Suggested order: default at validation → delete the `"no timeout"` branch → `CommandContext`
   always → `WaitDelay` → scheduler-context threading as a separate pass (see next item).
@@ -73,6 +105,12 @@ was confirmed against source; measured output is included where it exists.
 
   Note: `TODO.md` lists graceful shutdown as done. It is done for *scheduling*, not for
   *in-flight work*.
+
+  Note on the retry sleep: `MaxRetryCount = 8` × `MaxRetryPauseLimit = 7200s` means a step can
+  legitimately sit for up to 16 hours, and that is **by design** — the pause is sized to human
+  response time from the network team and vendors. So the bound is not the problem. It makes
+  cancellability strictly more important, not less: a workflow waiting out a deliberate
+  multi-hour pause is exactly the case where `running.Wait()` never returns.
 
   **Trap — error classification breaks when the parent becomes the scheduler context.**
   Line 41 of `runner.go` currently treats a fired context as a timeout:
@@ -191,6 +229,16 @@ was confirmed against source; measured output is included where it exists.
 
 Reasonable constraints for a lightweight single-instance scheduler — worth stating in
 `README.md` if intentional.
+
+---
+
+## Documentation
+
+- [ ] Add to `README.md`: what the two pauses measure and why the ceilings differ — retry
+      pause (7200s) is sized to network-team and vendor response time; step pause (1h) is
+      database backoff. Unrelated quantities that share a unit. Two reviews read it as drift
+      because nothing says otherwise.
+- [ ] Add to `README.md`: the architectural constraints listed above.
 
 ---
 
