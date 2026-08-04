@@ -28,6 +28,7 @@ func NewWorkflowLogger(workflowName string) WorkflowLogger {
 		WfRunID: wfID,
 		Out: StdOut.With(
 			slog.String("wfRunID", wfID),
+			slog.String("workflow", workflowName),
 		),
 	}
 }
