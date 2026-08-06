@@ -47,7 +47,7 @@ func validWorkflowRaw() WorkflowRaw {
 			PauseSeconds:  0,
 		},
 		OnFailure: &onFailure,
-		Steps: []Step{
+		Steps: []StepRaw{
 			{Name: "Step", Program: "program", Args: []string{"arg"}},
 		},
 	}
@@ -183,7 +183,7 @@ func TestWorkflowValidate(t *testing.T) {
 		{
 			name: "step name duplicate",
 			mutate: func(wf *WorkflowRaw) {
-				wf.Steps = append(wf.Steps, Step{Name: "Step", Program: "program"})
+				wf.Steps = append(wf.Steps, StepRaw{Name: "Step", Program: "program"})
 			},
 			wantError: ErrStepDuplicateName,
 		},
@@ -323,10 +323,10 @@ func repeatedArgs(count int, value string) []string {
 	return args
 }
 
-func repeatedSteps(count int) []Step {
-	steps := make([]Step, count)
+func repeatedSteps(count int) []StepRaw {
+	steps := make([]StepRaw, count)
 	for i := range steps {
-		steps[i] = Step{Name: fmt.Sprintf("Step %d", i+1), Program: "program"}
+		steps[i] = StepRaw{Name: fmt.Sprintf("Step %d", i+1), Program: "program"}
 	}
 
 	return steps

@@ -13,14 +13,6 @@ type Workflow struct {
 	Steps          []Step
 }
 
-type Step struct {
-	Name    string         `json:"name"`
-	Program string         `json:"program"`
-	Args    []string       `json:"args"`
-	Timeout ConfigDuration `json:"timeout"`
-	Pause   ConfigDuration `json:"pause"`
-}
-
 func WorkflowAbortsOnFailure(wf Workflow) bool {
 	return wf.OnFailure == Abort
 }

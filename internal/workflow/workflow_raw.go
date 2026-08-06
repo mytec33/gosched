@@ -58,7 +58,7 @@ type WorkflowRaw struct {
 	Trigger        *TriggerRaw  `json:"trigger"`
 	OnFailure      *FailureMode `json:"onFailure"`
 	Retry          *RetryPolicy `json:"retry"`
-	Steps          []Step       `json:"steps"`
+	Steps          []StepRaw    `json:"steps"`
 }
 
 func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
@@ -148,7 +148,10 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 		errorList = append(errorList, ErrStepCountExceeded)
 	}
 
-	for i, steps := range raw.Steps {
+	defaultTimeout := ConfigDuration{duration: 30 * time.Second}
+	for i := range raw.Steps {
+		steps := &raw.Steps[i]
+
 		field := fmt.Sprintf("workflow.steps[%d].name", i+1)
 		errorList = append(errorList, validateStringValue(field, steps.Name,
 			MaxWorkflowStepNameLength)...)
@@ -168,12 +171,25 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 
 		field = fmt.Sprintf("workflow.steps[%d].args", i+1)
 		errorList = append(errorList, validateStepArgs(field, steps.Args)...)
-	}
-	// Steps (and the entire schedule) are treated as immutable config after
-	// validation so args won't need a deep copy
-	workflow.Steps = raw.Steps
 
-	errorList = append(errorList, validateUniqueStepNames(raw.Steps)...)
+		if steps.Timeout == nil {
+			steps.Timeout = &defaultTimeout
+		}
+	}
+
+	steps := make([]Step, 0, len(raw.Steps))
+	for _, rawStep := range raw.Steps {
+		steps = append(steps, Step{
+			Name:    rawStep.Name,
+			Program: rawStep.Program,
+			Args:    rawStep.Args,
+			Timeout: *rawStep.Timeout,
+			Pause:   rawStep.Pause,
+		})
+	}
+	workflow.Steps = steps
+
+	errorList = append(errorList, validateUniqueStepNames(workflow.Steps)...)
 
 	return workflow, errorList
 }
