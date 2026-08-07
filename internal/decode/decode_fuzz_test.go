@@ -66,13 +66,8 @@ func FuzzDecodeWorkflows(f *testing.F) {
 			return
 		}
 
-		sched := schedule.FromWorkflows(wfs)
-
-		// Gate on schedule validation exactly as main.go does before expanding.
-		if len(sched.Validate()) > 0 {
-			return
-		}
-		if err := sched.ExpandSchedule(); err != nil {
+		sched, errorList := schedule.New(wfs)
+		if len(errorList) > 0 {
 			return
 		}
 

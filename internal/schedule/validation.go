@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (s Schedule) Validate() []error {
+func (s Schedule) validate() []error {
 	var errorList []error
 
 	errorList = append(errorList, s.validateWorkflowCount()...)

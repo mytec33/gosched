@@ -62,8 +62,9 @@ func ReadWorkflowFiles(filename manifest.WorkflowFiles) (schedule.Schedule, []er
 		return schedule.Schedule{}, allValidationErrors, nil
 	}
 
-	sched := schedule.FromWorkflows(allWorkflows)
-	return sched, nil, nil
+	sched, errorList := schedule.New(allWorkflows)
+
+	return sched, errorList, nil
 }
 
 func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {

@@ -30,15 +30,24 @@ type Schedule struct {
 	byMinute  map[workflow.MinuteOfDay][]workflow.Workflow
 }
 
-func NewSchedule() Schedule {
-	return Schedule{byMinute: make(map[workflow.MinuteOfDay][]workflow.Workflow)}
-}
+func New(wfs []workflow.Workflow) (Schedule, []error) {
+	var errorList []error
 
-func FromWorkflows(w []workflow.Workflow) Schedule {
-	s := NewSchedule()
-	s.workflows = append(s.workflows, w...)
+	s := Schedule{
+		workflows: append([]workflow.Workflow(nil), wfs...),
+	}
 
-	return s
+	errorList = s.validate()
+	if len(errorList) > 0 {
+		return Schedule{}, errorList
+	}
+
+	err := s.expandSchedule()
+	if err != nil {
+		return Schedule{}, []error{err}
+	}
+
+	return s, nil
 }
 
 func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
@@ -67,7 +76,7 @@ func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
 	return minutes, nil
 }
 
-func (s *Schedule) ExpandSchedule() error {
+func (s *Schedule) expandSchedule() error {
 	var newByMinute = make(map[workflow.MinuteOfDay][]workflow.Workflow)
 
 	for _, wf := range s.workflows {

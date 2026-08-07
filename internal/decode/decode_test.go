@@ -549,7 +549,7 @@ const validHourlyFromMidnight = `
 ]
 `
 
-func TestDecodeToExpandedScheduleContent(t *testing.T) {
+func TestDecodeToReadySchedule(t *testing.T) {
 	r := strings.NewReader(validHourlyFromMidnight)
 	sourceFile := "not used"
 	wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
@@ -561,12 +561,9 @@ func TestDecodeToExpandedScheduleContent(t *testing.T) {
 		t.Fatalf("expected no validation errors, got %v", validationErrors)
 	}
 
-	sched := schedule.FromWorkflows(wfs)
-	if scErrs := sched.Validate(); len(scErrs) > 0 {
-		t.Fatalf("unexpected schedule validation errors: %v", scErrs)
-	}
-	if err := sched.ExpandSchedule(); err != nil {
-		t.Fatalf("unexpected expansion error: %v", err)
+	sched, errorList := schedule.New(wfs)
+	if errorList != nil {
+		t.Fatalf("expected no errors, got %v\n", errorList)
 	}
 
 	if _, err := sched.GetWorkflowByName("test-hourly"); err != nil {

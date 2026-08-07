@@ -46,7 +46,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			errorList := tt.schedule.Validate()
+			errorList := tt.schedule.validate()
 
 			found := false
 			for _, e := range errorList {
@@ -72,7 +72,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
 		},
 	}
 
-	errorList := s.Validate()
+	errorList := s.validate()
 
 	found := false
 	for _, e := range errorList {
@@ -90,7 +90,7 @@ func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
 func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
 	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount)}
 
-	errorList := s.Validate()
+	errorList := s.validate()
 
 	if hasError(errorList, ErrWorkflowCountExceeded) {
 		t.Fatalf("unexpected %v in %v", ErrWorkflowCountExceeded, errorList)
@@ -100,7 +100,7 @@ func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
 func TestScheduleValidate_WorkflowCount_InvalidOverLimit(t *testing.T) {
 	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount + 1)}
 
-	errorList := s.Validate()
+	errorList := s.validate()
 
 	if !hasError(errorList, ErrWorkflowCountExceeded) {
 		t.Fatalf("expected %v, got %v", ErrWorkflowCountExceeded, errorList)
@@ -211,7 +211,7 @@ func TestExpandSchedule_Idempotent(t *testing.T) {
 		},
 	}
 
-	if err := s.ExpandSchedule(); err != nil {
+	if err := s.expandSchedule(); err != nil {
 		t.Fatalf("first expansion: %v", err)
 	}
 
@@ -220,7 +220,7 @@ func TestExpandSchedule_Idempotent(t *testing.T) {
 		firstCount += len(workflows)
 	}
 
-	if err := s.ExpandSchedule(); err != nil {
+	if err := s.expandSchedule(); err != nil {
 		t.Fatalf("second expansion: %v", err)
 	}
 

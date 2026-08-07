@@ -87,18 +87,6 @@ func run() int {
 		return ExitValidation
 	}
 
-	valErrors := sched.Validate()
-	if len(valErrors) > 0 {
-		logging.StdOut.Error("startup", "reason", "failed to validate schedule", "error(s)", valErrors)
-		return ExitScheduleValidation
-	}
-
-	err = sched.ExpandSchedule()
-	if err != nil {
-		logging.StdOut.Error("startup", "reason", "schedule expansion failed", "error", err)
-		return ExitScheduleExpansion
-	}
-
 	if printSchedule != "" {
 		return printConfiguration(printSchedule, sched)
 	}

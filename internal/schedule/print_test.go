@@ -44,7 +44,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		t.Fatalf("parse config duration 1800s: %v", err)
 	}
 
-	s := FromWorkflows([]workflow.Workflow{
+	workflows := []workflow.Workflow{
 		{
 			SourceFile: "/home/foo/etl.json",
 			Name:       "Workflow 1",
@@ -60,7 +60,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		},
 		{
 			SourceFile: "/home/foo/etl.json",
-			Name:       "Workflow 1",
+			Name:       "Workflow 2",
 			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
@@ -74,7 +74,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		},
 		{
 			SourceFile: "/home/foo/csv_exports.json",
-			Name:       "Workflow 2",
+			Name:       "Workflow 3",
 			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
@@ -87,7 +87,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		},
 		{
 			SourceFile: "/home/foo/csv_exports.json",
-			Name:       "Workflow 1",
+			Name:       "Workflow 4",
 			Enabled:    true,
 			Trigger: workflow.Trigger{
 				Every:   c15m,
@@ -100,7 +100,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 		},
 		{
 			SourceFile:     "/home/foo/csv_exports.json",
-			Name:           "Workflow 4",
+			Name:           "Workflow 5",
 			Enabled:        false,
 			DisabledReason: "demonstrating disabled display",
 			Trigger: workflow.Trigger{
@@ -112,7 +112,12 @@ func TestPrintScheduleConfig(t *testing.T) {
 				{Name: "step 1", Timeout: timeout1800s},
 			},
 		},
-	})
+	}
+
+	s, errorList := New(workflows)
+	if errorList != nil {
+		t.Fatalf("expected no errors, got %v\n", errorList)
+	}
 
 	var buf bytes.Buffer
 	s.printScheduleConfig(&buf)
@@ -122,16 +127,16 @@ func TestPrintScheduleConfig(t *testing.T) {
 /home/foo/etl.json:
 1: 1h 11:46  Workflow 1 (abort)
 		1: step 1 (timeout 30s)
-2: 1h 11:45  Workflow 1 (abort)
+2: 1h 11:45  Workflow 2 (abort)
 		1: step 1 (timeout 30s, pause 5s)
 		2: step 2 (timeout 30s)
 
 /home/foo/csv_exports.json:
-3: 1h 11:45  Workflow 2 (continue)
+3: 1h 11:45  Workflow 3 (continue)
 		1: step 1 (timeout 30s)
-4: 1h 12:47  Workflow 1 (retry)
+4: 1h 12:47  Workflow 4 (retry)
 		1: step 1 (timeout 30m0s)
-5: 1h 12:47  Workflow 4 (retry) <--- disabled: demonstrating disabled display
+5: 1h 12:47  Workflow 5 (retry) <--- disabled: demonstrating disabled display
 		1: step 1 (timeout 30m0s)
 
 `
@@ -248,7 +253,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 		t.Fatalf("parse config duration 1800s: %v", err)
 	}
 
-	s := FromWorkflows([]workflow.Workflow{
+	workflows := []workflow.Workflow{
 		{
 			Name:    "Workflow 1",
 			Enabled: true,
@@ -311,10 +316,11 @@ func TestPrintScheduleOperational(t *testing.T) {
 				{Name: "step 1", Timeout: timeOut1800s},
 			},
 		},
-	})
+	}
 
-	if err := s.ExpandSchedule(); err != nil {
-		t.Fatalf("expand schedule: %v", err)
+	s, errorList := New(workflows)
+	if errorList != nil {
+		t.Fatalf("expected no errors, got %v\n", errorList)
 	}
 
 	var buf bytes.Buffer
