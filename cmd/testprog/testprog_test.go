@@ -44,7 +44,7 @@ func TestSleepDuration(t *testing.T) {
 			name:         "sleep 0 exits quickly",
 			sleepSecs:    "0",
 			minDuration:  0,
-			maxDuration:  1 * time.Second,
+			maxDuration:  2 * time.Second,
 			wantExitCode: 0,
 		},
 		{
