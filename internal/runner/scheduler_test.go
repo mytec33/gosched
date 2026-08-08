@@ -14,6 +14,7 @@ import (
 )
 
 func TestExecuteWorkflowDisabledSkipsSteps(t *testing.T) {
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	marker := filepath.Join(t.TempDir(), "ran")
 	wf := workflow.Workflow{
 		Name:           "disabled workflow is skipped",
@@ -23,8 +24,13 @@ func TestExecuteWorkflowDisabledSkipsSteps(t *testing.T) {
 		Steps: []workflow.Step{
 			{
 				Name:    "must not run",
-				Program: "/bin/sh",
-				Args:    []string{"-c", "touch \"$1\"", "skip-script", marker},
+				Program: testprog,
+				Args: []string{
+					"-sleep", "0",
+					"-role", "must not run",
+					"-exit-code", "5",
+					"-fail-once-marker", marker,
+				},
 			},
 		},
 	}
@@ -152,6 +158,7 @@ func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
 }
 
 func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
 	dir := t.TempDir()
 	markerFile := filepath.Join(dir, "retried")
 	wf := workflow.Workflow{
@@ -164,12 +171,12 @@ func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
 		Steps: []workflow.Step{
 			{
 				Name:    "succeeds on retry",
-				Program: "/bin/sh",
+				Program: testprog,
 				Args: []string{
-					"-c",
-					"if [ -f \"$1\" ]; then exit 0; fi; touch \"$1\"; exit 5",
-					"retry-script",
-					markerFile,
+					"-sleep", "0",
+					"-role", "succeeds on retry",
+					"-exit-code", "5",
+					"-fail-once-marker", markerFile,
 				},
 			},
 		},
