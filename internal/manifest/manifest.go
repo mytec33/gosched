@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	ErrOpenManifest = errors.New("unable to open manifest")
-	ErrScanManifest = errors.New("unable to scan manifest")
+	ErrEmptyManifest = errors.New("manifest file must contain at least one file containing a workflow")
+	ErrOpenManifest  = errors.New("unable to open manifest")
+	ErrScanManifest  = errors.New("unable to scan manifest")
 )
 
 type WorkflowFiles []string
@@ -43,6 +44,10 @@ func ParseManifest(path string) (WorkflowFiles, error) {
 	err = scanner.Err()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %q: %w", ErrScanManifest, path, err)
+	}
+
+	if len(schedules) == 0 {
+		return nil, ErrEmptyManifest
 	}
 
 	return schedules, nil

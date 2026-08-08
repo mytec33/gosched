@@ -1,0 +1,5 @@
+# foo.txt is the first workflow
+foo.txt
+
+# bar.txt is the second workflow
+bar.txt

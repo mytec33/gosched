@@ -65,12 +65,6 @@ func run() int {
 		return ExitManifestError
 	}
 
-	if len(scheduleFiles) == 0 {
-		logging.StdOut.Error("startup", "reason", "manifest contains no schedule files")
-		flag.Usage()
-		return ExitInvalidArgs
-	}
-
 	sched, decodeErrors, err := decode.ReadWorkflowFiles(scheduleFiles)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
