@@ -156,10 +156,6 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 		errorList = append(errorList, validateStringValue(field, steps.Name,
 			MaxWorkflowStepNameLength)...)
 
-		if steps.Pause.Duration() < 0 {
-			errorList = append(errorList, ErrNumberNegative)
-		}
-
 		field = fmt.Sprintf("workflow.steps[%d].pause", i+1)
 		if steps.Pause.Duration() > MaxStepPauseDuration {
 			errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrPauseDurationTooLarge))

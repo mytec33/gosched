@@ -54,6 +54,11 @@ func validWorkflowRaw() WorkflowRaw {
 }
 
 func TestWorkflowValidate(t *testing.T) {
+	configDuration, err := ParseConfigDuration("1h1m")
+	if err != nil {
+		t.Fatalf("expected no error parsing configduration, got %v", err)
+	}
+
 	// only select whitespace tests are included as the validateStringValue function
 	// is tested heavily on its own. Leave a few here to prove higher level wiring works.
 	tests := []struct {
@@ -186,6 +191,13 @@ func TestWorkflowValidate(t *testing.T) {
 				wf.Steps = append(wf.Steps, StepRaw{Name: "Step", Program: "program"})
 			},
 			wantError: ErrStepDuplicateName,
+		},
+		{
+			name: "step pause too large",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps = append(wf.Steps, StepRaw{Name: "Step Pause Too Large", Program: "program", Pause: configDuration})
+			},
+			wantError: ErrPauseDurationTooLarge,
 		},
 		{
 			name: "trigger block missing",
