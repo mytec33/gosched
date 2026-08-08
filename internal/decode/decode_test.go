@@ -562,7 +562,7 @@ func TestDecodeToReadySchedule(t *testing.T) {
 	}
 
 	sched, errorList := schedule.New(wfs)
-	if errorList != nil {
+	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v\n", errorList)
 	}
 

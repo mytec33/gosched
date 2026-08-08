@@ -115,7 +115,7 @@ func TestPrintScheduleConfig(t *testing.T) {
 	}
 
 	s, errorList := New(workflows)
-	if errorList != nil {
+	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v\n", errorList)
 	}
 
@@ -319,7 +319,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 	}
 
 	s, errorList := New(workflows)
-	if errorList != nil {
+	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v\n", errorList)
 	}
 
