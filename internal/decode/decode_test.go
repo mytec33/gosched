@@ -591,3 +591,35 @@ func TestDecodeToReadySchedule(t *testing.T) {
 		t.Fatalf("expected 0 workflows at minute 30, got %d", got)
 	}
 }
+
+func TestDecodeWorkflows_UnknownTriggerField(t *testing.T) {
+	jsonInput := `[
+		{
+			"name": "workflow",
+			"enabled": true,
+			"trigger": {
+				"every": "1h",
+				"beginAt": "10:35",
+				"evrey": "2h"
+			},
+			"onFailure": "continue",
+			"steps": [
+				{
+					"name": "step",
+					"program": "program"
+				}
+			]
+		}
+	]`
+
+	_, validationErrors, err := DecodeWorkflows(strings.NewReader(jsonInput),
+		"source file not ")
+
+	if !errors.Is(err, ErrDecodeWorkflow) {
+		t.Fatalf("expected %v, got %T: %v", ErrDecodeWorkflow, err, err)
+	}
+
+	if len(validationErrors) > 0 {
+		t.Fatalf("expected no validation errors, got %v", validationErrors)
+	}
+}
