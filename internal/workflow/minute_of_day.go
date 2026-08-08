@@ -41,7 +41,9 @@ func (m *MinuteOfDay) String() string {
 
 func (m *MinuteOfDay) UnmarshalJSON(b []byte) error {
 	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
+
+	err := json.Unmarshal(b, &s)
+	if err != nil {
 		return err
 	}
 

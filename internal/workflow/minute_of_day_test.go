@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -45,7 +46,7 @@ func TestParseMinuteOfDay_Valid(t *testing.T) {
 		input string
 		want  string
 	}{
-		{name: "midnight", input: "00:00", want: "00:00"},
+		{name: "beginning of day", input: "00:00", want: "00:00"},
 		{name: "first minute", input: "00:01", want: "00:01"},
 		{name: "zero-padded hour", input: "08:00", want: "08:00"},
 		{name: "non-padded hour normalizes", input: "8:00", want: "08:00"},
@@ -187,4 +188,49 @@ func TestMinuteOfDayMinutesSince(t *testing.T) {
 			}
 		})
 	}
+}
+
+// This test is intentional overlap. We had to implement the UnmarshalJSON
+// interface so it needs to be tested despite mimicking tests above.
+func TestMinuteOfDayUnmarshalJSON_Valid(t *testing.T) {
+	type config struct {
+		BeginAt MinuteOfDay `json:"beginAt"`
+	}
+
+	var got config
+	want := config{
+		BeginAt: MinuteOfDay(10*60 + 35),
+	}
+
+	err := json.Unmarshal([]byte(`{"beginAt":"10:35"}`), &got)
+	if err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+
+	if want != got {
+		t.Fatalf("expected %v, got %v", want, got)
+	}
+}
+
+// This test is intentional overlap. We had to implement the UnmarshalJSON
+// interface so it needs to be tested despite mimicking tests above.
+func TestMinuteOfDayUnmarshalJSON_Invalid(t *testing.T) {
+	type config struct {
+		BeginAt MinuteOfDay `json:"beginAt"`
+	}
+
+	var got config
+
+	var typeError *json.UnmarshalTypeError
+	err := json.Unmarshal([]byte(`{"beginAt": 1023}`), &got)
+	if !errors.As(err, &typeError) {
+		t.Fatalf("expected json.UnmarshalTypeError, got %T: %v", err, err)
+	}
+
+	expectedError := ErrTimeFormatInvalid
+	err = json.Unmarshal([]byte(`{"beginAt": "90:23"}`), &got)
+	if !errors.Is(err, expectedError) {
+		t.Fatalf("expected %v, got %T: %v", expectedError, err, err)
+	}
+
 }
