@@ -32,10 +32,10 @@ var (
 	ErrFileIOError    = errors.New("error opening file")
 )
 
-// ReadWorkflowFiles opens the schedule file and delegates decoding and validation.
+// LoadSchedule opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func ReadWorkflowFiles(filename manifest.WorkflowFiles) (schedule.Schedule, []error, error) {
+func LoadSchedule(filename manifest.WorkflowFiles) (schedule.Schedule, []error, error) {
 	var allValidationErrors []error
 	var allWorkflows []workflow.Workflow
 
@@ -74,7 +74,7 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	}
 	defer f.Close()
 
-	wfs, validationErrors, err := DecodeWorkflows(f, file)
+	wfs, validationErrors, err := decodeWorkflows(f, file)
 	if err != nil {
 		return []workflow.Workflow{}, validationErrors, fmt.Errorf("decode workflows file %q: %w", file, err)
 	}
@@ -82,10 +82,10 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	return wfs, validationErrors, nil
 }
 
-// DecodeWorkflows reads JSON and performs validation.
+// decodeWorkflows reads JSON and performs validation.
 // The returned slice contains validation errors found in the input.
 // The returned error is reserved for I/O or decoding failures.
-func DecodeWorkflows(r io.Reader, sourceFile string) ([]workflow.Workflow, []error, error) {
+func decodeWorkflows(r io.Reader, sourceFile string) ([]workflow.Workflow, []error, error) {
 	var workflows []workflow.Workflow
 	var workflowsRaw []workflow.WorkflowRaw
 

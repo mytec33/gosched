@@ -27,7 +27,7 @@ func TestDecode_InvalidJSON(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
 			sourceFileName := "not used"
-			_, errorList, err := DecodeWorkflows(r, sourceFileName)
+			_, errorList, err := decodeWorkflows(r, sourceFileName)
 			if err == nil {
 				t.Fatal("expected error, got no error")
 			} else if !errors.Is(err, ErrDecodeWorkflow) {
@@ -133,7 +133,7 @@ func TestDecode_ValidInput(t *testing.T) {
 			r := strings.NewReader(tt.json)
 
 			sourceFileName := "not used"
-			_, errorList, err := DecodeWorkflows(r, sourceFileName)
+			_, errorList, err := decodeWorkflows(r, sourceFileName)
 			if err != nil {
 				t.Fatalf("%v: expected no error, got %v", tt.name, err)
 			}
@@ -216,7 +216,7 @@ func TestDecodeRejectsInvalidTypedField(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 			sourceFileName := "not used"
-			_, errorList, err := DecodeWorkflows(r, sourceFileName)
+			_, errorList, err := decodeWorkflows(r, sourceFileName)
 
 			if err == nil {
 				t.Fatalf("%s: expected decode/system error: got %v, want %v", tt.name, err, tt.wantError)
@@ -340,7 +340,7 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 			sourceFileName := "not used"
-			wfs, validationErrors, err := DecodeWorkflows(r, sourceFileName)
+			wfs, validationErrors, err := decodeWorkflows(r, sourceFileName)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -377,7 +377,7 @@ func TestDecode_NonStringTypedField(t *testing.T) {
 	r := strings.NewReader(InvalidWorkflowTimeNotString)
 
 	sourceFile := "not used"
-	_, errorList, err := DecodeWorkflows(r, sourceFile)
+	_, errorList, err := decodeWorkflows(r, sourceFile)
 	if err == nil {
 		t.Fatal("expected decode error, got none")
 	}
@@ -460,7 +460,7 @@ func TestDecodeEnabledDisabledMatrix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := strings.NewReader(tt.json)
 			sourceFile := "not used"
-			wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
+			wfs, validationErrors, err := decodeWorkflows(r, sourceFile)
 
 			if err != nil {
 				t.Fatalf("%s: unexpected decode/system error: %v", tt.name, err)
@@ -518,7 +518,7 @@ const oneValidOneInvalid = `
 func TestDecodePartialFailureYieldsNoSchedule(t *testing.T) {
 	r := strings.NewReader(oneValidOneInvalid)
 	sourceFile := "not used"
-	wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
+	wfs, validationErrors, err := decodeWorkflows(r, sourceFile)
 
 	if err != nil {
 		t.Fatalf("unexpected decode/system error: %v", err)
@@ -552,7 +552,7 @@ const validHourlyFromMidnight = `
 func TestDecodeToReadySchedule(t *testing.T) {
 	r := strings.NewReader(validHourlyFromMidnight)
 	sourceFile := "not used"
-	wfs, validationErrors, err := DecodeWorkflows(r, sourceFile)
+	wfs, validationErrors, err := decodeWorkflows(r, sourceFile)
 
 	if err != nil {
 		t.Fatalf("unexpected decode/system error: %v", err)
@@ -612,7 +612,7 @@ func TestDecodeWorkflows_UnknownTriggerField(t *testing.T) {
 		}
 	]`
 
-	_, validationErrors, err := DecodeWorkflows(strings.NewReader(jsonInput),
+	_, validationErrors, err := decodeWorkflows(strings.NewReader(jsonInput),
 		"source file not ")
 
 	if !errors.Is(err, ErrDecodeWorkflow) {

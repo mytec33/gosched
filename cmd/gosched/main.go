@@ -65,7 +65,7 @@ func run() int {
 		return ExitManifestError
 	}
 
-	sched, decodeErrors, err := decode.ReadWorkflowFiles(scheduleFiles)
+	sched, decodeErrors, err := decode.LoadSchedule(scheduleFiles)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
