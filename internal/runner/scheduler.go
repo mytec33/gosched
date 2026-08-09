@@ -184,7 +184,7 @@ func executeWorkflow(wf workflow.Workflow) error {
 
 	workflowStatus := workflow.StatusCompleted
 	for i, step := range wf.Steps {
-		result := RunStepAttempt(stdOut, wf.Name, step, i)
+		result := runStepAttempt(stdOut, wf.Name, step, i)
 
 		if result.Err != nil {
 			if workflow.WorkflowAbortsOnFailure(wf) {
@@ -198,7 +198,7 @@ func executeWorkflow(wf workflow.Workflow) error {
 			}
 
 			if workflow.WorkflowRetriesOnFailure(wf) {
-				retryStatus := RunStepRetries(stdOut, wf.Name, step, i, wf.Retry)
+				retryStatus := runStepRetries(stdOut, wf.Name, step, i, wf.Retry)
 				if retryStatus == workflow.StatusPartial {
 					workflowStatus = workflow.StatusPartial
 				}

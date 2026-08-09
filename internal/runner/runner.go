@@ -53,7 +53,7 @@ func runStepCommand(step workflow.Step) StepExecutionResult {
 	return stepResult
 }
 
-func RunStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, index int) StepExecutionResult {
+func runStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, index int) StepExecutionResult {
 	stdOut.Info("step", "status", "started", "workflow", wfName, "stepIndex", index, "stepName", step.Name,
 		"args", step.Args)
 	stepStart := time.Now()
@@ -76,7 +76,7 @@ func RunStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, inde
 	return stepResult
 }
 
-func RunStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
+func runStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
 	stepIndex int, retry workflow.RetryPolicy) workflow.WorkflowStatus {
 	var retryResult StepExecutionResult
 
@@ -90,7 +90,7 @@ func RunStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
 
 		time.Sleep(retryPause)
 
-		retryResult = RunStepAttempt(stdOut, wfName, step, stepIndex)
+		retryResult = runStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
 			return workflow.StatusCompleted
 		}
