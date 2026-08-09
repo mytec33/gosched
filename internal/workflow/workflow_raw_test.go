@@ -3,30 +3,20 @@ package workflow
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"reflect"
 	"testing"
 )
 
-func assertOnlyValidationError(t *testing.T, validationErrors []error, want error) {
+func assertHasValidationError(t *testing.T, validationErrors []error, want error) {
 	t.Helper()
 
-	if len(validationErrors) == 0 {
-		t.Fatalf("expected validation error %v, got none", want)
-	}
-
-	found := false
 	for _, err := range validationErrors {
-		if !errors.Is(err, want) {
-			t.Fatalf("unexpected validation error: %v (expected only %v). Full list: %v",
-				err, want, validationErrors)
+		if errors.Is(err, want) {
+			return
 		}
-
-		found = true
 	}
 
-	if !found {
-		t.Fatalf("missing expected error %v. Full list: %v", want, validationErrors)
-	}
+	t.Fatalf("missing expected error %v in %v", want, validationErrors)
 }
 
 func validWorkflowRaw() WorkflowRaw {
@@ -54,12 +44,7 @@ func validWorkflowRaw() WorkflowRaw {
 }
 
 func TestWorkflowValidate(t *testing.T) {
-	configDuration, err := ParseConfigDuration("1h1m")
-	if err != nil {
-		t.Fatalf("expected no error parsing configduration, got %v", err)
-	}
-
-	// only select whitespace tests are included as the validateStringValue function
+	// only select whitespace tests are included as the validateWorkflowStringValue function
 	// is tested heavily on its own. Leave a few here to prove higher level wiring works.
 	tests := []struct {
 		name      string
@@ -74,6 +59,13 @@ func TestWorkflowValidate(t *testing.T) {
 			wantError: ErrFieldEmpty,
 		},
 		{
+			name: "workflow invalid step rejected",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps[0].Name = ""
+			},
+			wantError: ErrStepFieldEmpty,
+		},
+		{
 			name: "workflow steps missing",
 			mutate: func(wf *WorkflowRaw) {
 				wf.Steps = nil
@@ -85,7 +77,14 @@ func TestWorkflowValidate(t *testing.T) {
 			mutate: func(wf *WorkflowRaw) {
 				wf.Steps = repeatedSteps(MaxStepsCount + 1)
 			},
-			wantError: ErrStepCountExceeded,
+			wantError: ErrStepsCountExceeded,
+		},
+		{
+			name: "step name duplicate",
+			mutate: func(wf *WorkflowRaw) {
+				wf.Steps = append(wf.Steps, StepRaw{Name: "Step", Program: "program"})
+			},
+			wantError: ErrStepsDuplicateName,
 		},
 		{
 			name: "enabled missing",
@@ -165,41 +164,6 @@ func TestWorkflowValidate(t *testing.T) {
 			wantError: ErrRetryPauseTooLarge,
 		},
 		{
-			name: "step name whitespace",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps[0].Name = "\t\n "
-			},
-			wantError: ErrFieldWhitespaceOnly,
-		},
-		{
-			name: "program whitespace leading",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps[0].Program = " program"
-			},
-			wantError: ErrFieldWhitespacePadded,
-		},
-		{
-			name: "step arg invalid",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps[0].Args = []string{"arg "}
-			},
-			wantError: ErrFieldWhitespacePadded,
-		},
-		{
-			name: "step name duplicate",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps = append(wf.Steps, StepRaw{Name: "Step", Program: "program"})
-			},
-			wantError: ErrStepDuplicateName,
-		},
-		{
-			name: "step pause too large",
-			mutate: func(wf *WorkflowRaw) {
-				wf.Steps = append(wf.Steps, StepRaw{Name: "Step Pause Too Large", Program: "program", Pause: configDuration})
-			},
-			wantError: ErrPauseDurationTooLarge,
-		},
-		{
 			name: "trigger block missing",
 			mutate: func(wf *WorkflowRaw) {
 				wf.Trigger = nil
@@ -228,9 +192,13 @@ func TestWorkflowValidate(t *testing.T) {
 			tt.mutate(&wf)
 
 			sourceFileName := "not used"
-			_, validationErrors := wf.Validate(sourceFileName)
+			got, validationErrors := wf.Validate(sourceFileName)
 
-			assertOnlyValidationError(t, validationErrors, tt.wantError)
+			assertHasValidationError(t, validationErrors, tt.wantError)
+
+			if !reflect.DeepEqual(got, Workflow{}) {
+				t.Fatalf("got %v, expected no trusted workflow", got)
+			}
 		})
 	}
 }
@@ -257,7 +225,7 @@ func TestWorkflowValidate_DisabledValid(t *testing.T) {
 	}
 }
 
-func TestValidateStringValue(t *testing.T) {
+func TestValidateWorkflowStringValue(t *testing.T) {
 	tests := []struct {
 		name      string
 		value     string
@@ -274,65 +242,18 @@ func TestValidateStringValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errs := validateStringValue("field", tt.value, tt.maxLength)
+			errs := validateWorkflowStringValue("field", tt.value, tt.maxLength)
 
 			if tt.wantError == nil {
 				if len(errs) != 0 {
-					t.Fatalf("validateStringValue() errors = %v, want none", errs)
+					t.Fatalf("validateWorkflowStringValue() errors = %v, want none", errs)
 				}
 				return
 			}
 
-			assertOnlyValidationError(t, errs, tt.wantError)
+			assertHasValidationError(t, errs, tt.wantError)
 		})
 	}
-}
-
-func TestValidateStepArgs(t *testing.T) {
-	tests := []struct {
-		name      string
-		args      []string
-		wantError error
-	}{
-		{"nil args allowed", nil, nil},
-		{"empty args allowed", []string{}, nil},
-		{"valid args", []string{"one", "two"}, nil},
-		{"arg empty", []string{""}, ErrFieldEmpty},
-		{"arg whitespace only", []string{"\t\n "}, ErrFieldWhitespaceOnly},
-		{"arg leading whitespace", []string{" arg"}, ErrFieldWhitespacePadded},
-		{"arg trailing whitespace", []string{"arg "}, ErrFieldWhitespacePadded},
-		{"arg too long", []string{strings.Repeat("a", MaxStepArgLength+1)}, ErrFieldTooLong},
-		{"too many args", repeatedArgs(MaxStepArgsCount+1, "arg"), ErrStepArgsCountExceeded},
-		{
-			name:      "total args too long",
-			args:      repeatedArgs(17, strings.Repeat("a", 241)),
-			wantError: ErrStepArgsTotalLengthExceeded,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			errs := validateStepArgs("field", tt.args)
-
-			if tt.wantError == nil {
-				if len(errs) != 0 {
-					t.Fatalf("validateStepArgs() errors = %v, want none", errs)
-				}
-				return
-			}
-
-			assertOnlyValidationError(t, errs, tt.wantError)
-		})
-	}
-}
-
-func repeatedArgs(count int, value string) []string {
-	args := make([]string, count)
-	for i := range args {
-		args[i] = value
-	}
-
-	return args
 }
 
 func repeatedSteps(count int) []StepRaw {

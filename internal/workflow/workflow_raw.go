@@ -4,21 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 )
 
 const (
-	MaxDisabledReasonLength      int           = 256
-	MaxRetryCount                int           = 8
-	MaxRetryPauseLimit           int           = 7200
-	MaxStepArgLength             int           = 256
-	MaxStepArgsCount             int           = 64
-	MaxStepArgsTotalLength       int           = 4096
-	MaxStepsCount                int           = 32
-	MaxStepPauseDuration         time.Duration = time.Hour * 1
-	MaxWorkflowNameLength        int           = 256
-	MaxWorkflowStepProgramLength int           = 256
-	MaxWorkflowStepNameLength    int           = 256
+	MaxDisabledReasonLength int = 256
+	MaxRetryCount           int = 8
+	MaxRetryPauseLimit      int = 7200
+	MaxStepsCount           int = 32
+	MaxWorkflowNameLength   int = 256
 )
 
 var (
@@ -30,7 +23,6 @@ var (
 	ErrFieldTooLong          = errors.New("too long")
 	ErrFieldWhitespaceOnly   = errors.New("cannot be all whitespace")
 	ErrFieldWhitespacePadded = errors.New("leading or trailing whitespace")
-	ErrNumberNegative        = errors.New("number cannot be negative, must be zero (indefinite) or greater")
 
 	ErrOnFailureRequired  = errors.New("onFailure field required")
 	ErrRetryCountNegative = fmt.Errorf("retry count must be 0 to %d", MaxRetryCount)
@@ -39,12 +31,9 @@ var (
 	ErrRetryPauseTooLarge = fmt.Errorf("retry pause seconds must be 0 to %d", MaxRetryPauseLimit)
 	ErrRetryRequired      = errors.New("retry config required when onFailure is set to retry")
 
-	ErrStepDuplicateName           = errors.New("step name is a duplicate")
-	ErrStepArgsCountExceeded       = fmt.Errorf("too many args provided: max is %d", MaxStepArgsCount)
-	ErrStepArgsTotalLengthExceeded = fmt.Errorf("total length of all args exceeds limit: max is %d", MaxStepArgsTotalLength)
-	ErrStepCountExceeded           = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
-	ErrPauseDurationTooLarge       = fmt.Errorf("pause duration must be 1 hour or less")
-	ErrStepsRequired               = fmt.Errorf("steps are required")
+	ErrStepsCountExceeded = fmt.Errorf("too many steps in workflow: max is %d", MaxStepsCount)
+	ErrStepsDuplicateName = errors.New("step name is a duplicate")
+	ErrStepsRequired      = fmt.Errorf("steps are required")
 
 	ErrTriggerRequired        = fmt.Errorf("trigger field is required")
 	ErrTriggerBeginAtRequired = errors.New("trigger beginAt field is required")
@@ -68,7 +57,7 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 	workflow.SourceFile = sourceFile
 
 	field := "workflow.name"
-	errorList = append(errorList, validateStringValue(field, raw.Name,
+	errorList = append(errorList, validateWorkflowStringValue(field, raw.Name,
 		MaxWorkflowNameLength)...)
 	workflow.Name = raw.Name
 
@@ -82,7 +71,7 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 				errorList = append(errorList, ErrDisabledReasonRequired)
 			} else {
 				field := "workflow.disabledReason"
-				errs := validateStringValue(field, *raw.DisabledReason, MaxDisabledReasonLength)
+				errs := validateWorkflowStringValue(field, *raw.DisabledReason, MaxDisabledReasonLength)
 				if len(errs) > 0 {
 					errorList = append(errorList, errs...)
 				} else {
@@ -145,74 +134,28 @@ func (raw WorkflowRaw) Validate(sourceFile string) (Workflow, []error) {
 	}
 
 	if len(raw.Steps) > MaxStepsCount {
-		errorList = append(errorList, ErrStepCountExceeded)
+		errorList = append(errorList, ErrStepsCountExceeded)
 	}
 
-	defaultTimeout := ConfigDuration{duration: 30 * time.Second}
 	for i := range raw.Steps {
-		steps := &raw.Steps[i]
-
-		field := fmt.Sprintf("workflow.steps[%d].name", i+1)
-		errorList = append(errorList, validateStringValue(field, steps.Name,
-			MaxWorkflowStepNameLength)...)
-
-		field = fmt.Sprintf("workflow.steps[%d].pause", i+1)
-		if steps.Pause.Duration() > MaxStepPauseDuration {
-			errorList = append(errorList, fmt.Errorf("%s: %w", field, ErrPauseDurationTooLarge))
-		}
-
-		field = fmt.Sprintf("workflow.steps[%d].program", i+1)
-		errorList = append(errorList, validateStringValue(field, steps.Program,
-			MaxWorkflowStepProgramLength)...)
-
-		field = fmt.Sprintf("workflow.steps[%d].args", i+1)
-		errorList = append(errorList, validateStepArgs(field, steps.Args)...)
-
-		if steps.Timeout == nil {
-			steps.Timeout = &defaultTimeout
+		step, errs := raw.Steps[i].Validate()
+		if len(errs) > 0 {
+			errorList = append(errorList, errs...)
+		} else {
+			workflow.Steps = append(workflow.Steps, step)
 		}
 	}
-
-	steps := make([]Step, 0, len(raw.Steps))
-	for _, rawStep := range raw.Steps {
-		steps = append(steps, Step{
-			Name:    rawStep.Name,
-			Program: rawStep.Program,
-			Args:    rawStep.Args,
-			Timeout: *rawStep.Timeout,
-			Pause:   rawStep.Pause,
-		})
-	}
-	workflow.Steps = steps
 
 	errorList = append(errorList, validateUniqueStepNames(workflow.Steps)...)
+
+	if len(errorList) > 0 {
+		return Workflow{}, errorList
+	}
 
 	return workflow, errorList
 }
 
-func validateStepArgs(field string, args []string) []error {
-	var errorList []error
-
-	if len(args) > MaxStepArgsCount {
-		errorList = append(errorList, ErrStepArgsCountExceeded)
-	}
-
-	totalArgsLength := 0
-	for j, arg := range args {
-		totalArgsLength += len(arg)
-
-		argField := fmt.Sprintf("%s[%d]", field, j+1)
-		errorList = append(errorList, validateStringValue(argField, arg, MaxStepArgLength)...)
-	}
-
-	if totalArgsLength > MaxStepArgsTotalLength {
-		errorList = append(errorList, ErrStepArgsTotalLengthExceeded)
-	}
-
-	return errorList
-}
-
-func validateStringValue(field string, s string, maxLength int) []error {
+func validateWorkflowStringValue(field string, s string, maxLength int) []error {
 	var errorList []error
 	trimmed := strings.TrimSpace(s)
 
@@ -236,7 +179,7 @@ func validateUniqueStepNames(steps []Step) []error {
 	for _, step := range steps {
 		_, exists := stepNames[step.Name]
 		if exists {
-			errors = append(errors, fmt.Errorf("%w: %s", ErrStepDuplicateName, step.Name))
+			errors = append(errors, fmt.Errorf("%w: %s", ErrStepsDuplicateName, step.Name))
 		} else {
 			stepNames[step.Name] = struct{}{}
 		}
