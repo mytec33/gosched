@@ -171,13 +171,13 @@ func executeWorkflow(wf workflow.Workflow) error {
 	}
 
 	lockKey := wf.Name
-	existingID, acquired := workflowLocks.TryAcquire(lockKey, wfLog.WfRunID)
+	existingID, acquired := workflowLocks.tryAcquire(lockKey, wfLog.WfRunID)
 	if !acquired {
 		stdOut.Error("workflow", "status", workflow.StatusSkipped.String(), "reason",
 			"workflow already running", "existingRunID", existingID)
 		return nil
 	}
-	defer workflowLocks.Delete(lockKey)
+	defer workflowLocks.delete(lockKey)
 
 	numSteps := len(wf.Steps)
 	stdOut.Info("workflow", "name", wf.Name, "status", "started", "stepCount", numSteps)

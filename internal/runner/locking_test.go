@@ -8,9 +8,9 @@ import (
 
 // Covers the lock-acquisition race found during review by LLM.
 func TestSafeMapTryAcquire(t *testing.T) {
-	running := NewSafeMap()
+	running := newSafeMap()
 
-	existing, acquired := running.TryAcquire("workflow", "run-1")
+	existing, acquired := running.tryAcquire("workflow", "run-1")
 	if !acquired {
 		t.Fatalf("expected first acquire to succeed, existing run ID %q", existing)
 	}
@@ -18,7 +18,7 @@ func TestSafeMapTryAcquire(t *testing.T) {
 		t.Fatalf("expected no existing run ID, got %q", existing)
 	}
 
-	existing, acquired = running.TryAcquire("workflow", "run-2")
+	existing, acquired = running.tryAcquire("workflow", "run-2")
 	if acquired {
 		t.Fatal("expected second acquire for same workflow to fail")
 	}
@@ -26,9 +26,9 @@ func TestSafeMapTryAcquire(t *testing.T) {
 		t.Fatalf("expected existing run ID %q, got %q", "run-1", existing)
 	}
 
-	running.Delete("workflow")
+	running.delete("workflow")
 
-	existing, acquired = running.TryAcquire("workflow", "run-3")
+	existing, acquired = running.tryAcquire("workflow", "run-3")
 	if !acquired {
 		t.Fatalf("expected acquire after delete to succeed, existing run ID %q", existing)
 	}
@@ -39,7 +39,7 @@ func TestSafeMapTryAcquire(t *testing.T) {
 
 // Covers the lock-acquisition race found during review by LLM.
 func TestSafeMapTryAcquireConcurrent(t *testing.T) {
-	running := NewSafeMap()
+	running := newSafeMap()
 
 	const attempts = 64
 	start := make(chan struct{})
@@ -51,7 +51,7 @@ func TestSafeMapTryAcquireConcurrent(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			<-start
-			_, acquired := running.TryAcquire("workflow", fmt.Sprintf("run-%d", i))
+			_, acquired := running.tryAcquire("workflow", fmt.Sprintf("run-%d", i))
 			results <- acquired
 		}(i)
 	}
@@ -73,11 +73,11 @@ func TestSafeMapTryAcquireConcurrent(t *testing.T) {
 }
 
 func TestSafeMapConcurrentDifferentKeys(t *testing.T) {
-	running := NewSafeMap()
+	running := newSafeMap()
 
 	// Workflow A and Workflow B should be able to run at the same time
-	_, acquiredA := running.TryAcquire("workflow-A", "run-1")
-	_, acquiredB := running.TryAcquire("workflow-B", "run-2")
+	_, acquiredA := running.tryAcquire("workflow-A", "run-1")
+	_, acquiredB := running.tryAcquire("workflow-B", "run-2")
 
 	if !acquiredA || !acquiredB {
 		t.Errorf("expected both different workflows to be acquired, A: %v, B: %v", acquiredA, acquiredB)
