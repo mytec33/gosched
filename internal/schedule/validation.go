@@ -17,6 +17,10 @@ func (s Schedule) validate() []error {
 func (s Schedule) validateWorkflowCount() []error {
 	var errorList []error
 
+	if s.WorkflowCount() == 0 {
+		errorList = append(errorList, ErrWorkflowsEmpty)
+	}
+
 	count := s.WorkflowCount()
 	if count > MaxWorkflowCount {
 		errorList = append(errorList, fmt.Errorf("%w: got %d", ErrWorkflowCountExceeded, count))

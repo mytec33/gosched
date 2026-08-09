@@ -87,23 +87,34 @@ func TestScheduleValidate_DuplicateWorkflowNames_Valid(t *testing.T) {
 	}
 }
 
-func TestScheduleValidate_WorkflowCount_ValidAtLimit(t *testing.T) {
-	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount)}
+func TestScheduleValidate_WorkflowCount_Valid(t *testing.T) {
+	// Valid range is between 1 and max workflow count
+	s := Schedule{workflows: makeWorkflows(MinWorkflowCount)}
+	err := s.validateWorkflowCount()
+	if len(err) > 0 {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
-	errorList := s.validate()
-
-	if hasError(errorList, ErrWorkflowCountExceeded) {
-		t.Fatalf("unexpected %v in %v", ErrWorkflowCountExceeded, errorList)
+	s = Schedule{workflows: makeWorkflows(MaxWorkflowCount)}
+	err = s.validateWorkflowCount()
+	if len(err) > 0 {
+		t.Fatalf("expected no error, got %v", err)
 	}
 }
 
-func TestScheduleValidate_WorkflowCount_InvalidOverLimit(t *testing.T) {
-	s := Schedule{workflows: makeWorkflows(MaxWorkflowCount + 1)}
+func TestScheduleValidate_WorkflowCount_Invalid(t *testing.T) {
+	expectedError := ErrWorkflowsEmpty
+	s := Schedule{workflows: makeWorkflows(0)}
+	err := s.validateWorkflowCount()
+	if !hasError(err, expectedError) {
+		t.Fatalf("expected %v, got %v", expectedError, err)
+	}
 
-	errorList := s.validate()
-
-	if !hasError(errorList, ErrWorkflowCountExceeded) {
-		t.Fatalf("expected %v, got %v", ErrWorkflowCountExceeded, errorList)
+	expectedError = ErrWorkflowCountExceeded
+	s = Schedule{workflows: makeWorkflows(MaxWorkflowCount + 1)}
+	err = s.validateWorkflowCount()
+	if !hasError(err, expectedError) {
+		t.Fatalf("expected %v, got %v", expectedError, err)
 	}
 }
 

@@ -3,9 +3,11 @@ package decode
 import (
 	"encoding/json"
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
@@ -589,6 +591,33 @@ func TestDecodeToReadySchedule(t *testing.T) {
 	}
 	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(30))); got != 0 {
 		t.Fatalf("expected 0 workflows at minute 30, got %d", got)
+	}
+}
+
+func TestLoadScheduleRejectsNoWorkflows(t *testing.T) {
+	tests := []struct {
+		name string
+		file string
+	}{
+		{name: "empty array", file: "empty_workflows.json"},
+		{name: "null", file: "null_workflows.json"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			files := manifest.WorkflowFiles{filepath.Join("testdata", tt.file)}
+
+			sched, validationErrors, err := LoadSchedule(files)
+			if err != nil {
+				t.Fatalf("unexpected decode/system error: %v", err)
+			}
+			if !hasError(validationErrors, schedule.ErrWorkflowsEmpty) {
+				t.Fatalf("expected %v, got %v", schedule.ErrWorkflowsEmpty, validationErrors)
+			}
+			if sched.WorkflowCount() != 0 {
+				t.Fatalf("expected no schedule, got %d workflows", sched.WorkflowCount())
+			}
+		})
 	}
 }
 

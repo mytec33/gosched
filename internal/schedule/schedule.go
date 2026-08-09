@@ -15,6 +15,7 @@ const (
 )
 
 const (
+	MinWorkflowCount int = 1
 	MaxWorkflowCount int = 64
 )
 
@@ -23,6 +24,7 @@ var (
 	ErrWorkflowCountExceeded  = fmt.Errorf("too many workflows in schedule: max is %d", MaxWorkflowCount)
 	ErrTriggerIntervalInvalid = errors.New("trigger interval must be greater than zero")
 	ErrWorkflowNameNotFound   = errors.New("workflow not found by name")
+	ErrWorkflowsEmpty         = errors.New("a schedule requires at least 1 workflow")
 )
 
 type Schedule struct {
