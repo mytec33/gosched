@@ -71,7 +71,7 @@ func run() int {
 		return ExitNoConfig
 	}
 
-	// Show which files were loaded to produce this schedule.
+	// Show totals of parts used to assemble the schedule
 	logging.StdOut.Info("startup", "fileCount", len(workflowFiles), "workflowCount", sched.WorkflowCount())
 
 	for _, v := range workflowFiles {
