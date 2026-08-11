@@ -113,6 +113,16 @@ func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {
 	return workflow.Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
 }
 
+func (s Schedule) StepCount() int {
+	var count int
+
+	for _, v := range s.workflows {
+		count += len(v.Steps)
+	}
+
+	return count
+}
+
 func (s Schedule) WorkflowCount() int {
 	// workflows is the canonical list; byMinute is only an index.
 	return len(s.workflows)

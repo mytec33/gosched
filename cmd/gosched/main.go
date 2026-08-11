@@ -72,7 +72,8 @@ func run() int {
 	}
 
 	// Show totals of parts used to assemble the schedule
-	logging.StdOut.Info("startup", "fileCount", len(workflowFiles), "workflowCount", sched.WorkflowCount())
+	logging.StdOut.Info("startup", "fileCount", len(workflowFiles), "workflowCount",
+		sched.WorkflowCount(), "stepCount", sched.StepCount())
 
 	for _, v := range workflowFiles {
 		logging.StdOut.Info("startup", "workflowFile", v)
