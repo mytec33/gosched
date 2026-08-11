@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+// Valid is primarily a guard against zero value Schedules being used.
+func (s Schedule) Valid() bool {
+	return s.EveryWorkflowHasName() && s.EveryWorkflowHasSteps()
+}
+
+// Validate only validates schedule level concerns. Workflow level validation
+// is done at that level.
 func (s Schedule) validate() []error {
 	var errorList []error
 

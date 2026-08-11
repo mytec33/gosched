@@ -113,11 +113,39 @@ func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {
 	return workflow.Workflow{}, fmt.Errorf("%w: %s", ErrWorkflowNameNotFound, n)
 }
 
+func (s Schedule) EveryWorkflowHasName() bool {
+	if len(s.workflows) == 0 {
+		return false
+	}
+
+	for _, wf := range s.workflows {
+		if wf.Name == "" {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s Schedule) EveryWorkflowHasSteps() bool {
+	if len(s.workflows) == 0 {
+		return false
+	}
+
+	for _, v := range s.workflows {
+		if v.StepCount() == 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s Schedule) StepCount() int {
 	var count int
 
 	for _, v := range s.workflows {
-		count += len(v.Steps)
+		count += v.StepCount()
 	}
 
 	return count

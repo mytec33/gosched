@@ -13,6 +13,10 @@ type Workflow struct {
 	Steps          []Step
 }
 
+func (wf Workflow) StepCount() int {
+	return len(wf.Steps)
+}
+
 func WorkflowAbortsOnFailure(wf Workflow) bool {
 	return wf.OnFailure == Abort
 }

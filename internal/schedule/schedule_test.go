@@ -138,6 +138,52 @@ func makeWorkflows(n int) []workflow.Workflow {
 	return workflows
 }
 
+func TestScheduleStepCount(t *testing.T) {
+	s := Schedule{
+		workflows: []workflow.Workflow{
+			{Steps: []workflow.Step{{}}},
+			{Steps: []workflow.Step{{}, {}}},
+		},
+	}
+
+	if got := s.StepCount(); got != 3 {
+		t.Fatalf("StepCount() = %d, want 3", got)
+	}
+}
+
+func TestScheduleValid(t *testing.T) {
+	if (Schedule{}).Valid() {
+		t.Fatal("expected zero value Schedule to be invalid")
+	}
+
+	missingName := Schedule{
+		workflows: []workflow.Workflow{
+			{Steps: []workflow.Step{{}}},
+		},
+	}
+	if missingName.Valid() {
+		t.Fatal("expected Schedule with unnamed Workflow to be invalid")
+	}
+
+	missingSteps := Schedule{
+		workflows: []workflow.Workflow{
+			{Name: "Workflow 1"},
+		},
+	}
+	if missingSteps.Valid() {
+		t.Fatal("expected Schedule with no Workflow steps to be invalid")
+	}
+
+	valid := Schedule{
+		workflows: []workflow.Workflow{
+			{Name: "Workflow 1", Steps: []workflow.Step{{}}},
+		},
+	}
+	if !valid.Valid() {
+		t.Fatal("expected named Workflow with a step to produce a valid Schedule")
+	}
+}
+
 func TestExpandCadence(t *testing.T) {
 	tests := []struct {
 		name      string

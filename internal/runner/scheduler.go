@@ -49,6 +49,10 @@ func alignToNextMinuteBoundary(ctx context.Context) error {
 }
 
 func RunSchedule(ctx context.Context, s schedule.Schedule) error {
+	if !s.Valid() {
+		panic("runner.RunSchedule: precondition failed: invalid Schedule")
+	}
+
 	var running sync.WaitGroup
 
 	// Capture lastProcessed before aligning so the first post-alignment minute
@@ -117,8 +121,12 @@ func nextWakeDuration() nextWakeTiming {
 	}
 }
 
-func RunScheduleOnce(sched schedule.Schedule, wfName string) error {
-	wf, err := sched.GetWorkflowByName(wfName)
+func RunScheduleOnce(s schedule.Schedule, wfName string) error {
+	if !s.Valid() {
+		panic("runner.RunScheduleOnce: precondition failed: invalid Schedule")
+	}
+
+	wf, err := s.GetWorkflowByName(wfName)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrWorkflowNotFoundByName, err)
 	}

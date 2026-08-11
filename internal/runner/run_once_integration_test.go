@@ -82,6 +82,9 @@ func TestRunOnceOneWorkflowOneStep(t *testing.T) {
 	}
 
 	expected := [][]byte{
+		[]byte(`fileCount=1`),
+		[]byte(`workflowCount=1`),
+		[]byte(`stepCount=1`),
 		[]byte(`reason="run once started"`),
 		[]byte(`workflow="Workflow 1"`),
 		[]byte(`msg=workflow`),

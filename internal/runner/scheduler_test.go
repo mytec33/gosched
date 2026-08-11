@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -10,8 +11,41 @@ import (
 
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
+	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
+
+func TestRunSchedulePrecondition(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	assertPanic(t, "runner.RunSchedule: precondition failed: invalid Schedule", func() {
+		_ = RunSchedule(ctx, schedule.Schedule{})
+	})
+}
+
+func TestRunScheduleOncePrecondition(t *testing.T) {
+	assertPanic(t, "runner.RunScheduleOnce: precondition failed: invalid Schedule", func() {
+		_ = RunScheduleOnce(schedule.Schedule{}, "Workflow 1")
+	})
+}
+
+func assertPanic(t *testing.T, want string, f func()) {
+	t.Helper()
+
+	defer func() {
+		got := recover()
+		if got == nil {
+			t.Fatal("expected panic")
+		}
+
+		if got != want {
+			t.Fatalf("panic = %q, want %q", got, want)
+		}
+	}()
+
+	f()
+}
 
 func TestExecuteWorkflowDisabledSkipsSteps(t *testing.T) {
 	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
