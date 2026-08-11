@@ -59,22 +59,24 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	scheduleFiles, err := manifest.ParseManifest(manifestFlag)
+	workflowFiles, err := manifest.ParseManifest(manifestFlag)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "no files found in manifest", "error", err)
 		return ExitManifestError
 	}
 
-	sched, decodeErrors, err := decode.LoadSchedule(scheduleFiles)
+	sched, decodeErrors, err := decode.LoadSchedule(workflowFiles)
 	if err != nil {
 		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
 		return ExitNoConfig
 	}
 
 	// Show which files were loaded to produce this schedule.
-	logging.StdOut.Info("startup", "fileCount", len(scheduleFiles), "workflowCount", sched.WorkflowCount(),
-		"files", scheduleFiles,
-	)
+	logging.StdOut.Info("startup", "fileCount", len(workflowFiles), "workflowCount", sched.WorkflowCount())
+
+	for _, v := range workflowFiles {
+		logging.StdOut.Info("startup", "workflowFile", v)
+	}
 
 	if len(decodeErrors) > 0 {
 		displayCfgErrors(decodeErrors)

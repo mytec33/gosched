@@ -1,6 +1,7 @@
 [
 	{
 		"name": "Example - Continue",
+		"enabled": true,
 		"trigger": { "every": "1d", "beginAt": "22:15" },
 		"onFailure": "continue",
 		"steps": [
@@ -15,8 +16,8 @@
 					"-exit-code",
 					"1"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			},
 			{
 				"name": "modified",
@@ -27,7 +28,7 @@
 					"-role",
 					"should run in continue mode"
 				],
-				"pause": 5
+				"pause": "5s"
 			}
 		]
 	}
