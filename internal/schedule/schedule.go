@@ -164,5 +164,9 @@ func (s Schedule) Workflows() []workflow.Workflow {
 }
 
 func (s Schedule) WorkflowsAtMinute(k workflow.MinuteOfDay) []workflow.Workflow {
-	return s.byMinute[k]
+	wfs := s.byMinute[k]
+	out := make([]workflow.Workflow, len(wfs))
+	copy(out, wfs)
+
+	return out
 }
