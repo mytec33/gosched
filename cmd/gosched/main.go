@@ -90,7 +90,10 @@ func run() int {
 
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
 	// wish to print is shown and not logging messages. Those don't play well with JSON. :-)
-	logging.StdOut.Info("startup", "reason", "scheduler service started")
+	//
+	// Also, a warn state to let whomever is responsible for this scheduling that the process has
+	// started up. This is important from an admin point (uncontrolled shutdown, etc.)
+	logging.StdOut.Warn("startup", "reason", "scheduler service started")
 
 	if runThisOnce != "" {
 		logging.StdOut.Info("startup", "reason", "run once started", "workflow", runThisOnce)
