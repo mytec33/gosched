@@ -2,7 +2,6 @@
 package logging
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"uuid"
@@ -18,8 +17,7 @@ type WorkflowLogger struct {
 }
 
 func NewWorkflowLogger(workflowName string) WorkflowLogger {
-	id := uuid.NewV7()
-	wfID := fmt.Sprintf("%x", id)
+	wfID := uuid.NewV7().String()
 
 	return WorkflowLogger{
 		WfRunID: wfID,
