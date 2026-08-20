@@ -66,10 +66,10 @@ func runStepAttempt(stdOut *slog.Logger, wfName string, step workflow.Step, inde
 	}
 
 	if stepResult.Err != nil {
-		stdOut.Error("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "failed",
+		stdOut.Error("step", "step", step.Name, "stepIndex", index, "status", "failed",
 			"exitCode", stepResult.ExitCode, "duration", stepDuration, "reason", stepResult.Err)
 	} else {
-		stdOut.Info("step", "workflow", wfName, "step", step.Name, "stepIndex", index, "status", "completed",
+		stdOut.Info("step", "step", step.Name, "stepIndex", index, "status", "completed",
 			"exitCode", stepResult.ExitCode, "duration", stepDuration)
 	}
 

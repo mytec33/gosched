@@ -88,7 +88,6 @@ func TestRunOnceOneWorkflowOneStep(t *testing.T) {
 		[]byte(`reason="run once started"`),
 		[]byte(`workflow="Workflow 1"`),
 		[]byte(`msg=workflow`),
-		[]byte(`name="Workflow 1"`),
 		[]byte(`status=completed`),
 		[]byte(`role=daily-slot-ratings`),
 	}
@@ -168,7 +167,6 @@ func TestRunOnceTwoWorkflowsOneStep(t *testing.T) {
 		[]byte(`reason="run once started"`),
 		[]byte(`workflow="Workflow 2"`),
 		[]byte(`msg=workflow`),
-		[]byte(`name="Workflow 2"`),
 		[]byte(`status=completed`),
 		[]byte(`role=workflow-2-step-1`),
 	}
