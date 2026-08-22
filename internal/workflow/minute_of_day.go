@@ -20,6 +20,23 @@ func MinuteOfDayFromTime(t time.Time) MinuteOfDay {
 }
 
 func (m *MinuteOfDay) MinutesSince(previous MinuteOfDay) int {
+	currentMinute := int(*m)
+	previousMinute := int(previous)
+
+	if currentMinute < 0 || currentMinute >= MinutesInDay {
+		panic(fmt.Sprintf(
+			"workflow.MinuteOfDay error: invalid current minute: %d",
+			currentMinute,
+		))
+	}
+
+	if previousMinute < 0 || previousMinute >= MinutesInDay {
+		panic(fmt.Sprintf(
+			"workflow.MinuteOfDay error: invalid previous minute: %d",
+			previousMinute,
+		))
+	}
+
 	return (int(*m) - int(previous) + MinutesInDay) % MinutesInDay
 }
 
@@ -33,6 +50,11 @@ func ParseMinuteOfDay(s string) (MinuteOfDay, error) {
 }
 
 func (m *MinuteOfDay) String() string {
+	minute := int(*m)
+	if minute < 0 || minute >= MinutesInDay {
+		panic(fmt.Sprintf("workflow.MinuteOfDay error: invalid minute: %d", minute))
+	}
+
 	h := int(*m) / 60
 	min := int(*m) % 60
 
