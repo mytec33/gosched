@@ -3,6 +3,7 @@ package workflow
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -20,6 +21,9 @@ type ConfigDuration struct {
 }
 
 func (c ConfigDuration) Duration() time.Duration {
+	if c.duration < 0 {
+		panic(fmt.Sprintf("workflow.ConfigDuration error: negative duration: %v", c.duration))
+	}
 	return c.duration
 }
 
