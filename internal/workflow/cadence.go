@@ -86,16 +86,16 @@ func (c Cadence) validateCadence() error {
 	return nil
 }
 
-func parseMeasure(unit string) (CadenceMeasure, error) {
+func parseMeasure(unit string) CadenceMeasure {
 	switch unit {
 	case "d":
-		return CadenceDay, nil
+		return CadenceDay
 	case "h":
-		return CadenceHour, nil
+		return CadenceHour
 	case "m":
-		return CadenceMinute, nil
+		return CadenceMinute
 	default:
-		return CadenceMeasure{}, ErrCadenceUnitInvalid
+		return CadenceUnknown
 	}
 }
 
@@ -135,9 +135,9 @@ func ParseCadence(s string) (Cadence, error) {
 	}
 
 	last := strings.ToLower(s[len(s)-lastCharSize:])
-	measure, err := parseMeasure(last)
-	if err != nil {
-		return Cadence{}, err
+	measure := parseMeasure(last)
+	if measure == CadenceUnknown {
+		return Cadence{}, ErrCadenceUnitInvalid
 	}
 
 	cadence := Cadence{
