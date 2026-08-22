@@ -1,7 +1,8 @@
 [
 	{
 		"name": "Example - Abort",
-		"trigger": { "every": "1d", "beginAt": "20:29" },
+		"enabled": true,
+		"trigger": { "every": "1d", "beginAt": "16:34" },
 		"onFailure": "abort",
 		"steps": [
 			{
@@ -15,8 +16,8 @@
 					"-exit-code",
 					"1"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			},
 			{
 				"name": "abort step 2",
@@ -27,12 +28,13 @@
 					"-role",
 					"should not run"
 				],
-				"pause": 5
+				"pause": "5s"
 			}
 		]
 	},
 	{
 		"name": "Example - Continue",
+		"enabled": true,
 		"trigger": { "every": "1d", "beginAt": "20:29" },
 		"onFailure": "continue",
 		"steps": [
@@ -47,8 +49,8 @@
 					"-exit-code",
 					"1"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "11s",
+				"pause": "3s"
 			},
 			{
 				"name": "modified",
@@ -59,7 +61,7 @@
 					"-role",
 					"should run in continue mode"
 				],
-				"pause": 5
+				"pause": "5s"
 			}
 		]
 	}

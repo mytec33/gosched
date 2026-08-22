@@ -2,9 +2,12 @@
 package logging
 
 import (
+	"crypto/rand"
 	"log/slog"
 	"os"
-	"uuid"
+	"time"
+
+	"github.com/oklog/ulid/v2"
 )
 
 var StdOut = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -17,7 +20,8 @@ type WorkflowLogger struct {
 }
 
 func NewWorkflowLogger(workflowName string) WorkflowLogger {
-	wfID := uuid.NewV7().String()
+	now := time.Now()
+	wfID := ulid.MustNew(ulid.Timestamp(now), rand.Reader).String()
 
 	return WorkflowLogger{
 		WfRunID: wfID,
