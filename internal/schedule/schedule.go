@@ -58,15 +58,7 @@ func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
 
 	// Minutes are the key focus of this scheduler. Minute is also the smallest
 	// unit of time so we can calc against minutes in day as our upper boundary
-	switch trigger.Every.Measure() {
-	case workflow.CadenceDay:
-		interval = trigger.Every.Repetition() * workflow.MinutesInDay
-	case workflow.CadenceHour:
-		interval = trigger.Every.Repetition() * 60
-	case workflow.CadenceMinute:
-		interval = trigger.Every.Repetition()
-	}
-
+	interval = trigger.Every.IntervalMinutes()
 	if interval <= 0 {
 		return minutes, ErrTriggerIntervalInvalid
 	}

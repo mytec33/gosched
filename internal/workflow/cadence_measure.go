@@ -5,9 +5,10 @@ type CadenceMeasure struct {
 }
 
 var (
-	CadenceDay    = CadenceMeasure{v: "d"}
-	CadenceHour   = CadenceMeasure{v: "h"}
-	CadenceMinute = CadenceMeasure{v: "m"}
+	CadenceDay     = CadenceMeasure{v: "d"}
+	CadenceHour    = CadenceMeasure{v: "h"}
+	CadenceMinute  = CadenceMeasure{v: "m"}
+	CadenceUnknown = CadenceMeasure{v: "unknown"}
 )
 
 func (m CadenceMeasure) String() string {

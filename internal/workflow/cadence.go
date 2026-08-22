@@ -31,11 +31,33 @@ type Cadence struct {
 	measure    CadenceMeasure
 }
 
+func (c Cadence) IntervalMinutes() int {
+	repetition := c.Repetition()
+	measure := c.Measure()
+
+	switch measure {
+	case CadenceDay:
+		return repetition * MinutesInDay
+	case CadenceHour:
+		return repetition * 60
+	case CadenceMinute:
+		return repetition
+	default:
+		panic("workflow.Cadence error: invalid unit")
+	}
+}
+
 func (c Cadence) Repetition() int {
+	if c.repetition < 1 {
+		panic(fmt.Sprintf("workflow.Cadence error: invalid repetition: %v", c.repetition))
+	}
 	return c.repetition
 }
 
 func (c Cadence) Measure() CadenceMeasure {
+	if c.measure == CadenceUnknown {
+		panic("workflow.Cadence error: invalid measure")
+	}
 	return c.measure
 }
 
