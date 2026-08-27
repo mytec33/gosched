@@ -3,6 +3,7 @@ package schedule
 import (
 	"fmt"
 	"io"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -18,6 +19,15 @@ func (s Schedule) Print(method string, w io.Writer) error {
 		s.printScheduleOperational(w)
 	default:
 		return fmt.Errorf("unknown print config method: %s", method)
+	}
+
+	return nil
+}
+
+func PrintConfiguration(method string, s Schedule) error {
+	err := s.Print(method, os.Stdout)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Step display variations",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "06:00" },
+        "onFailure": "abort",
+        "steps": [
+            {
+                "name": "timeout and pause",
+                "program": "program 1",
+                "args": [],
+                "timeout": "30s",
+                "pause": "5s"
+            },
+            {
+                "name": "timeout only",
+                "program": "program 2",
+                "args": [],
+                "timeout": "30s"
+            }
+        ]
+    },
+    {
+        "name": "Disabled workflow",
+        "enabled": false,
+        "disabledReason": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trigger": { "every": "1d", "beginAt": "07:00" },
+        "onFailure": "continue",
+        "steps": [
+            {
+                "name": "disabled step",
+                "program": "program 3",
+                "args": []
+            }
+        ]
+    }
+]

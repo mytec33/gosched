@@ -3,10 +3,43 @@ package schedule
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
+
+func TestNewExpandsHourlyWorkflowFromMidnight(t *testing.T) {
+	manifestFile := filepath.Join("testdata", "hourly_manifest.txt")
+	sched, errorList := New(manifestFile)
+	if len(errorList) > 0 {
+		t.Fatalf("expected no errors, got %v", errorList)
+	}
+
+	if _, err := sched.GetWorkflowByName("test-hourly"); err != nil {
+		t.Fatalf("expected to find workflow by name: %v", err)
+	}
+
+	populated := 0
+	for m := workflow.MinuteOfDay(0); m < workflow.MinuteOfDay(MinutesPerDay); m++ {
+		if len(sched.WorkflowsAtMinute(m)) > 0 {
+			populated++
+		}
+	}
+	if populated != 24 {
+		t.Fatalf("expected 24 populated minute slots, got %d", populated)
+	}
+
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(0))); got != 1 {
+		t.Fatalf("expected 1 workflow at minute 0, got %d", got)
+	}
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(60))); got != 1 {
+		t.Fatalf("expected 1 workflow at minute 60, got %d", got)
+	}
+	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(30))); got != 0 {
+		t.Fatalf("expected 0 workflows at minute 30, got %d", got)
+	}
+}
 
 func TestScheduleValidate_DuplicateWorkflowNames_Invalid(t *testing.T) {
 	tests := []struct {

@@ -1,0 +1,16 @@
+[
+    {
+        "name": "Workflow 3",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "11:46" },
+        "onFailure": "abort",
+        "steps": [
+            {
+                "name": "step 1",
+                "program": "program 1",
+                "args": [],
+                "timeout": "30s"
+            }
+        ]
+    }
+]

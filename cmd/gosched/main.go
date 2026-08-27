@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,24 +11,19 @@ import (
 	"git.sr.ht/~mytec/gosched/internal/decode"
 	"git.sr.ht/~mytec/gosched/internal/helpers"
 	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/runner"
 	"git.sr.ht/~mytec/gosched/internal/schedule"
 )
 
 const (
 	ExitSuccess                int = 0
-	ExitNoConfig               int = 1
-	ExitValidation             int = 3
-	ExitInvalidArgs            int = 4
-	ExitManifestError          int = 8
-	ExitWorkflowNotFoundByName int = 9
-	ExitExecuteWorkflow        int = 10
-	ExitScheduleValidation     int = 11
-	ExitScheduleExpansion      int = 12
-	ExitScheduleFailed         int = 13
-	ExitRunOnceUnexpected      int = 14
-	ExitInterruptSignal        int = 15
+	ExitInvalidArgs            int = 1
+	ExitWorkflowNotFoundByName int = 2
+	ExitExecuteWorkflow        int = 3
+	ExitScheduleError          int = 4
+	ExitScheduleFailed         int = 5
+	ExitRunOnceUnexpected      int = 7
+	ExitInterruptSignal        int = 8
 )
 
 func main() {
@@ -59,33 +53,19 @@ func run() int {
 		return ExitInvalidArgs
 	}
 
-	workflowFiles, err := manifest.ParseManifest(manifestFlag)
-	if err != nil {
-		logging.StdOut.Error("startup", "reason", "no files found in manifest", "error", err)
-		return ExitManifestError
-	}
-
-	sched, decodeErrors, err := decode.LoadSchedule(workflowFiles)
-	if err != nil {
-		logging.StdOut.Error("startup", "reason", "failed to load schedule", "error", err)
-		return ExitNoConfig
-	}
-
-	// Show totals of parts used to assemble the schedule
-	logging.StdOut.Info("startup", "fileCount", len(workflowFiles), "workflowCount",
-		sched.WorkflowCount(), "stepCount", sched.StepCount())
-
-	for _, v := range workflowFiles {
-		logging.StdOut.Info("startup", "workflowFile", v)
-	}
-
-	if len(decodeErrors) > 0 {
-		displayCfgErrors(decodeErrors)
-		return ExitValidation
+	sched, errs := schedule.New(manifestFlag)
+	if len(errs) > 0 {
+		displayCfgErrors(errs)
+		return ExitScheduleError
 	}
 
 	if printSchedule != "" {
-		return printConfiguration(printSchedule, sched)
+		err := schedule.PrintConfiguration(printSchedule, sched)
+		if err != nil {
+			logging.StdOut.Error("startup", "reason", "unable to print", "error", err, "arg", printSchedule)
+			return ExitInvalidArgs
+		}
+		return ExitSuccess
 	}
 
 	// This goes after newConfig or any other option that prints to STDOUT so only the output we
@@ -93,6 +73,7 @@ func run() int {
 	//
 	// Also, a warn state to let whomever is responsible for this scheduling that the process has
 	// started up. This is important from an admin point (uncontrolled shutdown, etc.)
+	schedule.DisplayScheduleStats(sched)
 	logging.StdOut.Warn("startup", "reason", "scheduler service started")
 
 	if runThisOnce != "" {
@@ -135,23 +116,12 @@ func run() int {
 	}
 }
 
-func printConfiguration(method string, s schedule.Schedule) int {
-	err := s.Print(method, os.Stdout)
-	if err != nil {
-		fmt.Println(err)
-		return ExitInvalidArgs
-	}
-
-	return ExitSuccess
-}
-
 func displayCfgErrors(fileErrors []error) {
 	logging.StdOut.Error("startup", "reason", "configuration invalid")
 
 	for _, err := range fileErrors {
-		var fileErr decode.FileValidationError
-
-		if errors.As(err, &fileErr) {
+		fileErr, ok := errors.AsType[decode.FileValidationError](err)
+		if ok {
 			logging.StdOut.Error("startup", "file", fileErr.File,
 				"reason", fileErr.Err)
 		} else {

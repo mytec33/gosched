@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"strings"
 
+	"git.sr.ht/~mytec/gosched/internal/decode"
+	"git.sr.ht/~mytec/gosched/internal/logging"
+	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
@@ -28,15 +31,30 @@ var (
 )
 
 type Schedule struct {
-	workflows []workflow.Workflow
-	byMinute  map[workflow.MinuteOfDay][]workflow.Workflow
+	workflows     []workflow.Workflow
+	byMinute      map[workflow.MinuteOfDay][]workflow.Workflow
+	manifestFiles []string
 }
 
-func New(wfs []workflow.Workflow) (Schedule, []error) {
+func New(manifestFile string) (Schedule, []error) {
 	var errorList []error
 
+	sourceFiles, err := manifest.ParseManifest(manifestFile)
+	if err != nil {
+		return Schedule{}, []error{err}
+	}
+
+	workflows, decodeErrors, err := decode.LoadSchedule(sourceFiles)
+	if err != nil {
+		return Schedule{}, []error{err}
+	}
+
+	if len(decodeErrors) > 0 {
+		return Schedule{}, decodeErrors
+	}
+
 	s := Schedule{
-		workflows: append([]workflow.Workflow(nil), wfs...),
+		workflows: append([]workflow.Workflow(nil), workflows...),
 	}
 
 	errorList = s.validate()
@@ -44,12 +62,27 @@ func New(wfs []workflow.Workflow) (Schedule, []error) {
 		return Schedule{}, errorList
 	}
 
-	err := s.expandSchedule()
+	err = s.expandSchedule()
 	if err != nil {
 		return Schedule{}, []error{err}
 	}
 
+	// retain the files and the order they were loaded in for later display
+	for _, v := range sourceFiles {
+		s.manifestFiles = append(s.manifestFiles, v)
+	}
+
 	return s, nil
+}
+
+func DisplayScheduleStats(s Schedule) {
+	// Show totals of parts used to assemble the schedule
+	logging.StdOut.Info("startup", "fileCount", len(s.manifestFiles), "workflowCount",
+		s.WorkflowCount(), "stepCount", s.StepCount())
+
+	for _, file := range s.manifestFiles {
+		logging.StdOut.Info("startup", "workflowFile", file)
+	}
 }
 
 func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {

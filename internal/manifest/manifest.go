@@ -15,10 +15,10 @@ var (
 	ErrScanManifest  = errors.New("unable to scan manifest")
 )
 
-type WorkflowFiles []string
+type Files []string
 
-func ParseManifest(path string) (WorkflowFiles, error) {
-	var schedules WorkflowFiles
+func ParseManifest(path string) (Files, error) {
+	var schedules Files
 
 	file, err := os.Open(path)
 	if err != nil {

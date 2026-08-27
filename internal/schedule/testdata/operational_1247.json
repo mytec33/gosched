@@ -1,0 +1,39 @@
+[
+    {
+        "name": "Workflow 1 at 12:47",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "12:47" },
+        "onFailure": "retry",
+        "retry": {
+            "numberRetries": 3,
+            "pauseSeconds": 10
+        },
+        "steps": [
+            {
+                "name": "step 1",
+                "program": "program 2",
+                "args": [],
+                "timeout": "1800s"
+            }
+        ]
+    },
+    {
+        "name": "Workflow 4",
+        "enabled": false,
+        "disabledReason": "disabled to test enable functionality",
+        "trigger": { "every": "1d", "beginAt": "12:47" },
+        "onFailure": "retry",
+        "retry": {
+            "numberRetries": 3,
+            "pauseSeconds": 10
+        },
+        "steps": [
+            {
+                "name": "step 1",
+                "program": "program 3",
+                "args": [],
+                "timeout": "1800s"
+            }
+        ]
+    }
+]

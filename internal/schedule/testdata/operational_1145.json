@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Workflow 1",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "11:45" },
+        "onFailure": "abort",
+        "steps": [
+            {
+                "name": "step 1",
+                "program": "program 1",
+                "args": [],
+                "timeout": "30s",
+                "pause": "5s"
+            },
+            {
+                "name": "step 2",
+                "program": "program 2",
+                "args": [],
+                "timeout": "30s"
+            }
+        ]
+    },
+    {
+        "name": "Workflow 2",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "11:45" },
+        "onFailure": "continue",
+        "steps": [
+            {
+                "name": "step 1",
+                "program": "program 3",
+                "args": [],
+                "timeout": "30s"
+            }
+        ]
+    }
+]

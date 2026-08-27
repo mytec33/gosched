@@ -123,8 +123,8 @@ func TestRunOnceWorkflowNotFound(t *testing.T) {
 		t.Fatalf("expected exec.ExitError, got %T: %v\n%s", err, err, out)
 	}
 
-	if exitErr.ExitCode() != 9 {
-		t.Fatalf("expected exit code 9, got %d\n%s", exitErr.ExitCode(), out)
+	if exitErr.ExitCode() != 2 {
+		t.Fatalf("expected exit code 2, got %d\n%s", exitErr.ExitCode(), out)
 	}
 
 	expected := [][]byte{

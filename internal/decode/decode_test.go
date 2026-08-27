@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"git.sr.ht/~mytec/gosched/internal/manifest"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
 
@@ -535,10 +534,6 @@ func TestDecodePartialFailureYieldsNoSchedule(t *testing.T) {
 	}
 }
 
-// a positive end-to-end case that asserts expansion behavior, not just the
-// absence of errors. An hourly trigger from midnight must expand to exactly
-// 24 minute slots, be findable by name, and populate the byMinute index at the
-// expected minutes only.
 const validHourlyFromMidnight = `
 [
   {
@@ -551,9 +546,9 @@ const validHourlyFromMidnight = `
 ]
 `
 
-func TestDecodeToReadySchedule(t *testing.T) {
+func TestDecodeHourlyWorkflow(t *testing.T) {
 	r := strings.NewReader(validHourlyFromMidnight)
-	sourceFile := "not used"
+	sourceFile := "hourly.json"
 	wfs, validationErrors, err := decodeWorkflows(r, sourceFile)
 
 	if err != nil {
@@ -563,38 +558,26 @@ func TestDecodeToReadySchedule(t *testing.T) {
 		t.Fatalf("expected no validation errors, got %v", validationErrors)
 	}
 
-	sched, errorList := schedule.New(wfs)
-	if len(errorList) > 0 {
-		t.Fatalf("expected no errors, got %v\n", errorList)
+	if len(wfs) != 1 {
+		t.Fatalf("expected 1 workflow, got %d", len(wfs))
 	}
 
-	if _, err := sched.GetWorkflowByName("test-hourly"); err != nil {
-		t.Fatalf("expected to find workflow by name: %v", err)
+	wf := wfs[0]
+	if wf.SourceFile != sourceFile {
+		t.Fatalf("source file = %q, want %q", wf.SourceFile, sourceFile)
 	}
-
-	// Hourly from 00:00 lands on minute 0, 60, 120 ... 1380: 24 slots.
-	populated := 0
-	for m := workflow.MinuteOfDay(0); m < workflow.MinuteOfDay(1440); m++ {
-		if len(sched.WorkflowsAtMinute(m)) > 0 {
-			populated++
-		}
+	if wf.Name != "test-hourly" {
+		t.Fatalf("workflow name = %q, want %q", wf.Name, "test-hourly")
 	}
-	if populated != 24 {
-		t.Fatalf("expected 24 populated minute slots, got %d", populated)
+	if got := wf.Trigger.Every.String(); got != "1h" {
+		t.Fatalf("trigger cadence = %q, want %q", got, "1h")
 	}
-
-	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(0))); got != 1 {
-		t.Fatalf("expected 1 workflow at minute 0, got %d", got)
-	}
-	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(60))); got != 1 {
-		t.Fatalf("expected 1 workflow at minute 60, got %d", got)
-	}
-	if got := len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(30))); got != 0 {
-		t.Fatalf("expected 0 workflows at minute 30, got %d", got)
+	if got := wf.Trigger.BeginAt.String(); got != "00:00" {
+		t.Fatalf("trigger start = %q, want %q", got, "00:00")
 	}
 }
 
-func TestLoadScheduleRejectsNoWorkflows(t *testing.T) {
+func TestLoadScheduleReturnsNoWorkflows(t *testing.T) {
 	tests := []struct {
 		name string
 		file string
@@ -605,17 +588,17 @@ func TestLoadScheduleRejectsNoWorkflows(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			files := manifest.WorkflowFiles{filepath.Join("testdata", tt.file)}
+			files := manifest.Files{filepath.Join("testdata", tt.file)}
 
-			sched, validationErrors, err := LoadSchedule(files)
+			workflows, validationErrors, err := LoadSchedule(files)
 			if err != nil {
 				t.Fatalf("unexpected decode/system error: %v", err)
 			}
-			if !hasError(validationErrors, schedule.ErrWorkflowsEmpty) {
-				t.Fatalf("expected %v, got %v", schedule.ErrWorkflowsEmpty, validationErrors)
+			if len(validationErrors) > 0 {
+				t.Fatalf("expected no validation errors, got %v", validationErrors)
 			}
-			if sched.WorkflowCount() != 0 {
-				t.Fatalf("expected no schedule, got %d workflows", sched.WorkflowCount())
+			if len(workflows) != 0 {
+				t.Fatalf("expected no schedule, got %d workflows", len(workflows))
 			}
 		})
 	}

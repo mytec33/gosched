@@ -1,0 +1,15 @@
+[
+    {
+        "name": "test-hourly",
+        "enabled": true,
+        "trigger": { "every": "1h", "beginAt": "00:00" },
+        "onFailure": "abort",
+        "steps": [
+            {
+                "name": "s",
+                "program": "program 1",
+                "args": []
+            }
+        ]
+    }
+]
