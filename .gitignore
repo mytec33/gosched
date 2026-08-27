@@ -2,6 +2,9 @@
 .zed/
 .idea/
 
+/scratch/*
+!/scratch/README.md
+
 # binaries
 /gosched
 /gosched.exe
