@@ -1,8 +1,0 @@
-[
-  {
-    "name": "null steps",
-    "trigger": { "every": "1d", "beginAt": "10:35" },
-    "onFailure": "continue",
-    "steps": null
-  }
-]

@@ -321,6 +321,66 @@ const stepsEmpty = `
 ]
 `
 
+const triggerNull = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": null,
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const everyNull = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": null, "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const beginAtNull = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d", "beginAt": null},
+    "onFailure": "continue",
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const onFailureNull = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": null,
+    "steps": [{"name": "daily", "program": "program", "args": ["args"]}]
+  }
+]
+`
+
+const stepsNull = `
+[
+  {
+    "name": "foo",
+    "enabled": true,
+    "trigger": {"every": "1d", "beginAt": "06:30"},
+    "onFailure": "continue",
+    "steps": null
+  }
+]
+`
+
 func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -335,6 +395,11 @@ func TestDecodeReportsWorkflowValidationError(t *testing.T) {
 		{name: "onFailure missing", json: onFailureMissing, wantError: workflow.ErrOnFailureRequired},
 		{name: "enabled missing", json: enabledMissing, wantError: workflow.ErrEnabledRequired},
 		{name: "steps empty", json: stepsEmpty, wantError: workflow.ErrStepsRequired},
+		{name: "trigger null", json: triggerNull, wantError: workflow.ErrTriggerRequired},
+		{name: "every null", json: everyNull, wantError: workflow.ErrTriggerEveryRequired},
+		{name: "beginAt null", json: beginAtNull, wantError: workflow.ErrTriggerBeginAtRequired},
+		{name: "onFailure null", json: onFailureNull, wantError: workflow.ErrOnFailureRequired},
+		{name: "steps null", json: stepsNull, wantError: workflow.ErrStepsRequired},
 	}
 
 	for _, tt := range tests {
