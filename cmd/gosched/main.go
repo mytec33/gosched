@@ -60,6 +60,7 @@ func run() int {
 	}
 
 	if printSchedule != "" {
+		schedule.DisplayScheduleStats(sched)
 		err := schedule.PrintConfiguration(printSchedule, sched)
 		if err != nil {
 			logging.StdOut.Error("startup", "reason", "unable to print", "error", err, "arg", printSchedule)
