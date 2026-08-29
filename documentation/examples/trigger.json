@@ -1,36 +1,38 @@
 [
 	{
-		"name": "Example - Abort",
+		"name": "Example - Trigger Once Per Day",
+		"enabled": true,
 		"trigger": {
             "every": "1d",
             "beginAt": "19:40"
         },
-		"onFailure": "abort",
+		"onFailure": "continue",
 		"steps": [
 			{
-				"name": "abort step 1",
+				"name": "step 1",
 				"program": "./testprog",
 				"args": [
 					"-sleep",
-					"10",
+					"5",
 					"-role",
-					"run and abort after step 1",
+					"step 1 - run cleanly",
 					"-exit-code",
-					"1"
+					"0"
 				],
-				"timeout": 11,
-				"pause": 3
+				"timeout": "20s",
+				"pause": "5s"
 			},
 			{
-				"name": "abort step 2",
+				"name": "step 2",
 				"program": "./testprog",
 				"args": [
 					"-sleep",
-					"50",
+					"5",
 					"-role",
-					"should not run"
-				],
-				"pause": 5
+					"step 2 - run cleanly",
+					"-exit-code",
+					"0"
+				]
 			}
 		]
 	}

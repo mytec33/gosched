@@ -6,29 +6,30 @@
 		"onFailure": "continue",
 		"steps": [
 			{
-				"name": "daily",
+				"name": "step 1 - fail",
 				"program": "./testprog",
 				"args": [
 					"-sleep",
-					"2",
+					"5",
 					"-role",
 					"fail but continue workflow",
 					"-exit-code",
 					"1"
 				],
 				"timeout": "11s",
-				"pause": "3s"
+				"pause": "5s"
 			},
 			{
-				"name": "modified",
+				"name": "step 2 - continue despite above failure",
 				"program": "./testprog",
 				"args": [
 					"-sleep",
 					"5",
 					"-role",
-					"should run in continue mode"
-				],
-				"pause": "5s"
+					"should run in continue mode",
+					"-exit-code",
+					"0"
+				]
 			}
 		]
 	}

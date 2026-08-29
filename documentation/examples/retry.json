@@ -1,15 +1,16 @@
 [
     {
-		"name": "Workflow Retry",
+		"name": "Example Retry",
+		"enabled": true,
 		"trigger": { "every": "1d", "beginAt": "21:43" },
 		"onFailure": "retry",
 		"retry": {
 			"numberRetries": 3,
-			"pauseSeconds": 10
+			"pauseSeconds": 5
 		},
 		"steps": [
 			{
-				"name": "daily",
+				"name": "step 1",
 				"program": "/opt/sbin/some_script",
 				"args": [
 					"--sleep",
