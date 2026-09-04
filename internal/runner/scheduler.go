@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -53,6 +54,10 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		panic("runner.RunSchedule: precondition failed: invalid Schedule")
 	}
 
+	var isReloadEvent = false
+	reloadChan := make(chan struct{}, 1)
+	go watchReloadFile("./reload", reloadChan, 5*time.Second)
+
 	var running sync.WaitGroup
 
 	// Capture lastProcessed before aligning so the first post-alignment minute
@@ -71,8 +76,13 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 
 		switch minuteDiff {
 		case 0:
-			logging.StdOut.Warn("scheduler", "reason", "duplicate suppression", "currentMinute",
-				currentMinute.String(), "lastProcessed", lastProcessed.String())
+			if isReloadEvent {
+				logging.StdOut.Warn("scheduler", "reason", "reload event")
+				isReloadEvent = false
+			} else {
+				logging.StdOut.Warn("scheduler", "reason", "duplicate suppression", "currentMinute",
+					currentMinute.String(), "lastProcessed", lastProcessed.String())
+			}
 		default:
 			if minuteDiff > 1 {
 				logging.StdOut.Warn("scheduler", "reason", "skipped minute(s)", "missed", minuteDiff-1,
@@ -105,6 +115,26 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 			return ErrSignalInterrupt
 		case <-timer.C:
 			logging.StdOut.Info("scheduler", "reason", "wake diagnostic", "wake", time.Now().Format(diagnosticTimeLayout))
+		case <-reloadChan:
+			logging.StdOut.Info("scheduler", "reason", "reload event initiated")
+			isReloadEvent = true
+
+			err := os.Remove("./reload")
+			if err != nil {
+				logging.StdOut.Error("scheduler", "reason", "unable to delete reload file", "error", err)
+			}
+
+			// drain the timer cleanly
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+
+			go func() {
+				logging.StdOut.Info("scheduler", "reason", "reload config")
+			}()
 		}
 	}
 }
