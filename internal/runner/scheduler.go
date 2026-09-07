@@ -54,10 +54,6 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		panic("runner.RunSchedule: precondition failed: invalid Schedule")
 	}
 
-	var isReloadEvent = false
-	reloadChan := make(chan struct{}, 1)
-	go watchReloadFile("./reload", reloadChan, 5*time.Second)
-
 	var running sync.WaitGroup
 
 	// Capture lastProcessed before aligning so the first post-alignment minute
@@ -69,6 +65,11 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		return err
 	}
 
+	// Start reload listener now that we are operational from a time perspective
+	var isReloadEvent = false
+	reloadChan := make(chan struct{}, 1)
+	go watchReloadFile("/home/bill/gosched/reload", reloadChan, 5*time.Second)
+
 	for {
 		now := time.Now()
 		currentMinute := workflow.MinuteOfDayFromTime(now)
@@ -77,7 +78,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		switch minuteDiff {
 		case 0:
 			if isReloadEvent {
-				logging.StdOut.Warn("scheduler", "reason", "reload event")
+				logging.StdOut.Warn("reload", "reason", "reload event")
 				isReloadEvent = false
 			} else {
 				logging.StdOut.Warn("scheduler", "reason", "duplicate suppression", "currentMinute",
@@ -116,12 +117,12 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 		case <-timer.C:
 			logging.StdOut.Info("scheduler", "reason", "wake diagnostic", "wake", time.Now().Format(diagnosticTimeLayout))
 		case <-reloadChan:
-			logging.StdOut.Info("scheduler", "reason", "reload event initiated")
+			logging.StdOut.Info("reload", "reason", "reload event initiated")
 			isReloadEvent = true
 
-			err := os.Remove("./reload")
+			err := os.Remove("/home/bill/gosched/reload")
 			if err != nil {
-				logging.StdOut.Error("scheduler", "reason", "unable to delete reload file", "error", err)
+				logging.StdOut.Error("reload", "reason", "unable to delete reload file", "error", err)
 			}
 
 			// drain the timer cleanly
@@ -132,9 +133,18 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 				}
 			}
 
-			go func() {
-				logging.StdOut.Info("scheduler", "reason", "reload config")
-			}()
+			manifestFile := s.GetManifestFile()
+			go func(manifestFile string) {
+				logging.StdOut.Info("reload", "reload", "reload config", "manifest file", manifestFile)
+
+				sched, errs := schedule.New(manifestFile)
+				if len(errs) > 0 {
+					logging.StdOut.Error("reload", "reason", "reload config - new schedule", "error", errs)
+					return
+				}
+				logging.StdOut.Info("reload", "reason", "schedule loaded")
+				schedule.DisplayScheduleStats(sched)
+			}(manifestFile)
 		}
 	}
 }

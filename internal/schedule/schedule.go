@@ -33,6 +33,7 @@ var (
 type Schedule struct {
 	workflows     []workflow.Workflow
 	byMinute      map[workflow.MinuteOfDay][]workflow.Workflow
+	manifestFile  string
 	manifestFiles []string
 }
 
@@ -67,7 +68,9 @@ func New(manifestFile string) (Schedule, []error) {
 		return Schedule{}, []error{err}
 	}
 
-	// retain the files and the order they were loaded in for later display
+	// retain the manifest file along with the files it contains
+	// and the order they were loaded in for later display
+	s.manifestFile = manifestFile
 	for _, v := range sourceFiles {
 		s.manifestFiles = append(s.manifestFiles, v)
 	}
@@ -123,6 +126,10 @@ func (s *Schedule) expandSchedule() error {
 	s.byMinute = newByMinute
 
 	return nil
+}
+
+func (s Schedule) GetManifestFile() string {
+	return s.manifestFile
 }
 
 func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {
