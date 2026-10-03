@@ -19,7 +19,7 @@ const (
 
 const (
 	MinWorkflowCount int = 1
-	MaxWorkflowCount int = 64
+	MaxWorkflowCount int = 160
 )
 
 var (
