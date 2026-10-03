@@ -2,6 +2,8 @@ package schedule
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -33,7 +35,9 @@ func TestPrintScheduleConfig(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	s.printScheduleConfig(&buf)
+	if err := s.printScheduleConfig(&buf); err != nil {
+		t.Fatal(err)
+	}
 
 	got := buf.String()
 	if got != fixturePrintScheduleCOnfig {
@@ -85,7 +89,9 @@ func TestPrintScheduleOperational(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	s.printScheduleOperational(&buf)
+	if err := s.printScheduleOperational(&buf); err != nil {
+		t.Fatal(err)
+	}
 
 	got := buf.String()
 	if got != fixturePrintScheduleOperational {
@@ -137,5 +143,46 @@ func TestPrintScheduleVariations(t *testing.T) {
 				t.Fatalf("unexpected output\ngot:\n%s\nwant:\n%s", got, tt.want)
 			}
 		})
+	}
+}
+
+// failPrintWriter fails at a chosen write and counts any writes after failure.
+type failPrintWriter struct {
+	writes int
+	failAt int
+	err    error
+}
+
+func (w *failPrintWriter) Write(p []byte) (int, error) {
+	w.writes++
+	if w.writes >= w.failAt {
+		return 0, w.err
+	}
+	return len(p), nil
+}
+
+func TestPrintWriteErrors(t *testing.T) {
+	s, errs := New(filepath.Join("testdata", "print_variations_manifest.txt"))
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	want := errors.New("output write failed")
+	for _, method := range []string{"config", "operational"} {
+		// Count successful writes so every output position is tested, including separators.
+		counter := &failPrintWriter{failAt: int(^uint(0) >> 1), err: want}
+		if err := s.Print(method, counter); err != nil {
+			t.Fatal(err)
+		}
+		for failAt := 1; failAt <= counter.writes; failAt++ {
+			t.Run(fmt.Sprintf("%s/write-%d", method, failAt), func(t *testing.T) {
+				w := &failPrintWriter{failAt: failAt, err: want}
+				if err := s.Print(method, w); !errors.Is(err, want) {
+					t.Fatalf("got %v, want %v", err, want)
+				}
+				if w.writes != failAt {
+					t.Fatalf("continued writing after failure: %d writes, want %d", w.writes, failAt)
+				}
+			})
+		}
 	}
 }

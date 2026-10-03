@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 
+	"git.sr.ht/~mytec/gosched/internal/logging"
 	"git.sr.ht/~mytec/gosched/internal/manifest"
 	"git.sr.ht/~mytec/gosched/internal/workflow"
 )
@@ -69,7 +70,13 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	if err != nil {
 		return []workflow.Workflow{}, nil, fmt.Errorf("%w: %q: %w", ErrFileIOError, file, err)
 	}
-	defer f.Close()
+	defer func() {
+		// This file is read-only; a close error does not affect the data already read.
+		deferErr := f.Close()
+		if deferErr != nil {
+			logging.StdOut.Warn("configuration", "reason", "unable to close workflow file", "file", file, "error", deferErr)
+		}
+	}()
 
 	wfs, validationErrors, err := decodeWorkflows(f, file)
 	if err != nil {

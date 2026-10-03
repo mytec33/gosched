@@ -14,14 +14,12 @@ import (
 func (s Schedule) Print(method string, w io.Writer) error {
 	switch method {
 	case "config":
-		s.printScheduleConfig(w)
+		return s.printScheduleConfig(w)
 	case "operational":
-		s.printScheduleOperational(w)
+		return s.printScheduleOperational(w)
 	default:
 		return fmt.Errorf("unknown print config method: %s", method)
 	}
-
-	return nil
 }
 
 func PrintConfiguration(method string, s Schedule) error {
@@ -33,7 +31,7 @@ func PrintConfiguration(method string, s Schedule) error {
 	return nil
 }
 
-func (s Schedule) printScheduleConfig(w io.Writer) {
+func (s Schedule) printScheduleConfig(w io.Writer) error {
 	workflows := s.Workflows()
 	wfWidth := len(strconv.Itoa(len(workflows)))
 
@@ -41,18 +39,25 @@ func (s Schedule) printScheduleConfig(w io.Writer) {
 	for i, v := range workflows {
 		if currentSourceFile != v.SourceFile {
 			currentSourceFile = v.SourceFile
-			fmt.Fprintf(w, "\n%s:\n", currentSourceFile)
+			if _, err := fmt.Fprintf(w, "\n%s:\n", currentSourceFile); err != nil {
+				return err
+			}
 		}
-		fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
-			wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure, disabledSuffix(v))
+		if _, err := fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
+			wfWidth, i+1, v.Trigger.String(), v.Name, v.OnFailure, disabledSuffix(v)); err != nil {
+			return err
+		}
 
 		numSteps := len(strconv.Itoa(len(v.Steps)))
 		for j, step := range v.Steps {
-			printStep(numSteps, j, step, w)
+			if err := printStep(numSteps, j, step, w); err != nil {
+				return err
+			}
 		}
 	}
 
-	fmt.Fprintf(w, "\n")
+	_, err := fmt.Fprintf(w, "\n")
+	return err
 }
 
 func displayReason(s string) string {
@@ -70,7 +75,7 @@ func disabledSuffix(wf workflow.Workflow) string {
 	return fmt.Sprintf(" <--- disabled: %s", displayReason(wf.DisabledReason))
 }
 
-func (s Schedule) printScheduleOperational(w io.Writer) {
+func (s Schedule) printScheduleOperational(w io.Writer) error {
 	minutes := make([]workflow.MinuteOfDay, 0, len(s.byMinute))
 	for m := range s.byMinute {
 		minutes = append(minutes, m)
@@ -80,25 +85,32 @@ func (s Schedule) printScheduleOperational(w io.Writer) {
 
 	for mi, m := range minutes {
 		if mi > 0 {
-			fmt.Fprintln(w)
+			if _, err := fmt.Fprintln(w); err != nil {
+				return err
+			}
 		}
 
 		workflows := s.byMinute[m]
 		wfWidth := len(strconv.Itoa(len(workflows)))
 
 		for i, v := range workflows {
-			fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
-				wfWidth, i+1, m.String(), v.Name, v.OnFailure, disabledSuffix(v))
+			if _, err := fmt.Fprintf(w, "%*d: %s  %s (%s)%s\n",
+				wfWidth, i+1, m.String(), v.Name, v.OnFailure, disabledSuffix(v)); err != nil {
+				return err
+			}
 
 			numSteps := len(strconv.Itoa(len(v.Steps)))
 			for j, step := range v.Steps {
-				printStep(numSteps, j, step, w)
+				if err := printStep(numSteps, j, step, w); err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
-func printStep(numSteps int, stepIndex int, step workflow.Step, w io.Writer) {
+func printStep(numSteps int, stepIndex int, step workflow.Step, w io.Writer) error {
 	var details []string
 
 	if step.Timeout.Duration() > 0 {
@@ -112,8 +124,10 @@ func printStep(numSteps int, stepIndex int, step workflow.Step, w io.Writer) {
 	}
 
 	if len(details) > 0 {
-		fmt.Fprintf(w, "\t\t%*d: %s (%s)\n", numSteps, stepIndex+1, step.Name, strings.Join(details, ", "))
+		_, err := fmt.Fprintf(w, "\t\t%*d: %s (%s)\n", numSteps, stepIndex+1, step.Name, strings.Join(details, ", "))
+		return err
 	} else {
-		fmt.Fprintf(w, "\t\t%*d: %s\n", numSteps, stepIndex+1, step.Name)
+		_, err := fmt.Fprintf(w, "\t\t%*d: %s\n", numSteps, stepIndex+1, step.Name)
+		return err
 	}
 }

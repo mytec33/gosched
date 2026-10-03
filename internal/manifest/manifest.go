@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"git.sr.ht/~mytec/gosched/internal/logging"
 )
 
 var (
@@ -24,7 +26,13 @@ func ParseManifest(path string) (Files, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s: %w", ErrOpenManifest, path, err)
 	}
-	defer file.Close()
+	defer func() {
+		// This file is read-only; a close error does not affect the data already read.
+		deferErr := file.Close()
+		if deferErr != nil {
+			logging.StdOut.Warn("configuration", "reason", "unable to close manifest file", "file", path, "error", deferErr)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
