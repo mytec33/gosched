@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +20,7 @@ const (
 )
 
 var (
+	ErrFilePath                = errors.New("cannot determine executable location")
 	ErrRunCommandAbortsOnError = errors.New("run command aborts on error")
 	ErrSchedulerMinuteParse    = errors.New("scheduler minute parse failed")
 	ErrWorkflowNotFoundByName  = errors.New("work flow not found in file(s) loaded by name")
@@ -50,19 +52,31 @@ func alignToNextMinuteBoundary(ctx context.Context) error {
 	return nil
 }
 
+func reloadPath() (string, error) {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrFilePath, err)
+	}
+
+	return filepath.Join(filepath.Dir(exePath), "reload.txt"), nil
+}
+
 func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 	if !s.Valid() {
 		panic("runner.RunSchedule: precondition failed: invalid Schedule")
 	}
 
-	var reloadPath = "/Users/bill/MySource/go/gosched/reload"
+	var reloadFilePath, err = reloadPath()
+	if err != nil {
+		return err
+	}
 	var running sync.WaitGroup
 
 	// Capture lastProcessed before aligning so the first post-alignment minute
 	// is treated as new work rather than a duplicate time.
 	lastProcessed := workflow.MinuteOfDayFromTime(time.Now())
 
-	err := alignToNextMinuteBoundary(ctx)
+	err = alignToNextMinuteBoundary(ctx)
 	if err != nil {
 		return err
 	}
@@ -73,7 +87,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 	// Start reload listener now that we are operational from a time perspective
 	var isReloadEvent = false
 	reloadChan := make(chan struct{}, 1)
-	go watchReloadFile(reloadPath, reloadChan, 5*time.Second)
+	go watchReloadFile(reloadFilePath, reloadChan, 5*time.Second)
 
 	for {
 		activeSchedule := currentSchedule.Load()
@@ -127,7 +141,7 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 			logging.StdOut.Info("reload", "reason", "reload event initiated")
 			isReloadEvent = true
 
-			err := os.Remove(reloadPath)
+			err := os.Remove(reloadFilePath)
 			if err != nil {
 				logging.StdOut.Error("reload", "reason", "unable to delete reload file", "error", err)
 			}
