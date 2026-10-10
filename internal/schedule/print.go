@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 func (s Schedule) Print(method string, w io.Writer) error {

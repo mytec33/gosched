@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/logging"
 )
 
 var (

@@ -10,9 +10,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/schedule"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 const (

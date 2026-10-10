@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 type StepExecutionResult struct {

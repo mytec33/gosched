@@ -9,9 +9,9 @@ import (
 	"io"
 	"os"
 
-	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/manifest"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/manifest"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 type FileValidationError struct {

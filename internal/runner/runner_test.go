@@ -3,8 +3,8 @@ package runner
 import (
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/helpers"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/helpers"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 func TestExitCode(t *testing.T) {

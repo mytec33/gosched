@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"git.sr.ht/~mytec/gosched/internal/decode"
-	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/manifest"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/decode"
+	"github.com/mytec33/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/manifest"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 const (

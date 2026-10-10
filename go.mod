@@ -1,4 +1,4 @@
-module git.sr.ht/~mytec/gosched
+module github.com/mytec33/gosched
 
 go 1.26
 

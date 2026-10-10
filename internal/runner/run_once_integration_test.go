@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~mytec/gosched/internal/helpers"
+	"github.com/mytec33/gosched/internal/helpers"
 )
 
 const runOnceOneWorkflowOneStep = `

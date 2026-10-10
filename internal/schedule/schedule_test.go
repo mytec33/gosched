@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 func TestNewExpandsHourlyWorkflowFromMidnight(t *testing.T) {

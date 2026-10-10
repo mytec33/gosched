@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/manifest"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/manifest"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 func TestDecode_InvalidJSON(t *testing.T) {

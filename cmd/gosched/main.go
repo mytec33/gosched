@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.sr.ht/~mytec/gosched/internal/decode"
-	"git.sr.ht/~mytec/gosched/internal/helpers"
-	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/runner"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
+	"github.com/mytec33/gosched/internal/decode"
+	"github.com/mytec33/gosched/internal/helpers"
+	"github.com/mytec33/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/runner"
+	"github.com/mytec33/gosched/internal/schedule"
 )
 
 const (

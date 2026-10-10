@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git.sr.ht/~mytec/gosched/internal/helpers"
-	"git.sr.ht/~mytec/gosched/internal/logging"
-	"git.sr.ht/~mytec/gosched/internal/schedule"
-	"git.sr.ht/~mytec/gosched/internal/workflow"
+	"github.com/mytec33/gosched/internal/helpers"
+	"github.com/mytec33/gosched/internal/logging"
+	"github.com/mytec33/gosched/internal/schedule"
+	"github.com/mytec33/gosched/internal/workflow"
 )
 
 func TestRunSchedulePrecondition(t *testing.T) {
