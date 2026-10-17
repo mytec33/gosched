@@ -9,7 +9,6 @@ import (
 
 	"github.com/mytec33/gosched/internal/decode"
 	"github.com/mytec33/gosched/internal/logging"
-	"github.com/mytec33/gosched/internal/manifest"
 	"github.com/mytec33/gosched/internal/workflow"
 )
 
@@ -33,14 +32,14 @@ var (
 type Schedule struct {
 	workflows     []workflow.Workflow
 	byMinute      map[workflow.MinuteOfDay][]workflow.Workflow
-	manifestFile  string
+	manifestPath  string
 	manifestFiles []string
 }
 
 func New(manifestFile string) (Schedule, []error) {
 	var errorList []error
 
-	sourceFiles, err := manifest.ParseManifest(manifestFile)
+	sourceFiles, err := parseManifest(manifestFile)
 	if err != nil {
 		return Schedule{}, []error{err}
 	}
@@ -68,9 +67,7 @@ func New(manifestFile string) (Schedule, []error) {
 		return Schedule{}, []error{err}
 	}
 
-	// retain the manifest file along with the files it contains
-	// and the order they were loaded in for later display
-	s.manifestFile = manifestFile
+	s.manifestPath = manifestFile
 	s.manifestFiles = append(s.manifestFiles, sourceFiles...)
 
 	return s, nil
@@ -127,7 +124,7 @@ func (s *Schedule) expandSchedule() error {
 }
 
 func (s Schedule) GetManifestFile() string {
-	return s.manifestFile
+	return s.manifestPath
 }
 
 func (s Schedule) GetWorkflowByName(n string) (workflow.Workflow, error) {

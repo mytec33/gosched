@@ -1,5 +1,4 @@
-// Package manifest provides schedules stored within a "manifest" file
-package manifest
+package schedule
 
 import (
 	"bufio"
@@ -17,7 +16,7 @@ var (
 	ErrScanManifest  = errors.New("unable to scan manifest")
 )
 
-func ParseManifest(path string) ([]string, error) {
+func parseManifest(path string) ([]string, error) {
 	var schedules []string
 
 	file, err := os.Open(path)

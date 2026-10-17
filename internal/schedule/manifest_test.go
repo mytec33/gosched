@@ -1,4 +1,4 @@
-package manifest
+package schedule
 
 import (
 	"errors"
@@ -49,7 +49,7 @@ func TestParseManifestWithContent(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fullPath := filepath.Join("testdata", tt.filename)
 
-			wfs, err := ParseManifest(fullPath)
+			wfs, err := parseManifest(fullPath)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("expected %v, got error: %s %v", tt.wantErr, fullPath, err)
 			}
