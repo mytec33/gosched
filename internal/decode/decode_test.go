@@ -641,7 +641,7 @@ func TestDecodeHourlyWorkflow(t *testing.T) {
 	}
 }
 
-func TestLoadScheduleReturnsNoWorkflows(t *testing.T) {
+func TestLoadWorkflowsReturnsNoWorkflows(t *testing.T) {
 	tests := []struct {
 		name string
 		file string
@@ -654,7 +654,7 @@ func TestLoadScheduleReturnsNoWorkflows(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			files := []string{filepath.Join("testdata", tt.file)}
 
-			workflows, validationErrors, err := LoadSchedule(files)
+			workflows, validationErrors, err := LoadWorkflows(files)
 			if err != nil {
 				t.Fatalf("unexpected decode/system error: %v", err)
 			}

@@ -31,10 +31,10 @@ var (
 	ErrFileIOError    = errors.New("error opening file")
 )
 
-// LoadSchedule opens the schedule file and delegates decoding and validation.
+// LoadWorkflows opens the workflow files and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func LoadSchedule(filenames []string) ([]workflow.Workflow, []error, error) {
+func LoadWorkflows(filenames []string) ([]workflow.Workflow, []error, error) {
 	var allValidationErrors []error
 	var allWorkflows []workflow.Workflow
 
@@ -85,9 +85,8 @@ func decodeWorkflowFile(file string) ([]workflow.Workflow, []error, error) {
 	return wfs, validationErrors, nil
 }
 
-// decodeWorkflows reads JSON and performs validation.
-// The returned slice contains validation errors found in the input.
-// The returned error is reserved for I/O or decoding failures.
+// decodeWorkflows reads JSON from a reader and decodes/validates all
+// workflows found within.
 func decodeWorkflows(r io.Reader, sourceFile string) ([]workflow.Workflow, []error, error) {
 	var workflows []workflow.Workflow
 	var workflowsRaw []workflow.WorkflowRaw

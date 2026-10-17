@@ -39,12 +39,12 @@ type Schedule struct {
 func New(manifestFile string) (Schedule, []error) {
 	var errorList []error
 
-	sourceFiles, err := parseManifest(manifestFile)
+	manifestFiles, err := parseManifest(manifestFile)
 	if err != nil {
 		return Schedule{}, []error{err}
 	}
 
-	workflows, decodeErrors, err := decode.LoadSchedule(sourceFiles)
+	workflows, decodeErrors, err := decode.LoadWorkflows(manifestFiles)
 	if err != nil {
 		return Schedule{}, []error{err}
 	}
@@ -68,7 +68,7 @@ func New(manifestFile string) (Schedule, []error) {
 	}
 
 	s.manifestPath = manifestFile
-	s.manifestFiles = append(s.manifestFiles, sourceFiles...)
+	s.manifestFiles = append(s.manifestFiles, manifestFiles...)
 
 	return s, nil
 }
