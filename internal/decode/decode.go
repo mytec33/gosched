@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/mytec33/gosched/internal/logging"
-	"github.com/mytec33/gosched/internal/manifest"
 	"github.com/mytec33/gosched/internal/workflow"
 )
 
@@ -35,11 +34,11 @@ var (
 // LoadSchedule opens the schedule file and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func LoadSchedule(filename manifest.Files) ([]workflow.Workflow, []error, error) {
+func LoadSchedule(filenames []string) ([]workflow.Workflow, []error, error) {
 	var allValidationErrors []error
 	var allWorkflows []workflow.Workflow
 
-	for _, file := range filename {
+	for _, file := range filenames {
 		wfs, validationErrors, err := decodeWorkflowFile(file)
 		if err != nil {
 			return []workflow.Workflow{}, validationErrors, err

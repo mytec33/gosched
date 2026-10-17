@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mytec33/gosched/internal/manifest"
 	"github.com/mytec33/gosched/internal/workflow"
 )
 
@@ -653,7 +652,7 @@ func TestLoadScheduleReturnsNoWorkflows(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			files := manifest.Files{filepath.Join("testdata", tt.file)}
+			files := []string{filepath.Join("testdata", tt.file)}
 
 			workflows, validationErrors, err := LoadSchedule(files)
 			if err != nil {
