@@ -43,7 +43,7 @@ func New(manifestFile string) (Schedule, []error) {
 		return Schedule{}, []error{err}
 	}
 
-	workflows, decodeErrors, err := LoadWorkflows(manifestFiles)
+	workflows, decodeErrors, err := loadWorkflows(manifestFiles)
 	if err != nil {
 		return Schedule{}, []error{err}
 	}

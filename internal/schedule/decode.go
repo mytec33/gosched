@@ -29,10 +29,10 @@ var (
 	ErrFileIOError    = errors.New("error opening file")
 )
 
-// LoadWorkflows opens the workflow files and delegates decoding and validation.
+// loadWorkflows opens the workflow files and delegates decoding and validation.
 // Validation errors are returned in the slice. The returned error is reserved for
 // I/O or decoding failures.
-func LoadWorkflows(filenames []string) ([]workflow.Workflow, []error, error) {
+func loadWorkflows(filenames []string) ([]workflow.Workflow, []error, error) {
 	var allValidationErrors []error
 	var allWorkflows []workflow.Workflow
 

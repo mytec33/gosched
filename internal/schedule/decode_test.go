@@ -644,7 +644,7 @@ func TestLoadWorkflowsReturnsNoWorkflows(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			files := []string{filepath.Join("testdata", "decode", tt.file)}
 
-			workflows, validationErrors, err := LoadWorkflows(files)
+			workflows, validationErrors, err := loadWorkflows(files)
 			if err != nil {
 				t.Fatalf("unexpected decode/system error: %v", err)
 			}
