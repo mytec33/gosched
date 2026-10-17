@@ -1,3 +1,0 @@
-testdata/operational_1145.json
-testdata/operational_1146.json
-testdata/operational_1247.json

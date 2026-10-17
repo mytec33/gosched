@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewExpandsHourlyWorkflowFromMidnight(t *testing.T) {
-	manifestFile := filepath.Join("testdata", "hourly_manifest.txt")
+	manifestFile := filepath.Join("testdata", "schedule", "hourly_manifest.txt")
 	sched, errorList := New(manifestFile)
 	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v", errorList)

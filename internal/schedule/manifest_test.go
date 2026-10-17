@@ -47,7 +47,7 @@ func TestParseManifestWithContent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fullPath := filepath.Join("testdata", tt.filename)
+			fullPath := filepath.Join("testdata", "manifest", tt.filename)
 
 			wfs, err := parseManifest(fullPath)
 			if !errors.Is(err, tt.wantErr) {

@@ -10,14 +10,14 @@ import (
 )
 
 var fixturePrintScheduleCOnfig = `
-testdata/config_print1.json:
+testdata/print/config_print1.json:
 1: 1h 11:46  Workflow 1 (abort)
 		1: step 1 (timeout 30s)
 2: 1h 11:45  Workflow 2 (abort)
 		1: step 1 (timeout 30s, pause 5s)
 		2: step 2 (timeout 30s)
 
-testdata/config_print2.json:
+testdata/print/config_print2.json:
 3: 1h 11:45  Workflow 3 (continue)
 		1: step 1 (timeout 30s)
 4: 1h 12:47  Workflow 4 (retry)
@@ -28,7 +28,7 @@ testdata/config_print2.json:
 `
 
 func TestPrintScheduleConfig(t *testing.T) {
-	manifestFile := filepath.Join("testdata", "config_manifest.txt")
+	manifestFile := filepath.Join("testdata", "print", "config_manifest.txt")
 	s, errorList := New(manifestFile)
 	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v\n", errorList)
@@ -82,7 +82,7 @@ var fixturePrintScheduleOperational = `1: 11:45  Workflow 1 (abort)
 `
 
 func TestPrintScheduleOperational(t *testing.T) {
-	manifestFile := filepath.Join("testdata", "operational_manifest.txt")
+	manifestFile := filepath.Join("testdata", "print", "operational_manifest.txt")
 	s, errorList := New(manifestFile)
 	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v\n", errorList)
@@ -100,7 +100,7 @@ func TestPrintScheduleOperational(t *testing.T) {
 }
 
 var fixturePrintVariationsConfig = `
-testdata/print_variations.json:
+testdata/print/print_variations.json:
 1: 1d 06:00  Step display variations (abort)
 		1: timeout and pause (timeout 30s, pause 5s)
 		2: timeout only (timeout 30s)
@@ -118,7 +118,7 @@ var fixturePrintVariationsOperational = `1: 06:00  Step display variations (abor
 `
 
 func TestPrintScheduleVariations(t *testing.T) {
-	manifestFile := filepath.Join("testdata", "print_variations_manifest.txt")
+	manifestFile := filepath.Join("testdata", "print", "print_variations_manifest.txt")
 	s, errorList := New(manifestFile)
 	if len(errorList) > 0 {
 		t.Fatalf("expected no errors, got %v", errorList)
@@ -162,7 +162,7 @@ func (w *failPrintWriter) Write(p []byte) (int, error) {
 }
 
 func TestPrintWriteErrors(t *testing.T) {
-	s, errs := New(filepath.Join("testdata", "print_variations_manifest.txt"))
+	s, errs := New(filepath.Join("testdata", "print", "print_variations_manifest.txt"))
 	if len(errs) > 0 {
 		t.Fatal(errs)
 	}

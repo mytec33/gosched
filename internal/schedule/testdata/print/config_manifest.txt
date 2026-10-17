@@ -1,0 +1,2 @@
+testdata/print/config_print1.json
+testdata/print/config_print2.json
