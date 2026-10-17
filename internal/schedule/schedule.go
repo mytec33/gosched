@@ -71,9 +71,7 @@ func New(manifestFile string) (Schedule, []error) {
 	// retain the manifest file along with the files it contains
 	// and the order they were loaded in for later display
 	s.manifestFile = manifestFile
-	for _, v := range sourceFiles {
-		s.manifestFiles = append(s.manifestFiles, v)
-	}
+	s.manifestFiles = append(s.manifestFiles, sourceFiles...)
 
 	return s, nil
 }
