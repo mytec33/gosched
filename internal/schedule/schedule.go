@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mytec33/gosched/internal/decode"
 	"github.com/mytec33/gosched/internal/logging"
 	"github.com/mytec33/gosched/internal/workflow"
 )
@@ -44,7 +43,7 @@ func New(manifestFile string) (Schedule, []error) {
 		return Schedule{}, []error{err}
 	}
 
-	workflows, decodeErrors, err := decode.LoadWorkflows(manifestFiles)
+	workflows, decodeErrors, err := LoadWorkflows(manifestFiles)
 	if err != nil {
 		return Schedule{}, []error{err}
 	}

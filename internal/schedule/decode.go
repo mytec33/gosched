@@ -1,6 +1,4 @@
-// Package decode reads workflow configuration input and converts it into
-// trusted workflow values or validation errors.
-package decode
+package schedule
 
 import (
 	"encoding/json"

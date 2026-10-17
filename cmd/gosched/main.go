@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mytec33/gosched/internal/decode"
 	"github.com/mytec33/gosched/internal/helpers"
 	"github.com/mytec33/gosched/internal/logging"
 	"github.com/mytec33/gosched/internal/runner"
@@ -121,7 +120,7 @@ func displayCfgErrors(fileErrors []error) {
 	logging.StdOut.Error("startup", "reason", "configuration invalid")
 
 	for _, err := range fileErrors {
-		fileErr, ok := errors.AsType[decode.FileValidationError](err)
+		fileErr, ok := errors.AsType[schedule.FileValidationError](err)
 		if ok {
 			logging.StdOut.Error("startup", "file", fileErr.File,
 				"reason", fileErr.Err)

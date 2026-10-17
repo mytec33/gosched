@@ -1,4 +1,4 @@
-package decode
+package schedule
 
 import (
 	"encoding/json"
@@ -457,16 +457,6 @@ func TestDecode_NonStringTypedField(t *testing.T) {
 	}
 }
 
-func hasError(errorList []error, target error) bool {
-	for _, e := range errorList {
-		if errors.Is(e, target) {
-			return true
-		}
-	}
-
-	return false
-}
-
 // disabledReason: This logic pairs two fields whose
 // validity depends on each other, so it is tested as a matrix rather than
 // isolated cases. The disabled-with-reason row also asserts the reason is
@@ -646,13 +636,13 @@ func TestLoadWorkflowsReturnsNoWorkflows(t *testing.T) {
 		name string
 		file string
 	}{
-		{name: "empty array", file: "empty_workflows.json"},
-		{name: "null", file: "null_workflows.json"},
+		{name: "empty array", file: "decode_empty_workflows.json"},
+		{name: "null", file: "decode_null_workflows.json"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			files := []string{filepath.Join("testdata", tt.file)}
+			files := []string{filepath.Join("testdata", "decode", tt.file)}
 
 			workflows, validationErrors, err := LoadWorkflows(files)
 			if err != nil {
