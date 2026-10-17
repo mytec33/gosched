@@ -4,10 +4,62 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/mytec33/gosched/internal/workflow"
 )
+
+func TestScheduleWorkflowGettersReturnIndependentCopies(t *testing.T) {
+	newSchedule := func() Schedule {
+		workflows := []workflow.Workflow{
+			{
+				Name: "original workflow",
+				Steps: []workflow.Step{
+					{Name: "original step", Args: []string{"original argument"}},
+				},
+			},
+		}
+		return Schedule{
+			workflows: workflows,
+			byMinute: map[workflow.MinuteOfDay][]workflow.Workflow{
+				0: workflows,
+			},
+		}
+	}
+
+	getters := []struct {
+		name string
+		get  func(Schedule) []workflow.Workflow
+	}{
+		{"Workflows", Schedule.Workflows},
+		{"WorkflowsAtMinute", func(s Schedule) []workflow.Workflow {
+			return s.WorkflowsAtMinute(0)
+		}},
+	}
+
+	for _, getter := range getters {
+		t.Run(getter.name, func(t *testing.T) {
+			s := newSchedule()
+			want := newSchedule()
+			got := getter.get(s)
+			if !reflect.DeepEqual(got, want.workflows) {
+				t.Fatalf("getter returned %v, want %v", got, want.workflows)
+			}
+
+			got[0].Name = "changed workflow"
+			got[0].Steps[0].Name = "changed step"
+			got[0].Steps[0].Args[0] = "changed argument"
+
+			if !reflect.DeepEqual(s, want) {
+				t.Fatal("changing returned workflow data modified the schedule")
+			}
+			if fresh := getter.get(s); !reflect.DeepEqual(fresh, want.workflows) {
+				t.Fatalf("subsequent getter returned %v, want %v", fresh, want.workflows)
+			}
+		})
+	}
+}
 
 func TestNewExpandsHourlyWorkflowFromMidnight(t *testing.T) {
 	manifestFile := filepath.Join("testdata", "schedule", "hourly_manifest.txt")

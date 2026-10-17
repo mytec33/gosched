@@ -5,6 +5,7 @@ package schedule
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/mytec33/gosched/internal/logging"
@@ -183,16 +184,27 @@ func (s Schedule) WorkflowCount() int {
 }
 
 func (s Schedule) Workflows() []workflow.Workflow {
-	out := make([]workflow.Workflow, len(s.workflows))
-	copy(out, s.workflows)
-
-	return out
+	return deepCopyWorkflows(s.workflows)
 }
 
 func (s Schedule) WorkflowsAtMinute(k workflow.MinuteOfDay) []workflow.Workflow {
 	wfs := s.byMinute[k]
-	out := make([]workflow.Workflow, len(wfs))
-	copy(out, wfs)
+	return deepCopyWorkflows(wfs)
+}
+
+func deepCopyWorkflows(source []workflow.Workflow) []workflow.Workflow {
+	out := slices.Clone(source)
+	if out == nil {
+		out = []workflow.Workflow{}
+	}
+
+	for i := range out {
+		out[i].Steps = slices.Clone(out[i].Steps)
+
+		for j := range out[i].Steps {
+			out[i].Steps[j].Args = slices.Clone(out[i].Steps[j].Args)
+		}
+	}
 
 	return out
 }
