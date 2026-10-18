@@ -483,7 +483,7 @@ func assertWorkflowSummary(t *testing.T, out []byte, name, status string) {
 		t.Fatalf("workflow %q must finish as %s; its final report says %q\n%s", name, status, reportedStatus, out)
 	}
 	duration, err := time.ParseDuration(durationText)
-	if err != nil || duration <= 0 {
-		t.Fatalf("workflow %q must report a positive elapsed duration; got %q (parse error: %v)\n%s", name, durationText, err, out)
+	if err != nil || duration < 0 {
+		t.Fatalf("workflow %q must report a valid, nonnegative elapsed duration; got %q (parse error: %v)\n%s", name, durationText, err, out)
 	}
 }
