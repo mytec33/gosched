@@ -1,6 +1,26 @@
 # TODO
 
 ```
+Consider indexing minute slots by workflow position instead of Workflow copies.
+
+Keep s.workflows as the canonical list and store positions in byMinute (for
+example, map[workflow.MinuteOfDay][]int). Minute queries resolve those positions
+and continue returning independent deep copies through the public API.
+
+An every-minute workflow currently contributes 1,440 Workflow struct copies.
+Its nested steps and arguments share backing storage in the internal index;
+they are not duplicated per slot. Integer positions could reduce the repeated
+struct storage, but would not remove the allocation cost of public deep copies.
+
+Measure memory and query costs with representative production schedules before
+changing the representation. Preserve workflow order within each minute and
+keep the canonical list stable for the schedule's lifetime. Reload should
+continue constructing a complete replacement, including its own index.
+
+Deferred idea from the Rust-port comparison; no implementation decision yet.
+```
+
+```
 Evaluate JSON tag ownership after enabled/disabled work.
 
 WorkflowRaw owns top-level JSON decoding, but nested structs such as Trigger,
