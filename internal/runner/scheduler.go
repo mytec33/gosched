@@ -265,7 +265,6 @@ func executeWorkflow(wf workflow.Workflow) error {
 
 			if workflow.WorkflowContinuesOnFailure(wf) {
 				workflowStatus = workflow.StatusPartial
-				continue
 			}
 
 			if workflow.WorkflowRetriesOnFailure(wf) {
