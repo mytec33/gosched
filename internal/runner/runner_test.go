@@ -112,6 +112,11 @@ func TestRunStepCommandResults(t *testing.T) {
 				} else if exitErr.ExitCode() != tt.wantExitCode {
 					t.Errorf("exit error must preserve child exit code %d; got %d", tt.wantExitCode, exitErr.ExitCode())
 				}
+			case tt.wantErr == os.ErrNotExist:
+				// Windows can report executable lookup failure before process creation.
+				if !errors.Is(result.Err, os.ErrNotExist) && !errors.Is(result.Err, exec.ErrNotFound) {
+					t.Errorf("missing executable must return os.ErrNotExist or exec.ErrNotFound; got %T: %v", result.Err, result.Err)
+				}
 			case tt.wantErr != nil:
 				if !errors.Is(result.Err, tt.wantErr) {
 					t.Errorf("command failure must identify %v; got %T: %v", tt.wantErr, result.Err, result.Err)
