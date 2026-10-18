@@ -54,7 +54,7 @@ func New(manifestFile string) (Schedule, []error) {
 	}
 
 	s := Schedule{
-		workflows: append([]workflow.Workflow(nil), workflows...),
+		workflows: workflows,
 	}
 
 	errorList = s.validate()
@@ -68,7 +68,7 @@ func New(manifestFile string) (Schedule, []error) {
 	}
 
 	s.manifestPath = manifestFile
-	s.manifestFiles = append(s.manifestFiles, manifestFiles...)
+	s.manifestFiles = manifestFiles
 
 	return s, nil
 }

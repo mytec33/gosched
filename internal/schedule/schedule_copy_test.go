@@ -46,6 +46,21 @@ func TestScheduleWorkflowGettersReturnIndependentCopies(t *testing.T) {
 		}
 	}
 
+	named, err := sched.GetWorkflowByName(want[0].Name)
+	if err != nil {
+		t.Fatalf("get workflow by name: %v", err)
+	}
+	if !reflect.DeepEqual(named, want[0]) {
+		t.Fatal("name lookup did not return the expected workflow")
+	}
+	named.Name = "changed workflow"
+	for j := range named.Steps {
+		named.Steps[j].Program = "changed program"
+		for k := range named.Steps[j].Args {
+			named.Steps[j].Args[k] = "changed argument"
+		}
+	}
+
 	got := sched.Workflows()
 	if !reflect.DeepEqual(got, want) {
 		t.Error("changing returned data modified the schedule's workflows")

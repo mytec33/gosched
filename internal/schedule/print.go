@@ -123,11 +123,6 @@ func printStep(numSteps int, stepIndex int, step workflow.Step, w io.Writer) err
 		details = append(details, fmt.Sprintf("pause %s", step.Pause))
 	}
 
-	if len(details) > 0 {
-		_, err := fmt.Fprintf(w, "\t\t%*d: %s (%s)\n", numSteps, stepIndex+1, step.Name, strings.Join(details, ", "))
-		return err
-	} else {
-		_, err := fmt.Fprintf(w, "\t\t%*d: %s\n", numSteps, stepIndex+1, step.Name)
-		return err
-	}
+	_, err := fmt.Fprintf(w, "\t\t%*d: %s (%s)\n", numSteps, stepIndex+1, step.Name, strings.Join(details, ", "))
+	return err
 }

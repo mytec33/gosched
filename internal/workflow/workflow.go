@@ -16,15 +16,3 @@ type Workflow struct {
 func (wf Workflow) StepCount() int {
 	return len(wf.Steps)
 }
-
-func WorkflowAbortsOnFailure(wf Workflow) bool {
-	return wf.OnFailure == Abort
-}
-
-func WorkflowContinuesOnFailure(wf Workflow) bool {
-	return wf.OnFailure == Continue
-}
-
-func WorkflowRetriesOnFailure(wf Workflow) bool {
-	return wf.OnFailure == Retry
-}
