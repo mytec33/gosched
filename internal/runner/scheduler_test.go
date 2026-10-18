@@ -82,148 +82,45 @@ func TestExecuteWorkflowDisabledSkipsSteps(t *testing.T) {
 	}
 }
 
-func TestExecuteWorkflowAbortOnMissingProgram(t *testing.T) {
+func TestExecuteWorkflowRejectsUnknownFailurePolicy(t *testing.T) {
+	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
+	marker := filepath.Join(t.TempDir(), "later-step-ran")
+	// JSON parsing rejects this policy. Supply it directly to exercise the
+	// execution boundary's defensive handling of an invalid internal value.
 	wf := workflow.Workflow{
-		Name:      "missing program aborts",
+		Name:      "Unknown failure policy",
 		Enabled:   true,
-		OnFailure: workflow.Abort,
+		OnFailure: workflow.FailureMode{},
 		Steps: []workflow.Step{
 			{
-				Name:    "missing",
+				Name:    "Cannot start",
 				Program: filepath.Join(t.TempDir(), "does-not-exist"),
 			},
 			{
-				Name:    "would continue",
-				Program: filepath.Join(t.TempDir(), "also-does-not-exist"),
-			},
-		},
-	}
-
-	if err := executeWorkflow(wf); err == nil {
-		t.Fatal("expected abort workflow to fail on missing program")
-	}
-}
-
-func TestExecuteWorkflowAbortUsesPolicyValue(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := workflow.Workflow{
-		Name:      "command failure aborts",
-		Enabled:   true,
-		OnFailure: workflow.Abort,
-		Steps: []workflow.Step{
-			{
-				Name:    "exit 5",
+				Name:    "Must not run",
 				Program: testprog,
 				Args: []string{
-					"-sleep", "0",
-					"-role", "exit 5",
-					"-exit-code", "5",
+					"--role", "must-not-run",
+					"--exit-code", "5",
+					"--fail-once-marker", marker,
 				},
 			},
 		},
 	}
-
-	if err := executeWorkflow(wf); err == nil {
-		t.Fatal("expected abort workflow to fail on command error")
-	}
-}
-
-func TestExecuteWorkflowContinueFailureLogsPartial(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := workflow.Workflow{
-		Name:      "continue failure is partial",
-		Enabled:   true,
-		OnFailure: workflow.Continue,
-		Steps: []workflow.Step{
-			{
-				Name:    "missing",
-				Program: filepath.Join(t.TempDir(), "does-not-exist"),
-			},
-			{
-				Name:    "continues",
-				Program: testprog,
-				Args: []string{
-					"-sleep", "0",
-					"-role", "continues",
-					"-exit-code", "0",
-				},
-			},
-		},
-	}
-
 	out, err := executeWorkflowWithCapturedOutput(t, wf)
-	if err != nil {
-		t.Fatalf("expected continue workflow to finish: %v\n%s", err, out)
+	if !errors.Is(err, ErrRunStepUnknownOnFailure) {
+		t.Fatalf("unsupported failure policy must stop the workflow with ErrRunStepUnknownOnFailure; got %v\n%s", err, out)
 	}
+	assertIntegrationOutput(t, out, `reason="reached an unexpected branch on run step. Contact developer."`, "unsupported failure policy must produce a developer-contact diagnostic")
+	assertIntegrationOutput(t, out, `"failure mode"=""`, "the diagnostic must identify the unsupported empty failure policy")
+	assertWorkflowSummary(t, out, wf.Name, "failed")
 
-	assertOutputContains(t, out, workflowStatusLog(workflow.StatusPartial))
-	assertOutputContains(t, out, []byte(`role=continues`))
-}
-
-func TestExecuteWorkflowRetryExhaustionLogsPartial(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	wf := workflow.Workflow{
-		Name:      "retry exhaustion is partial",
-		Enabled:   true,
-		OnFailure: workflow.Retry,
-		Retry: workflow.RetryPolicy{
-			NumberRetries: 1,
-		},
-		Steps: []workflow.Step{
-			{
-				Name:    "exhausts retries",
-				Program: testprog,
-				Args: []string{
-					"-sleep", "0",
-					"-role", "exhausts-retries",
-					"-exit-code", "5",
-				},
-			},
-		},
+	_, statErr := os.Stat(marker)
+	if !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("unsupported failure policy must prevent the following step from running; marker check returned %v\n%s", statErr, out)
 	}
-
-	out, err := executeWorkflowWithCapturedOutput(t, wf)
-	if err != nil {
-		t.Fatalf("expected retry workflow to finish: %v\n%s", err, out)
-	}
-
-	assertOutputContains(t, out, []byte(`status=exhausted`))
-	assertOutputContains(t, out, workflowStatusLog(workflow.StatusPartial))
-}
-
-func TestExecuteWorkflowRetrySuccessLogsCompleted(t *testing.T) {
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	dir := t.TempDir()
-	markerFile := filepath.Join(dir, "retried")
-	wf := workflow.Workflow{
-		Name:      "retry success is completed",
-		Enabled:   true,
-		OnFailure: workflow.Retry,
-		Retry: workflow.RetryPolicy{
-			NumberRetries: 1,
-		},
-		Steps: []workflow.Step{
-			{
-				Name:    "succeeds on retry",
-				Program: testprog,
-				Args: []string{
-					"-sleep", "0",
-					"-role", "succeeds on retry",
-					"-exit-code", "5",
-					"-fail-once-marker", markerFile,
-				},
-			},
-		},
-	}
-
-	out, err := executeWorkflowWithCapturedOutput(t, wf)
-	if err != nil {
-		t.Fatalf("expected retry workflow to finish: %v\n%s", err, out)
-	}
-
-	assertOutputContains(t, out, workflowStatusLog(workflow.StatusCompleted))
-	if bytes.Contains(out, workflowStatusLog(workflow.StatusPartial)) {
-		t.Fatalf("expected output not to contain partial status\n%s", out)
+	if bytes.Contains(out, []byte(`stepIndex=1`)) {
+		t.Fatalf("unsupported failure policy must return before attempting the following step\n%s", out)
 	}
 }
 

@@ -9,6 +9,7 @@ var (
 	StatusPartial   = WorkflowStatus{value: "partial"}
 	StatusFailed    = WorkflowStatus{value: "failed"}
 	StatusSkipped   = WorkflowStatus{value: "skipped"}
+	StatusUnknown   = WorkflowStatus{value: "unknown"}
 )
 
 func (s WorkflowStatus) String() string {

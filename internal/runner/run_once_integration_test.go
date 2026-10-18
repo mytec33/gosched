@@ -62,43 +62,6 @@ const runOnceTwoWorkflowsOneStep = `
 ]
 `
 
-func TestRunOnceOneWorkflowOneStep(t *testing.T) {
-	t.Parallel()
-
-	scheduler := helpers.BuildBinary(t, "gosched", "cmd/gosched")
-	testprog := helpers.BuildBinary(t, "testprog", "cmd/testprog")
-	schedule := fmt.Sprintf(runOnceOneWorkflowOneStep, time.Now().Format("15:04"), testprog)
-
-	manifestFile := writeRunOnceManifest(t, schedule)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, scheduler, "-manifest", manifestFile, "-run-once", "Workflow 1")
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("scheduler failed: %v\n%s", err, out)
-	}
-
-	expected := [][]byte{
-		[]byte(`fileCount=1`),
-		[]byte(`workflowCount=1`),
-		[]byte(`stepCount=1`),
-		[]byte(`reason="run once started"`),
-		[]byte(`workflow="Workflow 1"`),
-		[]byte(`msg=workflow`),
-		[]byte(`status=completed`),
-		[]byte(`role=daily-slot-ratings`),
-	}
-
-	for _, want := range expected {
-		if !bytes.Contains(out, want) {
-			t.Fatalf("expected output to contain %q\n%s", want, out)
-		}
-	}
-}
-
 func TestRunOnceWorkflowNotFound(t *testing.T) {
 	t.Parallel()
 
@@ -127,6 +90,7 @@ func TestRunOnceWorkflowNotFound(t *testing.T) {
 		t.Fatalf("expected exit code 2, got %d\n%s", exitErr.ExitCode(), out)
 	}
 
+	assertNoUnexpectedOutcome(t, out)
 	expected := [][]byte{
 		[]byte(`fileCount=1`),
 		[]byte(`reason="run once started"`),
@@ -162,12 +126,13 @@ func TestRunOnceTwoWorkflowsOneStep(t *testing.T) {
 		t.Fatalf("scheduler failed: %v\n%s", err, out)
 	}
 
+	assertWorkflowSummary(t, out, "Workflow 2", "completed")
+	assertNoUnexpectedOutcome(t, out)
 	expected := [][]byte{
 		[]byte(`reason="scheduler service started"`),
 		[]byte(`reason="run once started"`),
 		[]byte(`workflow="Workflow 2"`),
 		[]byte(`msg=workflow`),
-		[]byte(`status=completed`),
 		[]byte(`role=workflow-2-step-1`),
 	}
 

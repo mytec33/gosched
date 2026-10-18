@@ -28,6 +28,8 @@ Later files append workflows and implicitly take priority.
 - `continue` — keep running later steps after a failed step; use when steps are independent and partial success is useful.
 - `retry` — if a step fails, retry the step `numberRetries` times, pausing `pauseSeconds` between retries. After retries complete (successful or exhausted), continue to the next step.
 
+A step's configured `pause` applies before the next step, whether the current step succeeds or fails. No pause is taken after the final step or when the workflow aborts.
+
 ## Scheduling
 
 Due to OS jitter, VM pause/resume, or clock drift, scheduling may not always align perfectly with wall-clock time. This can result in skipped minutes.

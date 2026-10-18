@@ -92,6 +92,12 @@ func runStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
 
 		retryResult = runStepAttempt(stdOut, wfName, step, stepIndex)
 		if retryResult.Err == nil {
+			stdOut.Info("step retry",
+				"stepName", step.Name,
+				"stepIndex", stepIndex,
+				"status", "completed",
+				"retryAttempt", attempt)
+
 			return workflow.StatusCompleted
 		}
 	}
@@ -100,9 +106,4 @@ func runStepRetries(stdOut *slog.Logger, wfName string, step workflow.Step,
 		"status", "exhausted", "retries", retry.NumberRetries)
 
 	return workflow.StatusPartial
-}
-
-// Failed receiver function only used in tests
-func (s StepExecutionResult) Failed() bool {
-	return s.Err != nil || s.ExitCode != 0
 }

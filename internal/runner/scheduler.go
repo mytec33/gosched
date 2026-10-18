@@ -20,12 +20,14 @@ const (
 )
 
 var (
-	ErrFilePath                = errors.New("cannot determine executable location")
-	ErrRunCommandAbortsOnError = errors.New("run command aborts on error")
-	ErrSchedulerMinuteParse    = errors.New("scheduler minute parse failed")
-	ErrWorkflowNotFoundByName  = errors.New("work flow not found in file(s) loaded by name")
-	ErrExecutingWorkflow       = errors.New("execute workflow failure")
-	ErrSignalInterrupt         = errors.New("received interrupt signal")
+	ErrFilePath                  = errors.New("cannot determine executable location")
+	ErrRunStepUnknownRetryStatus = errors.New("run step attempt returned an unknown retry status")
+	ErrRunCommandAbortsOnError   = errors.New("run command aborts on error")
+	ErrRunStepUnknownOnFailure   = errors.New("run step attempt returned an unknown failure mode")
+	ErrSchedulerMinuteParse      = errors.New("scheduler minute parse failed")
+	ErrWorkflowNotFoundByName    = errors.New("work flow not found in file(s) loaded by name")
+	ErrExecutingWorkflow         = errors.New("execute workflow failure")
+	ErrSignalInterrupt           = errors.New("received interrupt signal")
 )
 
 type nextWakeTiming struct {
@@ -253,26 +255,61 @@ func executeWorkflow(wf workflow.Workflow) error {
 	numSteps := len(wf.Steps)
 	stdOut.Info("workflow", "name", wf.Name, "status", "started", "stepCount", numSteps)
 
-	workflowStatus := workflow.StatusCompleted
+	workflowStatus := workflow.StatusUnknown
+	defer func() {
+		workflowDuration := time.Since(workflowStart)
+		stdOut.Info("workflow", "workflow", wf.Name, "status", workflowStatus.String(), "duration", workflowDuration)
+
+		if workflowStatus == workflow.StatusUnknown {
+			stdOut.Error("workflow",
+				"workflow", wf.Name,
+				"status", workflowStatus.String(),
+				"reason", "workflow exited with an unexpected outcome; contact the developer",
+			)
+		}
+	}()
+
+	successfulSteps := 0
 	for i, step := range wf.Steps {
 		result := runStepAttempt(stdOut, wf.Name, step, i)
 
 		if result.Err != nil {
-			if workflow.WorkflowAbortsOnFailure(wf) {
+			switch wf.OnFailure {
+			case workflow.Abort:
 				stdOut.Info("step", "step", step.Name, "stepIndex", i, "status", wf.OnFailure)
+				workflowStatus = workflow.StatusFailed
 				return fmt.Errorf("%w: %s", ErrRunCommandAbortsOnError, result.Err)
-			}
-
-			if workflow.WorkflowContinuesOnFailure(wf) {
+			case workflow.Continue:
 				workflowStatus = workflow.StatusPartial
-			}
-
-			if workflow.WorkflowRetriesOnFailure(wf) {
+			case workflow.Retry:
 				retryStatus := runStepRetries(stdOut, wf.Name, step, i, wf.Retry)
-				if retryStatus == workflow.StatusPartial {
+				switch retryStatus {
+				case workflow.StatusPartial:
 					workflowStatus = workflow.StatusPartial
+				case workflow.StatusCompleted:
+					successfulSteps++
+				default:
+					stdOut.Error("step",
+						"step", step.Name,
+						"stepIndex", i,
+						"reason", "reached an unknown retry status. Contact developer.",
+						"retry status", retryStatus)
+
+					workflowStatus = workflow.StatusFailed
+					return fmt.Errorf("%w: %s", ErrRunStepUnknownRetryStatus, result.Err)
 				}
+			default:
+				stdOut.Error("step",
+					"step", step.Name,
+					"stepIndex", i,
+					"reason", "reached an unexpected branch on run step. Contact developer.",
+					"failure mode", wf.OnFailure)
+
+				workflowStatus = workflow.StatusFailed
+				return fmt.Errorf("%w: %s", ErrRunStepUnknownOnFailure, result.Err)
 			}
+		} else {
+			successfulSteps++
 		}
 
 		if step.Pause.Duration() > 0 {
@@ -287,7 +324,9 @@ func executeWorkflow(wf workflow.Workflow) error {
 		}
 	}
 
-	workflowDuration := time.Since(workflowStart)
-	stdOut.Info("workflow", "workflow", wf.Name, "status", workflowStatus.String(), "duration", workflowDuration)
+	if successfulSteps == numSteps {
+		workflowStatus = workflow.StatusCompleted
+	}
+
 	return nil
 }
