@@ -1,0 +1,21 @@
+[
+    {
+        "name": "First workflow",
+        "enabled": true,
+        "trigger": { "every": "1h", "beginAt": "00:00" },
+        "onFailure": "abort",
+        "steps": [
+            { "name": "First step", "program": "program-one", "args": ["--first", "value"] },
+            { "name": "Second step", "program": "program-two", "args": ["--second"] }
+        ]
+    },
+    {
+        "name": "Second workflow",
+        "enabled": true,
+        "trigger": { "every": "1d", "beginAt": "00:00" },
+        "onFailure": "continue",
+        "steps": [
+            { "name": "First step", "program": "program-three", "args": ["--third"] }
+        ]
+    }
+]
