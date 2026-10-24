@@ -21,7 +21,7 @@ func TestNewExpandsHourlyWorkflowFromMidnight(t *testing.T) {
 	}
 
 	populated := 0
-	for m := range MinutesPerDay {
+	for m := range workflow.MinutesInDay {
 		if len(sched.WorkflowsAtMinute(workflow.MinuteOfDay(m))) > 0 {
 			populated++
 		}

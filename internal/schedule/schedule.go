@@ -13,10 +13,6 @@ import (
 )
 
 const (
-	MinutesPerDay int = 24 * 60
-)
-
-const (
 	MinWorkflowCount int = 1
 	MaxWorkflowCount int = 160
 )
@@ -94,7 +90,7 @@ func expandCadence(trigger workflow.Trigger) ([]workflow.MinuteOfDay, error) {
 		return minutes, ErrTriggerIntervalInvalid
 	}
 
-	for minute := int(trigger.BeginAt); minute < MinutesPerDay; minute += interval {
+	for minute := int(trigger.BeginAt); minute < workflow.MinutesInDay; minute += interval {
 		minutes = append(minutes, workflow.MinuteOfDay(minute))
 	}
 
