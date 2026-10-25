@@ -157,19 +157,16 @@ func RunSchedule(ctx context.Context, s schedule.Schedule) error {
 			}
 
 			manifestFile := s.GetManifestFile()
-			go func(manifestFile string) {
-				logging.StdOut.Info("reload", "reload", "reload config", "manifest file", manifestFile)
+			logging.StdOut.Info("reload", "reload", "reload config", "manifest file", manifestFile)
 
-				sched, errs := schedule.New(manifestFile)
-				if len(errs) > 0 {
-					logging.StdOut.Error("reload", "reason", "reload config - ignoring reload attempt", "error", errs)
-					return
-				}
-
+			sched, errs := schedule.New(manifestFile)
+			if len(errs) > 0 {
+				logging.StdOut.Error("reload", "reason", "reload config - ignoring reload attempt", "error", errs)
+			} else {
 				currentSchedule.Store(&sched)
 				logging.StdOut.Info("reload", "reason", "schedule loaded")
 				schedule.DisplayScheduleStats(sched)
-			}(manifestFile)
+			}
 		}
 	}
 }
