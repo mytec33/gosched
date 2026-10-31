@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestParseCadence(t *testing.T) {
+func TestParseCadence_Valid(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       string
@@ -73,7 +73,12 @@ func TestParseCadence_Invalid(t *testing.T) {
 	}
 }
 
-func TestParseCadence_AllValidValuesRoundTrip(t *testing.T) {
+/*
+TestParseCadence runs through all valid combinations in the combined
+set of values in repetition and measure simulating an exhaustive
+check of the type space.
+*/
+func TestParseCadence_AllValidValues(t *testing.T) {
 	tests := []struct {
 		measure CadenceMeasure
 		max     int
@@ -115,22 +120,9 @@ func TestParseCadence_AllValidValuesRoundTrip(t *testing.T) {
 					)
 				}
 
-				reparsed, err := ParseCadence(cadence.String())
-				if err != nil {
-					t.Fatalf(
-						"ParseCadence(%q) round-trip error = %v",
-						cadence.String(),
-						err,
-					)
-				}
-
-				if reparsed != cadence {
-					t.Fatalf(
-						"ParseCadence(%q) round trip = %v, want %v",
-						input,
-						reparsed,
-						cadence,
-					)
+				got := cadence.String()
+				if got != input {
+					t.Fatalf("String() = %q, want %q", got, input)
 				}
 			})
 		}

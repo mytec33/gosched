@@ -55,8 +55,8 @@ func (c Cadence) Repetition() int {
 }
 
 func (c Cadence) Measure() CadenceMeasure {
-	if c.measure == CadenceUnknown {
-		panic("workflow.Cadence error: invalid measure")
+	if c.repetition == 0 || c.measure.v == "" {
+		panic("workflow.Cadence error: uninitialized cadence")
 	}
 	return c.measure
 }
@@ -86,16 +86,16 @@ func (c Cadence) validateCadence() error {
 	return nil
 }
 
-func parseMeasure(unit string) CadenceMeasure {
+func parseMeasure(unit string) (CadenceMeasure, error) {
 	switch unit {
 	case "d":
-		return CadenceDay
+		return CadenceDay, nil
 	case "h":
-		return CadenceHour
+		return CadenceHour, nil
 	case "m":
-		return CadenceMinute
+		return CadenceMinute, nil
 	default:
-		return CadenceUnknown
+		return CadenceMeasure{}, ErrCadenceUnitInvalid
 	}
 }
 
@@ -135,9 +135,9 @@ func ParseCadence(s string) (Cadence, error) {
 	}
 
 	last := strings.ToLower(s[len(s)-lastCharSize:])
-	measure := parseMeasure(last)
-	if measure == CadenceUnknown {
-		return Cadence{}, ErrCadenceUnitInvalid
+	measure, err := parseMeasure(last)
+	if err != nil {
+		return Cadence{}, err
 	}
 
 	cadence := Cadence{
